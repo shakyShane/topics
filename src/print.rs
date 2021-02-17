@@ -84,16 +84,18 @@ fn print_steps(str: &mut String, steps: &Vec<Step>) -> Result<()> {
                 writeln!(str, "- directory: `{}`", cmd.cwd)?;
                 writeln!(str, "```shell")?;
                 writeln!(str, "{}", cmd.command)?;
-                writeln!(str, "```")?;
+                writeln!(str, "```\n")?;
             }
             Step::FileExistsCheck(fe) => {
-                writeln!(str, "file check: {}", fe.path.display())?;
+                writeln!(str, "FileExistsCheck")?;
+                writeln!(str, "- directory: `{}`", fe.cwd.display())?;
+                writeln!(str, "- file: `{}`\n", fe.path.display())?;
             }
             Step::DependencyCheck(dep) => {
                 writeln!(str, "DependencyCheck [{url}]({url})", url = dep.url)?;
                 writeln!(str, "```shell")?;
                 writeln!(str, "{}", dep.verify)?;
-                writeln!(str, "```")?;
+                writeln!(str, "```\n")?;
             }
             Step::MultiSteps(multi) => print_steps(str, &multi.steps)?,
             Step::Instruction(instr) => {
