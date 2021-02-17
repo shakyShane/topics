@@ -19,7 +19,7 @@ commands:
     title: Builds just the images needed for screenshots
     kind: Command
     cwd: *root_dir
-    command: build -b ncouk-disconnectedlayoutservice -b ncouk-client
+    command: skaffold build -b ncouk-disconnectedlayoutservice -b ncouk-client
   - &update-screen-shot-images
     title: Updates the screenshots images
     kind: Command

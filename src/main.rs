@@ -1,4 +1,5 @@
 mod print;
+mod output;
 
 use anyhow::Result;
 use std::env::current_dir;
@@ -6,6 +7,7 @@ use structopt::StructOpt;
 
 use crate::print::print_doc;
 use std::path::PathBuf;
+use bat::{PrettyPrinter, Input};
 
 /// A basic example
 #[derive(StructOpt, Debug)]
@@ -43,7 +45,19 @@ fn from_opt(opt: Opt) -> Result<()> {
         for argument in &opt.files {
             let file = std::fs::read_to_string(cwd.join(argument))?;
             let d = serde_yaml::from_str(&file)?;
-            let _ = print_doc(d, opt.index)?;
+            let output = print_doc(d, opt.index)?;
+            PrettyPrinter::new()
+                .header(true)
+                // .grid(true)
+                // .line_numbers(true)
+                .inputs(vec![
+                    Input::from_bytes(output.body.as_bytes())
+                        .name("topics.md") // Dummy name provided to detect the syntax.
+                        .kind("File")
+                        .title(output.title),
+                ])
+                .print()
+                .unwrap();
         }
     }
     Ok(())

@@ -1,6 +1,9 @@
 use anyhow::Result;
-
+use bat::{Input, PrettyPrinter};
 use std::path::PathBuf;
+use std::fmt::Write;
+use crate::output::OutputDoc;
+use std::collections::HashMap;
 
 #[derive(Debug, serde::Deserialize)]
 struct Command {
@@ -57,42 +60,46 @@ struct Topic {
     steps: Vec<Step>,
 }
 
-pub fn print_doc(doc: Doc, index: Option<usize>) -> Result<()> {
-    doc.topics.iter().enumerate().for_each(|(i, item)| {
+pub fn print_doc(doc: Doc, index: Option<usize>) -> Result<OutputDoc> {
+    let mut output = String::new();
+    for (i, item) in doc.topics.iter().enumerate() {
         if let Some(index) = index {
             if i == index {
-                println!("-----");
-                println!("Topic ({}) `{}`", i, item.name);
-                println!("-----");
-
-                print_steps(&item.steps);
+                writeln!(output, "# Topic ({}) `{}`", i, item.name);
+                let _ = print_steps(&mut output, &item.steps);
             }
         } else {
-            println!("-----");
-            println!("Topic: ({}) `{}`", i, item.name);
-            println!("-----");
-            print_steps(&item.steps);
+            writeln!(output, "# Topic ({}) `{}`", i, item.name);
+            let _ = print_steps(&mut output, &item.steps);
         }
-    });
-    Ok(())
+    }
+    Ok(OutputDoc::new(String::from("Oops"), output))
 }
 
-fn print_steps(steps: &Vec<Step>) {
-    steps.iter().for_each(|step| match step {
-        Step::Command(cmd) => {
-            println!("[cmd] {}", cmd.title);
-            println!("  - [dir] {}", cmd.cwd);
-            println!("  - [run] \n\n\t{}\n", cmd.command);
+fn print_steps(str: &mut String, steps: &Vec<Step>) -> Result<()> {
+    for step in steps {
+        match step {
+            Step::Command(cmd) => {
+                writeln!(str, "Command: **{}**", cmd.title)?;
+                writeln!(str, "- directory: `{}`", cmd.cwd)?;
+                writeln!(str, "```shell")?;
+                writeln!(str, "{}", cmd.command)?;
+                writeln!(str, "```")?;
+            }
+            Step::FileExistsCheck(fe) => {
+                writeln!(str, "file check: {}", fe.path.display())?;
+            }
+            Step::DependencyCheck(dep) => {
+                writeln!(str, "DependencyCheck [{url}]({url})", url = dep.url)?;
+                writeln!(str, "```shell")?;
+                writeln!(str, "{}", dep.verify)?;
+                writeln!(str, "```")?;
+            }
+            Step::MultiSteps(multi) => print_steps(str, &multi.steps)?,
+            Step::Instruction(instr) => {
+                writeln!(str, "{}", instr.instruction)?;
+            }
         }
-        Step::FileExistsCheck(fe) => {
-            println!("file check: {}", fe.path.display())
-        }
-        Step::DependencyCheck(dep) => {
-            println!("[dep] {}", dep.verify)
-        }
-        Step::MultiSteps(multi) => print_steps(&multi.steps),
-        Step::Instruction(instr) => {
-            println!("{}", instr.instruction)
-        }
-    });
+    }
+    Ok(())
 }
