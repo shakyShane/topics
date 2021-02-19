@@ -114,7 +114,7 @@ fn print_steps(str: &mut String, steps: &Vec<Step>) -> Result<()> {
             Step::HostEntriesCheck(he) => {
                 writeln!(str, "HostEntriesCheck: {} domains", he.hosts.len())?;
                 for entry in &he.hosts {
-                    writeln!(str, "- {}", entry.domain)?;
+                    writeln!(str, "- `127.0.0.1  {}`", entry.domain)?;
                 }
                 writeln!(str)?;
             }
