@@ -3,6 +3,9 @@ vars:
   - &client_dir          "containers/www/client"
   - &client_env          ".env"
   - &client_env_template ".env.template"
+  - &hosts
+    - domain: 'example.com'
+    - domain: 'shane.example.com'
 
 commands:
   - &run-next-js
@@ -57,11 +60,15 @@ steps:
     kind: DependencyCheck
     verify: docker -v
     url: https://docs.docker.com/docker-for-mac/install/
+  - &host-entries-check
+    kind: HostEntriesCheck
+    hosts: *hosts
 
 multi_steps:
   - &kubernetes-deps
     kind: MultiSteps
     steps:
+      - *host-entries-check
       - *docker-installed
       - *kubernetes-installed
       - *helm-installed

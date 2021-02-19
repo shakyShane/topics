@@ -1,9 +1,8 @@
 use anyhow::Result;
-use bat::{Input, PrettyPrinter};
-use std::path::PathBuf;
-use std::fmt::Write;
+
 use crate::output::OutputDoc;
-use std::collections::HashMap;
+use std::fmt::Write;
+use std::path::PathBuf;
 
 #[derive(Debug, serde::Deserialize)]
 struct Command {
@@ -47,11 +46,22 @@ enum Step {
     DependencyCheck(DependencyCheck),
     MultiSteps(Multi),
     Instruction(Instruction),
+    HostEntriesCheck(HostEntriesCheck),
 }
 
 #[derive(Debug, serde::Deserialize)]
 struct Instruction {
-    instruction: String
+    instruction: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct HostEntriesCheck {
+    hosts: Vec<HostEntry>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct HostEntry {
+    domain: String,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -100,6 +110,13 @@ fn print_steps(str: &mut String, steps: &Vec<Step>) -> Result<()> {
             Step::MultiSteps(multi) => print_steps(str, &multi.steps)?,
             Step::Instruction(instr) => {
                 writeln!(str, "{}", instr.instruction)?;
+            }
+            Step::HostEntriesCheck(he) => {
+                writeln!(str, "HostEntriesCheck: {} domains", he.hosts.len())?;
+                for entry in &he.hosts {
+                    writeln!(str, "- {}", entry.domain)?;
+                }
+                writeln!(str)?;
             }
         }
     }
