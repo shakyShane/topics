@@ -1,62 +1,74 @@
+mod command;
+mod context;
+mod cwd;
+mod dependency;
+mod doc;
+mod file_exists;
+mod host;
+mod instruction;
+mod multi_step;
+mod opt;
 mod output;
 mod print;
+mod step;
+mod topic;
 
+use crate::context::Context;
+
+use crate::opt::Opt;
+use crate::print::Print;
 use anyhow::Result;
-use std::env::current_dir;
-use structopt::StructOpt;
-
-use crate::print::print_doc;
-use bat::{Input, PrettyPrinter};
-use std::path::PathBuf;
-
-/// A basic example
-#[derive(StructOpt, Debug)]
-#[structopt(name = "basic")]
-struct Opt {
-    #[structopt(short, long)]
-    cwd: Option<PathBuf>,
-
-    #[structopt(short, long)]
-    index: Option<usize>,
-
-    /// Files to process
-    #[structopt(name = "FILE", parse(from_os_str))]
-    files: Vec<PathBuf>,
-}
 
 fn main() -> Result<()> {
     // std::env::set_var("RUST_LOG", "topics=trace");
     env_logger::init();
-    let mut opts: Opt = Opt::from_args();
+    let opts = Opt::from_cli_args();
     if opts.files.is_empty() {
         eprintln!("no files provided");
         std::process::exit(1);
     }
-    if opts.cwd.is_none() {
-        opts.cwd = Some(current_dir().expect("can see current"))
-    }
     log::debug!("{:#?}", opts);
-    let _ = from_opt(opts)?;
-    Ok(())
+    let ctx = context::Context::from_opts(&opts);
+    std::process::exit(match from_opt(&ctx) {
+        Ok(_) => 0,
+        Err(_) => 1,
+    });
 }
 
-fn from_opt(opt: Opt) -> Result<()> {
-    if let Some(cwd) = &opt.cwd {
-        for argument in &opt.files {
-            let file = std::fs::read_to_string(cwd.join(argument))?;
-            let d = serde_yaml::from_str(&file)?;
-            let output = print_doc(d, opt.index)?;
-            PrettyPrinter::new()
-                .header(true)
-                // .grid(true)
-                // .line_numbers(true)
-                .inputs(vec![Input::from_bytes(output.body.as_bytes())
-                    .name("topics.md") // Dummy name provided to detect the syntax.
-                    .kind("File")
-                    .title(output.title)])
-                .print()
-                .unwrap();
+fn from_opt(ctx: &Context) -> Result<()> {
+    let (good, bad) = ctx.read_docs_split();
+    if !bad.is_empty() {
+        eprintln!("Could not read all documents, please see the info below");
+        for item in bad {
+            if let Err(e) = item {
+                eprintln!("{}", e);
+            }
         }
+        return Err(anyhow::anyhow!("failed, see above"));
     }
-    Ok(())
+    ctx.print_all(&good, &ctx)
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum MainError {
+    #[error("print kind not recognised")]
+    InvalidFiles { errors: Vec<anyhow::Error> },
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_main() {
+        let args = vec![
+            "topics",
+            "fixtures/topics-01.yaml",
+            "fixtures/topics-03.yaml",
+        ];
+        let ctx = Context::from_vec(&args);
+        let (good, bad) = ctx.read_docs_split();
+        assert_eq!(good.len(), 1);
+        assert_eq!(bad.len(), 1);
+    }
 }

@@ -10,6 +10,7 @@ edition = "2018"
 serde = { version = "1.0.123", features = ["derive"] }
 serde_yaml = "0.8.17"
 anyhow = "1.0.38"
+thiserror = "1.0.24"
 structopt = "0.3.21"
 env_logger = "0.8.3"
 log = "0.4.14"
