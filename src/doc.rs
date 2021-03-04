@@ -1,15 +1,20 @@
+use crate::command::Command;
 use crate::context::Context;
-use crate::step::Step;
+use crate::dependency::DependencyCheck;
+use crate::instruction::Instruction;
+use crate::item::Item;
 use crate::topic::Topic;
+use serde::Deserialize;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Default, serde::Deserialize)]
 pub struct Doc {
     pub source: Option<DocSource>,
-    pub topics: Vec<Topic>,
-    pub commands: Option<Vec<Step>>,
-    pub steps: Option<Vec<Step>>,
-    pub multi_steps: Option<Vec<Step>>,
+    pub topics: HashMap<String, Topic>,
+    pub instructions: HashMap<String, Instruction>,
+    pub dep_checks: HashMap<String, DependencyCheck>,
+    pub commands: HashMap<String, Command>,
 }
 
 impl Doc {
@@ -25,8 +30,27 @@ impl Doc {
             abs: attempt,
             original: e,
         })?;
-        let mut doc: Doc = serde_yaml::from_str(&file)?;
+        let mut doc = Doc::default();
         doc.source = Some(source);
+        for document in serde_yaml::Deserializer::from_str(&file) {
+            let value = Item::deserialize(document)?;
+            match value {
+                Item::Command(cmd) => {
+                    doc.commands.insert(cmd.name.clone(), cmd.clone());
+                }
+                Item::FileExistsCheck(_) => {}
+                Item::DependencyCheck(dc) => {
+                    doc.dep_checks.insert(dc.name.clone(), dc.clone());
+                }
+                Item::Instruction(inst) => {
+                    doc.instructions.insert(inst.name.clone(), inst.clone());
+                }
+                Item::HostEntriesCheck(_) => {}
+                Item::Topic(t) => {
+                    doc.topics.insert(t.name.clone(), t.clone());
+                }
+            };
+        }
         Ok(doc)
     }
 }
@@ -50,4 +74,21 @@ enum DocError {
         abs: PathBuf,
         original: std::io::Error,
     },
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::doc::Doc;
+
+    use std::env::current_dir;
+
+    #[test]
+    fn test_deserialise() -> anyhow::Result<()> {
+        let _str = std::fs::read_to_string(current_dir()?.join("fixtures2/topics.yaml"))?;
+        let d = Doc::default();
+        println!("{:#?}", d);
+        // dbg!(t);
+        Ok(())
+    }
 }

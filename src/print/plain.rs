@@ -1,5 +1,6 @@
 use crate::context::Context;
 use crate::doc::Doc;
+use crate::item::ItemWrap;
 use crate::print::Print;
 
 #[derive(Debug)]
@@ -18,8 +19,30 @@ impl Print for PlainPrinter {
         } else {
             println!("\n{} Topics", topic_len);
         }
-        for (index, topic) in d.topics.iter().enumerate() {
-            println!("- {}) {}", index, topic.name);
+        for (index, (name, topic)) in d.topics.iter().enumerate() {
+            println!("- {}) {}", index, name);
+            println!("  - Dependencies:");
+            for dep in &topic.deps {
+                match dep {
+                    ItemWrap::Named(name) => {
+                        println!("     - {}", name);
+                    }
+                    ItemWrap::Item(item) => {
+                        println!("     - {}", item.name());
+                    }
+                }
+            }
+            println!("  - Steps:");
+            for step in &topic.steps {
+                match step {
+                    ItemWrap::Named(name) => {
+                        println!("     - {}", name);
+                    }
+                    ItemWrap::Item(item) => {
+                        println!("     - {}", item.name());
+                    }
+                }
+            }
         }
         Ok(())
     }

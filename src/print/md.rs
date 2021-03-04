@@ -1,8 +1,8 @@
 use crate::context::Context;
 use crate::doc::Doc;
+use crate::item::Item;
 use crate::output::OutputDoc;
 use crate::print::Print;
-use crate::step::Step;
 use anyhow::Result;
 use bat::{Input, PrettyPrinter};
 use std::fmt::Write;
@@ -30,53 +30,53 @@ impl Print for MdPrinter {
 
 impl MdPrinter {
     pub fn print_md_doc(doc: &Doc, index: Option<usize>) -> Result<OutputDoc> {
-        let mut output = String::new();
-        for (i, item) in doc.topics.iter().enumerate() {
+        let output = String::new();
+        for (i, _item) in doc.topics.iter().enumerate() {
             if let Some(index) = index {
                 if i == index {
-                    let _ = writeln!(output, "# Topic ({}) `{}`", i, item.name);
-                    let _ = MdPrinter::print_steps(&mut output, &item.steps);
+                    // let _ = writeln!(output, "# Topic ({}) `{}`", i, item.name);
+                    // let _ = MdPrinter::print_steps(&mut output, &item.steps);
                 }
             } else {
-                let _ = writeln!(output, "# Topic ({}) `{}`", i, item.name);
-                let _ = MdPrinter::print_steps(&mut output, &item.steps);
+                // let _ = writeln!(output, "# Topic ({}) `{}`", i, item.name);
+                // let _ = MdPrinter::print_steps(&mut output, &item.steps);
             }
         }
         Ok(OutputDoc::new(String::from("Oops"), output))
     }
 
-    fn print_steps(str: &mut String, steps: &Vec<Step>) -> Result<()> {
+    fn print_steps(str: &mut String, steps: &Vec<Item>) -> Result<()> {
         for step in steps {
             match step {
-                Step::Command(cmd) => {
-                    let _ = writeln!(str, "Command: **{}**", cmd.title)?;
+                Item::Command(cmd) => {
+                    let _ = writeln!(str, "Command: **{}**", cmd.name)?;
                     let _ = writeln!(str, "- directory: `{}`", cmd.cwd)?;
                     let _ = writeln!(str, "```shell")?;
                     let _ = writeln!(str, "{}", cmd.command)?;
                     let _ = writeln!(str, "```\n")?;
                 }
-                Step::FileExistsCheck(fe) => {
+                Item::FileExistsCheck(fe) => {
                     let _ = writeln!(str, "FileExistsCheck")?;
                     let _ = writeln!(str, "- directory: `{}`", fe.cwd.display())?;
                     let _ = writeln!(str, "- file: `{}`\n", fe.path.display())?;
                 }
-                Step::DependencyCheck(dep) => {
+                Item::DependencyCheck(dep) => {
                     let _ = writeln!(str, "DependencyCheck [{url}]({url})", url = dep.url)?;
                     let _ = writeln!(str, "```shell")?;
                     let _ = writeln!(str, "{}", dep.verify)?;
                     let _ = writeln!(str, "```\n")?;
                 }
-                Step::MultiSteps(multi) => MdPrinter::print_steps(str, &multi.steps)?,
-                Step::Instruction(instr) => {
+                Item::Instruction(instr) => {
                     let _ = writeln!(str, "{}", instr.instruction)?;
                 }
-                Step::HostEntriesCheck(he) => {
+                Item::HostEntriesCheck(he) => {
                     let _ = writeln!(str, "HostEntriesCheck: {} domains", he.hosts.len())?;
                     for entry in &he.hosts {
                         let _ = writeln!(str, "- `127.0.0.1  {}`", entry.domain)?;
                     }
                     let _ = writeln!(str)?;
                 }
+                Item::Topic(_) => {}
             }
         }
         Ok(())

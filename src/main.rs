@@ -6,11 +6,10 @@ mod doc;
 mod file_exists;
 mod host;
 mod instruction;
-mod multi_step;
+mod item;
 mod opt;
 mod output;
 mod print;
-mod step;
 mod topic;
 
 use crate::context::Context;
@@ -41,7 +40,7 @@ fn from_opt(ctx: &Context) -> Result<()> {
         eprintln!("Could not read all documents, please see the info below");
         for item in bad {
             if let Err(e) = item {
-                eprintln!("{}", e);
+                eprintln!("{:#?}", e);
             }
         }
         return Err(anyhow::anyhow!("failed, see above"));
@@ -63,8 +62,8 @@ mod test {
     fn test_main() {
         let args = vec![
             "topics",
-            "fixtures/topics-01.yaml",
-            "fixtures/topics-03.yaml",
+            "fixtures2/topics.yaml",
+            "fixtures2/topics-03.yaml",
         ];
         let ctx = Context::from_vec(&args);
         let (good, bad) = ctx.read_docs_split();

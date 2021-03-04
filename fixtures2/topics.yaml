@@ -1,0 +1,39 @@
+kind: Topic
+name: Run unit tests
+deps:
+  - global-node
+steps:
+  - kind: Instruction
+    name: check-hithub-checkin
+    instruction: |
+      Don't forget to check in the changes
+
+---
+
+kind: DependencyCheck
+name: global-node
+verify: node -v
+url: https://www.nodejs.org
+
+---
+
+kind: DependencyCheck
+name: global-yarn
+verify: yarn -v
+url: https://yarn.sh/legacy
+
+---
+
+kind: Topic
+name: Run screen shot tests
+deps:
+  - global-node
+  - global-yarn
+steps:
+  - github-checkin
+
+---
+
+kind: Instruction
+name: github-checkin
+instruction: Don't forget to check in
