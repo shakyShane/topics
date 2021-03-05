@@ -40,7 +40,7 @@ fn from_opt(ctx: &Context) -> Result<()> {
         eprintln!("Could not read all documents, please see the info below");
         for item in bad {
             if let Err(e) = item {
-                eprintln!("{:#?}", e);
+                eprintln!("{}", e);
             }
         }
         return Err(anyhow::anyhow!("failed, see above"));
