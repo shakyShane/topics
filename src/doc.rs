@@ -37,22 +37,21 @@ impl Doc {
         doc.sources = doc_srcs;
         for src in &doc.sources {
             let item: Item = serde_yaml::from_str(&src.content).map_err(|e| {
+                let mut err = LocationError {
+                    location: Some(Location::Region {
+                        line_start: src.line_start + 1,
+                        line_end: src.line_end,
+                    }),
+                    input_file: doc.input_file.clone(),
+                    description: e.to_string(),
+                };
                 if let Some(location) = e.location() {
-                    DocError::SerdeYamlErr(LocationError {
-                        location: Some(Location {
-                            line: location.line() + src.line_start,
-                            column: location.column(),
-                        }),
-                        input_file: doc.input_file.clone(),
-                        description: e.to_string(),
-                    })
-                } else {
-                    DocError::SerdeYamlErr(LocationError {
-                        location: None,
-                        input_file: doc.input_file.clone(),
-                        description: e.to_string(),
-                    })
+                    err.location = Some(Location::LineAndCol {
+                        line: location.line(),
+                        column: location.column(),
+                    });
                 }
+                DocError::SerdeYamlErr(err)
             })?;
             match item {
                 Item::Command(cmd) => {
@@ -92,19 +91,33 @@ struct LocationError {
 }
 
 #[derive(Debug)]
-struct Location {
-    line: usize,
-    column: usize,
+enum Location {
+    LineAndCol { line: usize, column: usize },
+    Region { line_start: usize, line_end: usize },
+    Unknown,
 }
 
 impl Display for LocationError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "");
-        writeln!(f, "    msg: `{}`", self.description);
-        writeln!(f, "   file: `{}`", self.input_file.display());
         if let Some(location) = &self.location {
-            writeln!(f, "   line: `{}`", location.line);
-            writeln!(f, " column: `{}`", location.column);
+            match location {
+                Location::LineAndCol { line, column } => {
+                    writeln!(f, "    msg: {}", self.description);
+                    writeln!(f, "   file: {}", self.input_file.display());
+                    writeln!(f, "   line: {}", line);
+                    writeln!(f, " column: {}", column);
+                }
+                Location::Region {
+                    line_start,
+                    line_end,
+                } => {
+                    writeln!(f, "           msg: {}", self.description);
+                    writeln!(f, "          file: {}", self.input_file.display());
+                    writeln!(f, " between lines: {} & {}", line_start, line_end);
+                }
+                Location::Unknown => {}
+            }
         }
         Ok(())
     }

@@ -7,8 +7,8 @@ Err(
     SerdeYamlErr(
         LocationError {
             location: Some(
-                Location {
-                    line: 22,
+                LineAndCol {
+                    line: 7,
                     column: 1,
                 },
             ),
