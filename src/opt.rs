@@ -5,7 +5,7 @@ use structopt::StructOpt;
 use crate::cwd::Cwd;
 
 /// A basic example
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Debug, Default, Clone)]
 #[structopt(name = "basic")]
 pub struct Opt {
     #[structopt(short, long, default_value)]

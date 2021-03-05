@@ -3,6 +3,7 @@ mod context;
 mod cwd;
 mod dependency;
 mod doc;
+mod doc_src;
 mod file_exists;
 mod host;
 mod instruction;

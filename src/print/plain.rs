@@ -9,16 +9,12 @@ pub struct PlainPrinter;
 impl Print for PlainPrinter {
     fn print(&self, d: &Doc, _ctx: &Context) -> anyhow::Result<()> {
         let topic_len = d.topics.len();
-        if let Some(src) = &d.source {
-            println!(
-                "\n{} Topic{} from `{}`",
-                topic_len,
-                if topic_len == 1 { "" } else { "s" },
-                src.original.display()
-            );
-        } else {
-            println!("\n{} Topics", topic_len);
-        }
+        println!(
+            "\n{} Topic{} from `{}`",
+            topic_len,
+            if topic_len == 1 { "" } else { "s" },
+            d.input_file.display()
+        );
         for (index, (name, topic)) in d.topics.iter().enumerate() {
             println!("- {}) {}", index, name);
             println!("  - Dependencies:");

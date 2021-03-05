@@ -1,0 +1,12 @@
+---
+source: src/doc_src/doc_src.rs
+expression: srcs
+
+---
+[
+    DocSource {
+        line_start: 3,
+        line_end: 10,
+        content: "kind: Topic\nname: Run screen shot tests\ndeps:\n  - global-node\n  - global-yarn\nsteps:\n  - github-checkin",
+    },
+]

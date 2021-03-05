@@ -3,7 +3,7 @@ use crate::opt::Opt;
 use crate::print::Print;
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Context {
     pub opts: Opt,
 }

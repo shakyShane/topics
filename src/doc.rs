@@ -1,16 +1,19 @@
 use crate::command::Command;
 use crate::context::Context;
 use crate::dependency::DependencyCheck;
+use crate::doc_src::DocSource;
 use crate::instruction::Instruction;
 use crate::item::Item;
 use crate::topic::Topic;
-use serde::Deserialize;
+
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
-#[derive(Debug, Default, serde::Deserialize)]
+#[derive(Debug, Default)]
 pub struct Doc {
-    pub source: Option<DocSource>,
+    pub input_file: PathBuf,
+    pub sources: Vec<DocSource>,
     pub topics: HashMap<String, Topic>,
     pub instructions: HashMap<String, Instruction>,
     pub dep_checks: HashMap<String, DependencyCheck>,
@@ -19,29 +22,20 @@ pub struct Doc {
 
 impl Doc {
     pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> anyhow::Result<Self> {
-        let source = DocSource {
-            original: pb.clone(),
-            absolute: ctx.join_path(pb),
-            cwd: ctx.cwd(),
-        };
-        let attempt = ctx.join_path(pb);
-        let file_str = std::fs::read_to_string(&attempt).map_err(|e| DocError::FileRead {
-            pb: pb.clone(),
-            abs: attempt,
-            original: e,
-        })?;
-        Self::from_str_doc(&file_str, &ctx, Some(source))
+        let doc_src = DocSource::from_path_buf(&pb, ctx)?;
+        Self::from_doc_src(&pb, doc_src, &ctx)
     }
-    pub fn from_str_doc(str: &str, _ctx: &Context, src: Option<DocSource>) -> anyhow::Result<Self> {
+    pub fn from_doc_src(
+        pb: &PathBuf,
+        doc_srcs: Vec<DocSource>,
+        _ctx: &Context,
+    ) -> anyhow::Result<Self> {
         let mut doc = Doc::default();
-        doc.source = src;
-        for document in serde_yaml::Deserializer::from_str(&str) {
-            let value = Item::deserialize(document);
-            if let Err(e) = value {
-                eprintln!("e={}", e);
-                return Err(e.into());
-            }
-            match value? {
+        doc.input_file = pb.clone();
+        doc.sources = doc_srcs;
+        for src in &doc.sources {
+            let item: Item = serde_yaml::from_str(&src.content)?;
+            match item {
                 Item::Command(cmd) => {
                     doc.commands.insert(cmd.name.clone(), cmd.clone());
                 }
@@ -62,52 +56,57 @@ impl Doc {
     }
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct DocSource {
-    pub original: PathBuf,
-    pub absolute: PathBuf,
-    pub cwd: PathBuf,
-}
+impl FromStr for Doc {
+    type Err = anyhow::Error;
 
-#[derive(Debug, thiserror::Error)]
-enum DocError {
-    #[error(
-        "FileRead error: could not read file `{}`\nFull path: {}",
-        pb.display(),
-        abs.display()
-    )]
-    FileRead {
-        pb: PathBuf,
-        abs: PathBuf,
-        original: std::io::Error,
-    },
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let doc_srcs = DocSource::parse(s)?;
+        Doc::from_doc_src(&PathBuf::new(), doc_srcs, &Default::default())
+    }
 }
 
 #[cfg(test)]
 mod test {
-
-    use crate::doc::Doc;
     use super::*;
-    use std::env::current_dir;
 
     #[test]
-    fn test_deserialise() -> anyhow::Result<()> {
-        let ctx = Context::from_vec(&[]);
-        let pb = current_dir()?.join("fixtures2/topics.yaml");
-        let input = r#"kind: Topic
+    fn test_single_doc() -> anyhow::Result<()> {
+        let input = r#"
+kind: Topic
 name: Run screen shot tests
 deps:
   - global-node
   - global-yarn
 steps:
-
+  - github-checkin
 "#;
-        let s = input.split("---");
-        let i = serde_yaml::from_str::<Item>(input);
-        if let Err(e) = i {
-            println!("{}", e);
-        }
-        // dbg!(t);
+        let doc = Doc::from_str(input)?;
+        assert_eq!(doc.sources.len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_multi_doc() -> anyhow::Result<()> {
+        let input = r#"
+---
+kind: Topic
+name: Run screen shot tests
+deps:
+  - global-node
+  - global-yarn
+steps:
+  - github-checkin
+---
+---
+---
+kind: Instruction
+instruction: help me!
+name: help-me-instruction
+---
+---
+"#;
+        let doc = Doc::from_str(input)?;
+        assert_eq!(doc.sources.len(), 2);
         Ok(())
     }
 }
