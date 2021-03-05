@@ -7,6 +7,8 @@ use crate::item::Item;
 use crate::topic::Topic;
 
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -34,7 +36,24 @@ impl Doc {
         doc.input_file = pb.clone();
         doc.sources = doc_srcs;
         for src in &doc.sources {
-            let item: Item = serde_yaml::from_str(&src.content)?;
+            let item: Item = serde_yaml::from_str(&src.content).map_err(|e| {
+                if let Some(location) = e.location() {
+                    DocError::SerdeYamlErr(LocationError {
+                        location: Some(Location {
+                            line: location.line() + src.line_start,
+                            column: location.column(),
+                        }),
+                        input_file: doc.input_file.clone(),
+                        description: e.to_string(),
+                    })
+                } else {
+                    DocError::SerdeYamlErr(LocationError {
+                        location: None,
+                        input_file: doc.input_file.clone(),
+                        description: e.to_string(),
+                    })
+                }
+            })?;
             match item {
                 Item::Command(cmd) => {
                     doc.commands.insert(cmd.name.clone(), cmd.clone());
@@ -53,6 +72,41 @@ impl Doc {
             };
         }
         Ok(doc)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+enum DocError {
+    #[error(
+        "An error occurred when trying to parse a YAML file\n{}",
+        .0
+    )]
+    SerdeYamlErr(LocationError),
+}
+
+#[derive(Debug)]
+struct LocationError {
+    location: Option<Location>,
+    input_file: PathBuf,
+    description: String,
+}
+
+#[derive(Debug)]
+struct Location {
+    line: usize,
+    column: usize,
+}
+
+impl Display for LocationError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "");
+        writeln!(f, "    msg: `{}`", self.description);
+        writeln!(f, "   file: `{}`", self.input_file.display());
+        if let Some(location) = &self.location {
+            writeln!(f, "   line: `{}`", location.line);
+            writeln!(f, " column: `{}`", location.column);
+        }
+        Ok(())
     }
 }
 
@@ -107,6 +161,52 @@ name: help-me-instruction
 "#;
         let doc = Doc::from_str(input)?;
         assert_eq!(doc.sources.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_errors_single() -> anyhow::Result<()> {
+        let pb = PathBuf::from("/input-yaml.yml");
+        let input = r#"
+kind: Topic
+name: Run screen shot tests
+deps
+"#;
+        let srcs = DocSource::parse(input)?;
+        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
+        insta::assert_debug_snapshot!(doc);
+        Ok(())
+    }
+
+    #[test]
+    fn test_errors_multi() -> anyhow::Result<()> {
+        let pb = PathBuf::from("/input-yaml.yml");
+        let input = r#"---
+
+kind: DependencyCheck
+name: global-node
+verify: node -v
+url: https://www.nodejs.org
+
+---
+
+kind: DependencyCheck
+name: global-yarn
+verify: yarn -v
+url: https://yarn.sh/legacy
+
+---
+
+kind: Topic
+name: Run screen shot tests
+deps:
+  - global-node
+  - global-yarn
+steps
+"#;
+        let srcs = DocSource::parse(input)?;
+        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
+        insta::assert_debug_snapshot!(doc);
         Ok(())
     }
 }

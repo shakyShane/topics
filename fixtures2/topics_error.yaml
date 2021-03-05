@@ -1,0 +1,5 @@
+kind: Topic
+name: Run unit tests
+deps:
+  - global-node
+steps

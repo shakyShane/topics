@@ -29,7 +29,7 @@ impl DocSource {
         let mut docs: Vec<(usize, usize)> = vec![];
         while let Some((line, content)) = peek.next() {
             if content.starts_with("---") {
-                let finish = line - 1;
+                let finish = if line > 0 { line - 1 } else { line };
                 if start < finish {
                     docs.push((start, line));
                     end = line;
@@ -80,7 +80,7 @@ enum DocSrcError {
 mod test {
 
     use crate::context::Context;
-    use crate::doc::Doc;
+
     use crate::doc_src::DocSource;
     use std::env::current_dir;
 

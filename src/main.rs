@@ -38,7 +38,6 @@ fn main() -> Result<()> {
 fn from_opt(ctx: &Context) -> Result<()> {
     let (good, bad) = ctx.read_docs_split();
     if !bad.is_empty() {
-        eprintln!("Could not read all documents, please see the info below");
         for item in bad {
             if let Err(e) = item {
                 eprintln!("{}", e);

@@ -1,0 +1,22 @@
+---
+
+kind: DependencyCheck
+name: global-node
+verify: node -v
+url: https://www.nodejs.org
+
+---
+
+kind: DependencyCheck
+name: global-yarn
+verify: yarn -v
+url: https://yarn.sh/legacy
+
+---
+
+kind: Topic
+name: Run screen shot tests
+deps:
+  - global-node
+  - global-yarn
+steps
