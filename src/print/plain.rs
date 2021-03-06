@@ -4,6 +4,7 @@ use crate::item::ItemWrap;
 use crate::print::Print;
 use bat::line_range::{LineRange, LineRanges};
 use bat::{Input, PrettyPrinter};
+use std::error::Error;
 
 #[derive(Debug)]
 pub struct PlainPrinter;
@@ -57,36 +58,54 @@ impl Print for PlainPrinter {
     }
 
     fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
-        for doc in docs {
-            if let Ok(doc) = doc {
-                for error in &doc.errors {
-                    print_error(&doc, &error);
+        for doc_result in docs {
+            match doc_result {
+                Ok(doc) => {
+                    for error in &doc.errors {
+                        print_error(&doc, &error);
+                    }
                 }
-            } else {
-                eprintln!("could not print a document as it had errored")
+                Err(e) => {
+                    print_doc_error(&e);
+                }
             }
         }
         Ok(())
     }
 }
 
+fn print_doc_error(doc_err: &DocError) {
+    match doc_err {
+        DocError::FileRead { original, pb, original } => {
+            print_error_heading("File error", &original.to_string());
+
+        }
+        _ => unimplemented!("use print error for this")
+    }
+}
+
+fn print_error_heading(kind: &str, message: &str) {
+    use ansi_term::Colour::Red;
+    use ansi_term::{ANSIString, ANSIStrings};
+    eprint!("\n");
+    let some_value = format!("{}", kind);
+    let strings: &[ANSIString<'static>] =
+        &[Red.paint("["), Red.bold().paint(some_value), Red.paint("]")];
+    eprintln!(
+        "{} {}",
+        ANSIStrings(strings),
+        Red.bold().paint(message)
+    );
+}
+
 fn print_error(doc: &Doc, doc_err: &DocError) {
     match doc_err {
-        DocError::FileRead { .. } => {
-            eprintln!("{}", doc_err);
+        DocError::FileRead { pb, abs, original } => {
+            // eprintln!("{}", doc_err);
+            // println!("{}", original.to_string());
         }
         DocError::SerdeYamlErr(loc_err) => {
-            use ansi_term::Colour::Red;
-            use ansi_term::{ANSIString, ANSIStrings};
-            eprint!("\n");
-            let some_value = format!("{}", "YAML error");
-            let strings: &[ANSIString<'static>] =
-                &[Red.paint("["), Red.bold().paint(some_value), Red.paint("]")];
-            eprintln!(
-                "{} {}",
-                ANSIStrings(strings),
-                Red.bold().paint(&loc_err.description)
-            );
+            print_error_heading("YAML error", &loc_err.description);
             if let Some(error_loc) = &loc_err.location {
                 match error_loc {
                     Location::LineAndCol {

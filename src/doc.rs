@@ -90,7 +90,7 @@ impl Doc {
 #[derive(Debug, thiserror::Error)]
 pub enum DocError {
     #[error(
-    "FileRead error: could not read file `{}`\nFull path: {}",
+    "could not read file `{}`\nFull path: {}",
     pb.display(),
     abs.display()
     )]
