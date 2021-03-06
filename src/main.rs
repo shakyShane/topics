@@ -1,3 +1,4 @@
+mod cli;
 mod command;
 mod context;
 mod cwd;
@@ -15,18 +16,13 @@ mod topic;
 
 use crate::context::Context;
 
+use crate::cli::{SubCommand, SubCommandItems, SubCommandResult};
 use crate::opt::Opt;
-use crate::print::Print;
-use anyhow::Result;
 
-fn main() -> Result<()> {
+fn main() -> anyhow::Result<()> {
     // std::env::set_var("RUST_LOG", "topics=trace");
     env_logger::init();
     let opts = Opt::from_cli_args();
-    if opts.files.is_empty() {
-        eprintln!("no files provided");
-        std::process::exit(1);
-    }
     log::debug!("{:#?}", opts);
     let ctx = context::Context::from_opts(&opts);
     std::process::exit(match from_opt(&ctx) {
@@ -35,53 +31,20 @@ fn main() -> Result<()> {
     });
 }
 
-fn from_opt(ctx: &Context) -> Result<()> {
-    let (good, bad) = ctx.read_docs_split();
-    if !bad.is_empty() {
-        ctx.print_errors(&bad, &ctx);
-        return Err(anyhow::anyhow!("failed, see above"));
+fn from_opt(ctx: &Context) -> SubCommandResult<()> {
+    match ctx.opts.cmd.as_ref() {
+        Some(cmd) => match cmd {
+            SubCommandItems::Print(print) => print.exec(&ctx),
+        },
+        None => {
+            println!("no command given");
+            Ok(())
+        }
     }
-    let titles = good
-        .iter()
-        .filter_map(|item| item.as_ref().ok().map(|doc| doc.topics.keys()))
-        .flatten()
-        .collect::<Vec<&String>>();
-
-    use dialoguer::MultiSelect;
-
-    ctx.print_welcome(&good, &ctx);
-    let selection = MultiSelect::new().items(&titles).interact()?;
-    println!(
-        "selected = {:?}",
-        selection
-            .iter()
-            .map(|idx| titles[*idx])
-            .collect::<Vec<&String>>()
-    );
-
-    Ok(())
 }
 
 #[derive(thiserror::Error, Debug)]
 pub enum MainError {
     #[error("print kind not recognised")]
     InvalidFiles { errors: Vec<anyhow::Error> },
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_main() {
-        let args = vec![
-            "topics",
-            "fixtures2/topics.yaml",
-            "fixtures2/topics-03.yaml",
-        ];
-        let ctx = Context::from_vec(&args);
-        let (good, bad) = ctx.read_docs_split();
-        assert_eq!(good.len(), 1);
-        assert_eq!(bad.len(), 1);
-    }
 }

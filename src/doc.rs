@@ -7,7 +7,6 @@ use crate::item::Item;
 use crate::topic::Topic;
 
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -131,7 +130,7 @@ pub enum Location {
         line_start: usize,
         line_end: usize,
     },
-    Unknown,
+    // Unknown,
 }
 
 impl Display for LocationError {
@@ -153,7 +152,6 @@ impl Display for LocationError {
                     let _ = writeln!(f, "          file: {}", self.input_file.display());
                     let _ = writeln!(f, " between lines: {} & {}", line_start, line_end);
                 }
-                Location::Unknown => {}
             }
         }
         Ok(())

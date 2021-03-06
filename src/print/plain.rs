@@ -4,7 +4,6 @@ use crate::item::ItemWrap;
 use crate::print::Print;
 use bat::line_range::{LineRange, LineRanges};
 use bat::{Input, PrettyPrinter};
-use std::error::Error;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
@@ -225,7 +224,6 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                             .print()
                             .unwrap();
                     }
-                    Location::Unknown => {}
                 }
             }
         }

@@ -1,7 +1,6 @@
-use crate::print::PrintKind;
-use std::path::PathBuf;
 use structopt::StructOpt;
 
+use crate::cli::SubCommandItems;
 use crate::cwd::Cwd;
 
 /// A basic example
@@ -11,15 +10,8 @@ pub struct Opt {
     #[structopt(short, long, default_value)]
     pub cwd: Cwd,
 
-    #[structopt(short, long, default_value)]
-    pub print_kind: PrintKind,
-
-    #[structopt(short, long)]
-    pub index: Option<usize>,
-
-    /// Files to process
-    #[structopt(name = "FILE", parse(from_os_str))]
-    pub files: Vec<PathBuf>,
+    #[structopt(subcommand)]
+    pub cmd: Option<SubCommandItems>,
 }
 
 impl Opt {
@@ -38,15 +30,5 @@ impl Opt {
         //     opts.cwd = Some(current_dir().expect("can see current"))
         // }
         // opts
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test_print_kind() {
-        let opt = Opt::from_vec(&["prog"]);
-        assert_eq!(opt.print_kind, PrintKind::Plain)
     }
 }
