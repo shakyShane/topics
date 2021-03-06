@@ -6,6 +6,7 @@ use bat::line_range::{LineRange, LineRanges};
 use bat::{Input, PrettyPrinter};
 use std::error::Error;
 use std::io::ErrorKind;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct PlainPrinter;
@@ -59,9 +60,39 @@ impl Print for PlainPrinter {
     }
 
     fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+        let summary: Vec<(usize, PathBuf)> =
+            docs.iter()
+                .fold(vec![], |mut acc, doc_result| match doc_result {
+                    Ok(doc) => {
+                        acc.push((doc.errors.len(), doc.input_file.clone()));
+                        acc
+                    }
+                    Err(e) => match e {
+                        DocError::PathRead { pb, .. } => {
+                            acc.push((1, pb.clone()));
+                            acc
+                        }
+                        DocError::SerdeYamlErr(_) => unreachable!("shouldn't get here"),
+                    },
+                });
+
+        print_error_heading("Problems detected", "Please review the following:");
+        eprintln!();
+        summary.iter().for_each(|(num, file)| {
+            use ansi_term::Colour::{Cyan, Red};
+            eprintln!(
+                "    {} in {}",
+                Red.bold()
+                    .paint(format!("{} error{}", num, if *num == 1 { "" } else { "s" })),
+                Cyan.paint(file.display().to_string())
+            )
+        });
+
         for doc_result in docs {
             match doc_result {
                 Ok(doc) => {
+                    // eprintln!("{} errors found in {}", doc.input_file.display());
+
                     for error in &doc.errors {
                         print_error(&doc, &error);
                     }
@@ -105,6 +136,19 @@ fn print_error_heading(kind: &str, message: &str) {
     let strings: &[ANSIString<'static>] =
         &[Red.paint("["), Red.bold().paint(some_value), Red.paint("]")];
     eprintln!("{} {}", ANSIStrings(strings), Red.bold().paint(message));
+}
+
+fn print_heading(kind: &str, message: &str) {
+    use ansi_term::Colour::Red;
+    use ansi_term::{ANSIString, ANSIStrings};
+    eprint!("\n");
+    let some_value = format!("{}", kind);
+    let strings: &[ANSIString<'static>] = &[
+        Green.paint("["),
+        Green.bold().paint(some_value),
+        Green.paint("]"),
+    ];
+    eprintln!("{} {}", ANSIStrings(strings), Green.bold().paint(message));
 }
 
 fn print_error(doc: &Doc, doc_err: &DocError) {
