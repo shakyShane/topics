@@ -15,7 +15,7 @@ use std::str::FromStr;
 #[derive(Debug, Default)]
 pub struct Doc {
     pub input_file: PathBuf,
-    pub sources: Vec<DocSource>,
+    pub source: DocSource,
     pub topics: HashMap<String, Topic>,
     pub instructions: HashMap<String, Instruction>,
     pub dep_checks: HashMap<String, DependencyCheck>,
@@ -27,15 +27,11 @@ impl Doc {
         let doc_src = DocSource::from_path_buf(&pb, ctx)?;
         Self::from_doc_src(&pb, doc_src, &ctx)
     }
-    pub fn from_doc_src(
-        pb: &PathBuf,
-        doc_srcs: Vec<DocSource>,
-        _ctx: &Context,
-    ) -> anyhow::Result<Self> {
+    pub fn from_doc_src(pb: &PathBuf, doc_srcs: DocSource, _ctx: &Context) -> anyhow::Result<Self> {
         let mut doc = Doc::default();
         doc.input_file = pb.clone();
-        doc.sources = doc_srcs;
-        for src in &doc.sources {
+        doc.source = doc_srcs;
+        for src in &doc.source.doc_src_items {
             let item: Item = serde_yaml::from_str(&src.content).map_err(|e| {
                 let mut err = LocationError {
                     location: Some(Location::Region {
@@ -119,6 +115,16 @@ impl Display for LocationError {
                 Location::Unknown => {}
             }
         }
+        // PrettyPrinter::new()
+        //     .header(true)
+        //     // .grid(true)
+        //     // .line_numbers(true)
+        //     .inputs(vec![Input::from_bytes(output.body.as_bytes())
+        //         .name("topics.yaml") // Dummy name provided to detect the syntax.
+        //         .kind("File")
+        //         .title(output.title)])
+        //     .print()
+        //     .unwrap();
         Ok(())
     }
 }
@@ -127,7 +133,7 @@ impl FromStr for Doc {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let doc_srcs = DocSource::parse(s)?;
+        let doc_srcs = DocSource::from_str(s)?;
         Doc::from_doc_src(&PathBuf::new(), doc_srcs, &Default::default())
     }
 }
@@ -148,7 +154,7 @@ steps:
   - github-checkin
 "#;
         let doc = Doc::from_str(input)?;
-        assert_eq!(doc.sources.len(), 1);
+        assert_eq!(doc.source.doc_src_items.len(), 1);
         Ok(())
     }
 
@@ -173,7 +179,7 @@ name: help-me-instruction
 ---
 "#;
         let doc = Doc::from_str(input)?;
-        assert_eq!(doc.sources.len(), 2);
+        assert_eq!(doc.source.doc_src_items.len(), 2);
         Ok(())
     }
 
@@ -185,7 +191,7 @@ kind: Topic
 name: Run screen shot tests
 deps
 "#;
-        let srcs = DocSource::parse(input)?;
+        let srcs = DocSource::from_str(input)?;
         let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
         insta::assert_debug_snapshot!(doc);
         Ok(())
@@ -217,7 +223,7 @@ deps:
   - global-yarn
 steps
 "#;
-        let srcs = DocSource::parse(input)?;
+        let srcs = DocSource::from_str(input)?;
         let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
         insta::assert_debug_snapshot!(doc);
         Ok(())

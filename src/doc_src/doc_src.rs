@@ -1,26 +1,38 @@
 use crate::context::Context;
 
 use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Debug, Default)]
 pub struct DocSource {
+    pub file_content: String,
+    pub doc_src_items: Vec<DocSourceItem>,
+}
+
+#[derive(Debug)]
+pub struct DocSourceItem {
     pub line_start: usize,
     pub line_end: usize,
     pub content: String,
 }
 
 impl DocSource {
-    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> anyhow::Result<Vec<Self>> {
+    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> anyhow::Result<Self> {
         let abs = ctx.join_path(pb);
         let file_str = std::fs::read_to_string(&abs).map_err(|e| DocSrcError::FileRead {
             pb: pb.clone(),
             abs: abs.clone(),
             original: e,
         })?;
-        Self::parse(&file_str)
+        let items = Self::parse(&file_str)?;
+        let new_self = Self {
+            file_content: file_str,
+            doc_src_items: items,
+        };
+        Ok(new_self)
     }
-    pub fn parse(str: &str) -> anyhow::Result<Vec<Self>> {
-        let mut output: Vec<Self> = vec![];
+    pub fn parse(str: &str) -> anyhow::Result<Vec<DocSourceItem>> {
+        let mut output: Vec<DocSourceItem> = vec![];
         let split = str.lines().collect::<Vec<&str>>();
         let mut peek = split.iter().enumerate().peekable();
         let mut start = 0;
@@ -52,13 +64,25 @@ impl DocSource {
 
         for (start, end) in docs {
             let content = split[start..end].join("\n");
-            output.push(Self {
+            output.push(DocSourceItem {
                 line_start: start,
                 line_end: end,
                 content,
             });
         }
         Ok(output)
+    }
+}
+
+impl FromStr for DocSource {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let items = Self::parse(&s)?;
+        Ok(Self {
+            file_content: s.to_string(),
+            doc_src_items: items,
+        })
     }
 }
 
