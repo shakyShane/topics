@@ -1,0 +1,15 @@
+kind: Topic
+name: Create a new Pull Request
+steps:
+  - kind: Instruction
+    name: create-a-new-branch
+    instruction: Create a new feature branch from Master
+  - kind: Instruction
+    name: finish-your-work
+    instruction: Complete your work locally
+  - kind: Instruction
+    name: run-type-checks
+    instruction: Run type checks
+  - kind: Instruction
+    name: run-eslint-prettier
+    instruction: Run eslint & prettier

@@ -2,6 +2,7 @@ use crate::context::Context;
 use crate::doc::{Doc, DocError, DocResult, Location};
 use crate::item::ItemWrap;
 use crate::print::Print;
+use crate::topic::Topic;
 use bat::line_range::{LineRange, LineRanges};
 use bat::{Input, PrettyPrinter};
 use std::io::ErrorKind;
@@ -11,45 +12,55 @@ use std::path::PathBuf;
 pub struct PlainPrinter;
 
 impl Print for PlainPrinter {
-    fn print(&self, d: &Doc, _ctx: &Context) -> anyhow::Result<()> {
-        let topic_len = d.topics.len();
+    fn print(&self, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
+        let topic_len = doc.topics.len();
         println!(
             "\n{} Topic{} from `{}`",
             topic_len,
             if topic_len == 1 { "" } else { "s" },
-            d.input_file.display()
+            doc.input_file.display()
         );
-        for (index, (name, topic)) in d.topics.iter().enumerate() {
-            println!("- {}) {}", index, name);
-            println!("  - Dependencies:");
-            for dep in &topic.deps {
-                match dep {
-                    ItemWrap::Named(name) => {
-                        println!("     - {}", name);
-                    }
-                    ItemWrap::Item(item) => {
-                        println!("     - {}", item.name());
-                    }
-                }
-            }
-            println!("  - Steps:");
-            for step in &topic.steps {
-                match step {
-                    ItemWrap::Named(name) => {
-                        println!("     - {}", name);
-                    }
-                    ItemWrap::Item(item) => {
-                        println!("     - {}", item.name());
-                    }
-                }
-            }
+        for (_index, (_name, topic)) in doc.topics.iter().enumerate() {
+            self.print_heading("Topic", &topic.name);
+            self.print_topic(&topic, &doc, &ctx);
         }
         Ok(())
     }
 
-    fn print_welcome(&self, _docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
-        print_heading("Topics", "What would you like to do today?");
+    fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()> {
+        plain_print_heading("Topics", "What would you like to do today?");
         println!();
+        Ok(())
+    }
+
+    fn print_heading(&self, kind: &str, message: &str) {
+        plain_print_heading(kind, message);
+    }
+
+    fn print_topic(&self, topic: &Topic, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()> {
+        println!();
+        println!("  - Dependencies:");
+        for dep in &topic.deps {
+            match dep {
+                ItemWrap::Named(name) => {
+                    println!("     - {}", name);
+                }
+                ItemWrap::Item(item) => {
+                    println!("     - {}", item.name());
+                }
+            }
+        }
+        println!("  - Steps:");
+        for step in &topic.steps {
+            match step {
+                ItemWrap::Named(name) => {
+                    println!("     - {}", name);
+                }
+                ItemWrap::Item(item) => {
+                    println!("     - {}", item.name());
+                }
+            }
+        }
         Ok(())
     }
 
@@ -148,7 +159,7 @@ fn print_error_heading(kind: &str, message: &str) {
     eprintln!("{} {}", ANSIStrings(strings), Red.bold().paint(message));
 }
 
-fn print_heading(kind: &str, message: &str) {
+fn plain_print_heading(kind: &str, message: &str) {
     use ansi_term::Colour::Green;
     use ansi_term::{ANSIString, ANSIStrings};
     eprint!("\n");
