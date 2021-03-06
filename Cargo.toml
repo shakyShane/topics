@@ -18,6 +18,7 @@ bat = { version = "0.17.1" }
 ansi_term = "0.12.1"
 regex = "1.4.3"
 lazy_static = "1.4.0"
+dialoguer = "0.7.1"
 
 [dev-dependencies]
 insta = "1.7.0"

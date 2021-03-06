@@ -47,6 +47,13 @@ impl Print for PlainPrinter {
         }
         Ok(())
     }
+
+    fn print_welcome(&self, _docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+        print_heading("Topics", "What would you like to do today?");
+        println!();
+        Ok(())
+    }
+
     fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
         println!("Printing {} doc(s) in Plain format", docs.len());
         for doc in docs {
@@ -108,7 +115,11 @@ impl Print for PlainPrinter {
 
 fn print_doc_error(doc_err: &DocError) {
     match doc_err {
-        DocError::PathRead { original, abs, pb } => {
+        DocError::PathRead {
+            original,
+            abs: _,
+            pb,
+        } => {
             print_error_heading("File error", &original.to_string());
             match original.kind() {
                 ErrorKind::NotFound => {
@@ -139,7 +150,7 @@ fn print_error_heading(kind: &str, message: &str) {
 }
 
 fn print_heading(kind: &str, message: &str) {
-    use ansi_term::Colour::Red;
+    use ansi_term::Colour::Green;
     use ansi_term::{ANSIString, ANSIStrings};
     eprint!("\n");
     let some_value = format!("{}", kind);
@@ -153,7 +164,11 @@ fn print_heading(kind: &str, message: &str) {
 
 fn print_error(doc: &Doc, doc_err: &DocError) {
     match doc_err {
-        DocError::PathRead { pb, abs, original } => {
+        DocError::PathRead {
+            pb: _,
+            abs: _,
+            original: _,
+        } => {
             // eprintln!("{}", doc_err);
             // println!("{}", original.to_string());
         }

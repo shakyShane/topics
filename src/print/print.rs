@@ -6,6 +6,7 @@ use std::str::FromStr;
 
 pub trait Print: Debug {
     fn print(&self, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()>;
+    fn print_welcome(&self, _docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()>;
     fn print_all(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
         println!("[default impl] printing {} doc(s)", docs.len());
         Ok(())
@@ -57,6 +58,17 @@ impl Print for PrintKind {
             }
         }
     }
+
+    fn print_welcome(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+        match self {
+            PrintKind::Markdown => (md::MdPrinter).print_welcome(docs, ctx),
+            PrintKind::Plain => (plain::PlainPrinter).print_welcome(docs, ctx),
+            PrintKind::Json => {
+                todo!("implement json")
+            }
+        }
+    }
+
     fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_all(docs, ctx),

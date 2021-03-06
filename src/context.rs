@@ -42,6 +42,11 @@ impl Print for Context {
     fn print(&self, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
         self.opts.print_kind.print(&doc, &ctx)
     }
+
+    fn print_welcome(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+        self.opts.print_kind.print_welcome(&docs, &ctx)
+    }
+
     fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
         self.opts.print_kind.print_all(&docs, &ctx)
     }

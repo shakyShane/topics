@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::doc::Doc;
+use crate::doc::{Doc, DocResult};
 use crate::item::Item;
 use crate::output::OutputDoc;
 use crate::print::Print;
@@ -24,6 +24,11 @@ impl Print for MdPrinter {
                 .title(output.title)])
             .print()
             .unwrap();
+        Ok(())
+    }
+
+    fn print_welcome(&self, _docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+        println!("later..");
         Ok(())
     }
 }

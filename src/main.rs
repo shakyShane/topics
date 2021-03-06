@@ -41,7 +41,25 @@ fn from_opt(ctx: &Context) -> Result<()> {
         ctx.print_errors(&bad, &ctx);
         return Err(anyhow::anyhow!("failed, see above"));
     }
-    ctx.print_all(&good, &ctx)
+    let titles = good
+        .iter()
+        .filter_map(|item| item.as_ref().ok().map(|doc| doc.topics.keys()))
+        .flatten()
+        .collect::<Vec<&String>>();
+
+    use dialoguer::MultiSelect;
+
+    ctx.print_welcome(&good, &ctx);
+    let selection = MultiSelect::new().items(&titles).interact()?;
+    println!(
+        "selected = {:?}",
+        selection
+            .iter()
+            .map(|idx| titles[*idx])
+            .collect::<Vec<&String>>()
+    );
+
+    Ok(())
 }
 
 #[derive(thiserror::Error, Debug)]
