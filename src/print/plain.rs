@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::doc::Doc;
+use crate::doc::{Doc, DocResult};
 use crate::item::ItemWrap;
 use crate::print::Print;
 
@@ -42,7 +42,7 @@ impl Print for PlainPrinter {
         }
         Ok(())
     }
-    fn print_all(&self, docs: &Vec<anyhow::Result<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
         println!("Printing {} doc(s) in Plain format", docs.len());
         for doc in docs {
             if let Ok(doc) = doc {

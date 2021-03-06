@@ -11,7 +11,6 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
-use bat::{PrettyPrinter, Input};
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -23,12 +22,14 @@ pub struct Doc {
     pub commands: HashMap<String, Command>,
 }
 
+pub type DocResult<T, E = DocError> = core::result::Result<T, E>;
+
 impl Doc {
-    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> anyhow::Result<Self> {
+    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
         let doc_src = DocSource::from_path_buf(&pb, ctx)?;
         Self::from_doc_src(&pb, doc_src, &ctx)
     }
-    pub fn from_doc_src(pb: &PathBuf, doc_srcs: DocSource, _ctx: &Context) -> anyhow::Result<Self> {
+    pub fn from_doc_src(pb: &PathBuf, doc_srcs: DocSource, _ctx: &Context) -> DocResult<Self> {
         let mut doc = Doc::default();
         doc.input_file = pb.clone();
         doc.source = doc_srcs;
@@ -45,7 +46,7 @@ impl Doc {
                 };
                 if let Some(location) = e.location() {
                     err.location = Some(Location::LineAndCol {
-                        line: location.line(),
+                        line: location.line() + src.line_start,
                         column: location.column(),
                     });
                 }
@@ -73,7 +74,17 @@ impl Doc {
 }
 
 #[derive(Debug, thiserror::Error)]
-enum DocError {
+pub enum DocError {
+    #[error(
+    "FileRead error: could not read file `{}`\nFull path: {}",
+    pb.display(),
+    abs.display()
+    )]
+    FileRead {
+        pb: PathBuf,
+        abs: PathBuf,
+        original: std::io::Error,
+    },
     #[error(
         "An error occurred when trying to parse a YAML file\n{}",
         .0
@@ -118,21 +129,12 @@ impl Display for LocationError {
                 Location::Unknown => {}
             }
         }
-        // let to_write = PrettyPrinter::new()
-        //     .header(true)
-        //     // .grid(true)
-        //     .line_numbers(true)
-        //     .inputs(vec![Input::from_bytes(self.input_file_src.as_bytes())
-        //         .name(&self.input_file) // Dummy name provided to detect the syntax.
-        //         .kind("File")
-        //         .title("oops")])?;
-
         Ok(())
     }
 }
 
 impl FromStr for Doc {
-    type Err = anyhow::Error;
+    type Err = DocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let doc_srcs = DocSource::from_str(s)?;

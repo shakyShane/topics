@@ -1,5 +1,6 @@
 use crate::context::Context;
 
+use crate::doc::{DocError, DocResult};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -17,9 +18,9 @@ pub struct DocSourceItem {
 }
 
 impl DocSource {
-    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> anyhow::Result<Self> {
+    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
         let abs = ctx.join_path(pb);
-        let file_str = std::fs::read_to_string(&abs).map_err(|e| DocSrcError::FileRead {
+        let file_str = std::fs::read_to_string(&abs).map_err(|e| DocError::FileRead {
             pb: pb.clone(),
             abs: abs.clone(),
             original: e,
@@ -31,7 +32,7 @@ impl DocSource {
         };
         Ok(new_self)
     }
-    pub fn parse(str: &str) -> anyhow::Result<Vec<DocSourceItem>> {
+    pub fn parse(str: &str) -> DocResult<Vec<DocSourceItem>> {
         let mut output: Vec<DocSourceItem> = vec![];
         let split = str.lines().collect::<Vec<&str>>();
         let mut peek = split.iter().enumerate().peekable();
@@ -75,7 +76,7 @@ impl DocSource {
 }
 
 impl FromStr for DocSource {
-    type Err = anyhow::Error;
+    type Err = DocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let items = Self::parse(&s)?;
@@ -84,20 +85,6 @@ impl FromStr for DocSource {
             doc_src_items: items,
         })
     }
-}
-
-#[derive(Debug, thiserror::Error)]
-enum DocSrcError {
-    #[error(
-    "FileRead error: could not read file `{}`\nFull path: {}",
-    pb.display(),
-    abs.display()
-    )]
-    FileRead {
-        pb: PathBuf,
-        abs: PathBuf,
-        original: std::io::Error,
-    },
 }
 
 #[cfg(test)]

@@ -1,12 +1,12 @@
 use crate::context::Context;
-use crate::doc::Doc;
+use crate::doc::{Doc, DocResult};
 use crate::print::{md, plain};
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
 pub trait Print: Debug {
     fn print(&self, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()>;
-    fn print_all(&self, docs: &Vec<anyhow::Result<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
         println!("[default impl] printing {} doc(s)", docs.len());
         for doc in docs {
             println!("{:?}", doc);
@@ -44,7 +44,7 @@ impl Print for PrintKind {
             }
         }
     }
-    fn print_all(&self, docs: &Vec<anyhow::Result<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_all(docs, ctx),
             PrintKind::Plain => (plain::PlainPrinter).print_all(docs, ctx),

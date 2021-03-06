@@ -8,7 +8,7 @@ url: https://www.nodejs.org
 ---
 
 kind: DependencyCheck
-name: global-yarn
+name_oops_typo: global-yarn
 verify: yarn -v
 url: https://yarn.sh/legacy
 
