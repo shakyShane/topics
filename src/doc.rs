@@ -73,7 +73,7 @@ impl Doc {
                     Item::Topic(t) => {
                         doc.topics.insert(t.name.clone(), t.clone());
                     }
-                }
+                },
             };
         }
         Ok(doc)
@@ -93,7 +93,7 @@ pub enum DocError {
         original: std::io::Error,
     },
     #[error(
-        "An error occurred when trying to parse a YAML file\n{}",
+        "{}",
         .0
     )]
     SerdeYamlErr(LocationError),
@@ -116,22 +116,22 @@ pub enum Location {
 
 impl Display for LocationError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "");
+        let _ = writeln!(f, "");
         if let Some(location) = &self.location {
             match location {
                 Location::LineAndCol { line, column } => {
-                    writeln!(f, "    msg: {}", self.description);
-                    writeln!(f, "   file: {}", self.input_file.display());
-                    writeln!(f, "   line: {}", line);
-                    writeln!(f, " column: {}", column);
+                    let _ = writeln!(f, "    msg: {}", self.description);
+                    let _ = writeln!(f, "   file: {}", self.input_file.display());
+                    let _ = writeln!(f, "   line: {}", line);
+                    let _ = writeln!(f, " column: {}", column);
                 }
                 Location::Region {
                     line_start,
                     line_end,
                 } => {
-                    writeln!(f, "           msg: {}", self.description);
-                    writeln!(f, "          file: {}", self.input_file.display());
-                    writeln!(f, " between lines: {} & {}", line_start, line_end);
+                    let _ = writeln!(f, "           msg: {}", self.description);
+                    let _ = writeln!(f, "          file: {}", self.input_file.display());
+                    let _ = writeln!(f, " between lines: {} & {}", line_start, line_end);
                 }
                 Location::Unknown => {}
             }

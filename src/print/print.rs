@@ -11,6 +11,7 @@ pub trait Print: Debug {
         Ok(())
     }
     fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+        println!("[default impl print::print_errors]");
         for doc in docs {
             match doc {
                 Err(e) => {
@@ -60,6 +61,15 @@ impl Print for PrintKind {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_all(docs, ctx),
             PrintKind::Plain => (plain::PlainPrinter).print_all(docs, ctx),
+            PrintKind::Json => {
+                todo!("implement json")
+            }
+        }
+    }
+    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+        match self {
+            PrintKind::Markdown => (md::MdPrinter).print_errors(docs, ctx),
+            PrintKind::Plain => (plain::PlainPrinter).print_errors(docs, ctx),
             PrintKind::Json => {
                 todo!("implement json")
             }

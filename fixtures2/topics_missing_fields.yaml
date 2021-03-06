@@ -1,0 +1,6 @@
+kind: Topic
+deps:
+  - global-node
+steps:
+  - step1
+  - step2

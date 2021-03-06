@@ -18,7 +18,6 @@ use crate::context::Context;
 use crate::opt::Opt;
 use crate::print::Print;
 use anyhow::Result;
-use crate::doc::DocError;
 
 fn main() -> Result<()> {
     // std::env::set_var("RUST_LOG", "topics=trace");

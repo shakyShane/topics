@@ -1,5 +1,8 @@
 kind: Topic
 name: Run unit tests
-deps:
+deps
   - global-node
-steps
+steps:
+  - step1
+  - step2
+  - step3

@@ -1,7 +1,7 @@
 ---
 
 kind: DependencyCheck
-name: global-node
+#name: oops, commented out by mistake
 verify: node -v
 url: https://www.nodejs.org
 
@@ -9,7 +9,7 @@ url: https://www.nodejs.org
 
 kind: DependencyCheck
 name_oops_typo: global-yarn
-verify: yarn -v
+verify yarn -v
 url: https://yarn.sh/legacy
 
 ---
