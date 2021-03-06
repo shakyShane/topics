@@ -11,6 +11,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
+use bat::{PrettyPrinter, Input};
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -34,6 +35,7 @@ impl Doc {
         for src in &doc.source.doc_src_items {
             let item: Item = serde_yaml::from_str(&src.content).map_err(|e| {
                 let mut err = LocationError {
+                    input_file_src: doc.source.file_content.clone(),
                     location: Some(Location::Region {
                         line_start: src.line_start + 1,
                         line_end: src.line_end,
@@ -83,6 +85,7 @@ enum DocError {
 struct LocationError {
     location: Option<Location>,
     input_file: PathBuf,
+    input_file_src: String,
     description: String,
 }
 
@@ -115,16 +118,15 @@ impl Display for LocationError {
                 Location::Unknown => {}
             }
         }
-        // PrettyPrinter::new()
+        // let to_write = PrettyPrinter::new()
         //     .header(true)
         //     // .grid(true)
-        //     // .line_numbers(true)
-        //     .inputs(vec![Input::from_bytes(output.body.as_bytes())
-        //         .name("topics.yaml") // Dummy name provided to detect the syntax.
+        //     .line_numbers(true)
+        //     .inputs(vec![Input::from_bytes(self.input_file_src.as_bytes())
+        //         .name(&self.input_file) // Dummy name provided to detect the syntax.
         //         .kind("File")
-        //         .title(output.title)])
-        //     .print()
-        //     .unwrap();
+        //         .title("oops")])?;
+
         Ok(())
     }
 }

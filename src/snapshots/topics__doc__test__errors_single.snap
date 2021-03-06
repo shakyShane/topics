@@ -13,6 +13,7 @@ Err(
                 },
             ),
             input_file: "/input-yaml.yml",
+            input_file_src: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
             description: "while parsing a block mapping, did not find expected key at line 4 column 1",
         },
     ),
