@@ -8,8 +8,20 @@ pub trait Print: Debug {
     fn print(&self, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()>;
     fn print_all(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
         println!("[default impl] printing {} doc(s)", docs.len());
+        Ok(())
+    }
+    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
         for doc in docs {
-            println!("{:?}", doc);
+            match doc {
+                Err(e) => {
+                    eprintln!("{}", e);
+                }
+                Ok(doc) => {
+                    for err in &doc.errors {
+                        eprintln!("{}", err);
+                    }
+                }
+            }
         }
         Ok(())
     }

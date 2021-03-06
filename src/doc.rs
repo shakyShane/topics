@@ -20,6 +20,7 @@ pub struct Doc {
     pub instructions: HashMap<String, Instruction>,
     pub dep_checks: HashMap<String, DependencyCheck>,
     pub commands: HashMap<String, Command>,
+    pub errors: Vec<DocError>,
 }
 
 pub type DocResult<T, E = DocError> = core::result::Result<T, E>;
@@ -34,7 +35,7 @@ impl Doc {
         doc.input_file = pb.clone();
         doc.source = doc_srcs;
         for src in &doc.source.doc_src_items {
-            let item: Item = serde_yaml::from_str(&src.content).map_err(|e| {
+            let item: Result<Item, DocError> = serde_yaml::from_str(&src.content).map_err(|e| {
                 let mut err = LocationError {
                     input_file_src: doc.source.file_content.clone(),
                     location: Some(Location::Region {
@@ -51,21 +52,27 @@ impl Doc {
                     });
                 }
                 DocError::SerdeYamlErr(err)
-            })?;
+            });
+
             match item {
-                Item::Command(cmd) => {
-                    doc.commands.insert(cmd.name.clone(), cmd.clone());
+                Err(doc_err) => {
+                    doc.errors.push(doc_err);
                 }
-                Item::FileExistsCheck(_) => {}
-                Item::DependencyCheck(dc) => {
-                    doc.dep_checks.insert(dc.name.clone(), dc.clone());
-                }
-                Item::Instruction(inst) => {
-                    doc.instructions.insert(inst.name.clone(), inst.clone());
-                }
-                Item::HostEntriesCheck(_) => {}
-                Item::Topic(t) => {
-                    doc.topics.insert(t.name.clone(), t.clone());
+                Ok(item) => match item {
+                    Item::Command(cmd) => {
+                        doc.commands.insert(cmd.name.clone(), cmd.clone());
+                    }
+                    Item::FileExistsCheck(_) => {}
+                    Item::DependencyCheck(dc) => {
+                        doc.dep_checks.insert(dc.name.clone(), dc.clone());
+                    }
+                    Item::Instruction(inst) => {
+                        doc.instructions.insert(inst.name.clone(), inst.clone());
+                    }
+                    Item::HostEntriesCheck(_) => {}
+                    Item::Topic(t) => {
+                        doc.topics.insert(t.name.clone(), t.clone());
+                    }
                 }
             };
         }
@@ -93,15 +100,15 @@ pub enum DocError {
 }
 
 #[derive(Debug)]
-struct LocationError {
-    location: Option<Location>,
-    input_file: PathBuf,
-    input_file_src: String,
-    description: String,
+pub struct LocationError {
+    pub location: Option<Location>,
+    pub input_file: PathBuf,
+    pub input_file_src: String,
+    pub description: String,
 }
 
 #[derive(Debug)]
-enum Location {
+pub enum Location {
     LineAndCol { line: usize, column: usize },
     Region { line_start: usize, line_end: usize },
     Unknown,

@@ -3,18 +3,37 @@ source: src/doc.rs
 expression: doc
 
 ---
-Err(
-    SerdeYamlErr(
-        LocationError {
-            location: Some(
-                LineAndCol {
-                    line: 4,
-                    column: 1,
+Ok(
+    Doc {
+        input_file: "/input-yaml.yml",
+        source: DocSource {
+            file_content: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
+            doc_src_items: [
+                DocSourceItem {
+                    line_start: 0,
+                    line_end: 4,
+                    content: "\nkind: Topic\nname: Run screen shot tests\ndeps",
+                },
+            ],
+        },
+        topics: {},
+        instructions: {},
+        dep_checks: {},
+        commands: {},
+        errors: [
+            SerdeYamlErr(
+                LocationError {
+                    location: Some(
+                        LineAndCol {
+                            line: 4,
+                            column: 1,
+                        },
+                    ),
+                    input_file: "/input-yaml.yml",
+                    input_file_src: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
+                    description: "while parsing a block mapping, did not find expected key at line 4 column 1",
                 },
             ),
-            input_file: "/input-yaml.yml",
-            input_file_src: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
-            description: "while parsing a block mapping, did not find expected key at line 4 column 1",
-        },
-    ),
+        ],
+    },
 )

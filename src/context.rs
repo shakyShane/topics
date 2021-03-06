@@ -21,7 +21,10 @@ impl Context {
         self.opts.cwd.join_path(pb)
     }
     pub fn read_docs_split(&self) -> (Vec<DocResult<Doc>>, Vec<DocResult<Doc>>) {
-        self.read_docs().into_iter().partition(|a| a.is_ok())
+        self.read_docs().into_iter().partition(|a| match a {
+            Ok(doc) => doc.errors.is_empty(),
+            Err(_) => false,
+        })
     }
     pub fn read_docs(&self) -> Vec<DocResult<Doc>> {
         self.opts
@@ -41,5 +44,8 @@ impl Print for Context {
     }
     fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
         self.opts.print_kind.print_all(&docs, &ctx)
+    }
+    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+        self.opts.print_kind.print_errors(&docs, &ctx)
     }
 }

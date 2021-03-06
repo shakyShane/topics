@@ -18,6 +18,7 @@ use crate::context::Context;
 use crate::opt::Opt;
 use crate::print::Print;
 use anyhow::Result;
+use crate::doc::DocError;
 
 fn main() -> Result<()> {
     // std::env::set_var("RUST_LOG", "topics=trace");
@@ -38,11 +39,7 @@ fn main() -> Result<()> {
 fn from_opt(ctx: &Context) -> Result<()> {
     let (good, bad) = ctx.read_docs_split();
     if !bad.is_empty() {
-        for item in bad {
-            if let Err(e) = item {
-                eprintln!("{}", e);
-            }
-        }
+        ctx.print_errors(&bad, &ctx);
         return Err(anyhow::anyhow!("failed, see above"));
     }
     ctx.print_all(&good, &ctx)

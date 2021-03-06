@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::doc::{Doc, DocResult};
+use crate::doc::{Doc, DocResult, DocError};
 use crate::item::ItemWrap;
 use crate::print::Print;
 
@@ -52,5 +52,32 @@ impl Print for PlainPrinter {
             }
         }
         Ok(())
+    }
+
+    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) ->  anyhow::Result<()> {
+        for doc in docs {
+            if let Ok(doc) = doc {
+                for error in &doc.errors {
+                    print_error(&doc, &error);
+                }
+            } else {
+                eprintln!("could not print a document as it had errored")
+            }
+        }
+        Ok(())
+    }
+}
+
+fn print_error(doc: &Doc, doc_err: &DocError) {
+    match doc_err {
+        DocError::FileRead { .. } => {
+
+        }
+        DocError::SerdeYamlErr(loc) => {
+            if let Some(error_loc) = &loc.location {
+                eprintln!("{}", loc.input_file.display());
+                eprintln!("{:#?}", error_loc);
+            }
+        }
     }
 }
