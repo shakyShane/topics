@@ -5,6 +5,7 @@ use crate::print::Print;
 use bat::line_range::{LineRange, LineRanges};
 use bat::{Input, PrettyPrinter};
 use std::error::Error;
+use std::io::ErrorKind;
 
 #[derive(Debug)]
 pub struct PlainPrinter;
@@ -76,11 +77,23 @@ impl Print for PlainPrinter {
 
 fn print_doc_error(doc_err: &DocError) {
     match doc_err {
-        DocError::FileRead { original, pb, original } => {
+        DocError::PathRead { original, abs, pb } => {
             print_error_heading("File error", &original.to_string());
-
+            match original.kind() {
+                ErrorKind::NotFound => {
+                    eprintln!();
+                    eprintln!("    A given path could not be found, please check your input");
+                }
+                ErrorKind::Other => {}
+                _ => {
+                    eprintln!("An unknown error occured");
+                }
+            }
+            use ansi_term::Colour::Green;
+            eprintln!();
+            eprintln!("    input: {}", Green.paint(&pb.display().to_string()));
         }
-        _ => unimplemented!("use print error for this")
+        _ => unimplemented!("use print error for this"),
     }
 }
 
@@ -91,16 +104,12 @@ fn print_error_heading(kind: &str, message: &str) {
     let some_value = format!("{}", kind);
     let strings: &[ANSIString<'static>] =
         &[Red.paint("["), Red.bold().paint(some_value), Red.paint("]")];
-    eprintln!(
-        "{} {}",
-        ANSIStrings(strings),
-        Red.bold().paint(message)
-    );
+    eprintln!("{} {}", ANSIStrings(strings), Red.bold().paint(message));
 }
 
 fn print_error(doc: &Doc, doc_err: &DocError) {
     match doc_err {
-        DocError::FileRead { pb, abs, original } => {
+        DocError::PathRead { pb, abs, original } => {
             // eprintln!("{}", doc_err);
             // println!("{}", original.to_string());
         }
@@ -126,7 +135,11 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                             .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
                                 .name(&doc.input_file) // Dummy name provided to detect the syntax.
                                 .kind("File")
-                                .title(format!("{}:{}", &loc_err.input_file.display().to_string(), line))])
+                                .title(format!(
+                                    "{}:{}",
+                                    &loc_err.input_file.display().to_string(),
+                                    line
+                                ))])
                             .print()
                             .unwrap();
                     }
@@ -145,7 +158,11 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                             .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
                                 .name(&doc.input_file) // Dummy name provided to detect the syntax.
                                 .kind("File")
-                                .title(format!("{}:{}", &loc_err.input_file.display().to_string(), line_start))])
+                                .title(format!(
+                                    "{}:{}",
+                                    &loc_err.input_file.display().to_string(),
+                                    line_start
+                                ))])
                             .print()
                             .unwrap();
                     }

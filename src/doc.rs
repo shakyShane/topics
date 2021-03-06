@@ -56,7 +56,12 @@ impl Doc {
                         line_start: src.line_start + 1,
                         line_end: src.line_end,
                     });
-                    err.description = RE.replace_all(err.description.as_str(), format!("at line {}", real_line).as_str()).to_string()
+                    err.description = RE
+                        .replace_all(
+                            err.description.as_str(),
+                            format!("at line {}", real_line).as_str(),
+                        )
+                        .to_string()
                 }
                 DocError::SerdeYamlErr(err)
             });
@@ -94,7 +99,7 @@ pub enum DocError {
     pb.display(),
     abs.display()
     )]
-    FileRead {
+    PathRead {
         pb: PathBuf,
         abs: PathBuf,
         original: std::io::Error,

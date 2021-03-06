@@ -20,7 +20,7 @@ pub struct DocSourceItem {
 impl DocSource {
     pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
         let abs = ctx.join_path(pb);
-        let file_str = std::fs::read_to_string(&abs).map_err(|e| DocError::FileRead {
+        let file_str = std::fs::read_to_string(&abs).map_err(|e| DocError::PathRead {
             pb: pb.clone(),
             abs: abs.clone(),
             original: e,
