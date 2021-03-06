@@ -25,6 +25,8 @@ Ok(
                 LocationError {
                     location: Some(
                         LineAndCol {
+                            line_start: 1,
+                            line_end: 4,
                             line: 4,
                             column: 1,
                         },

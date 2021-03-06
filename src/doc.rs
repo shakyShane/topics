@@ -34,6 +34,9 @@ impl Doc {
         let mut doc = Doc::default();
         doc.input_file = pb.clone();
         doc.source = doc_srcs;
+        lazy_static::lazy_static! {
+            static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
+        }
         for src in &doc.source.doc_src_items {
             let item: Result<Item, DocError> = serde_yaml::from_str(&src.content).map_err(|e| {
                 let mut err = LocationError {
@@ -46,10 +49,14 @@ impl Doc {
                     description: e.to_string(),
                 };
                 if let Some(location) = e.location() {
+                    let real_line = location.line() + src.line_start;
                     err.location = Some(Location::LineAndCol {
-                        line: location.line() + src.line_start,
+                        line: real_line,
                         column: location.column(),
+                        line_start: src.line_start + 1,
+                        line_end: src.line_end,
                     });
+                    err.description = RE.replace_all(err.description.as_str(), format!("at line {}", real_line).as_str()).to_string()
                 }
                 DocError::SerdeYamlErr(err)
             });
@@ -109,8 +116,16 @@ pub struct LocationError {
 
 #[derive(Debug)]
 pub enum Location {
-    LineAndCol { line: usize, column: usize },
-    Region { line_start: usize, line_end: usize },
+    LineAndCol {
+        line_start: usize,
+        line_end: usize,
+        line: usize,
+        column: usize,
+    },
+    Region {
+        line_start: usize,
+        line_end: usize,
+    },
     Unknown,
 }
 
@@ -119,7 +134,7 @@ impl Display for LocationError {
         let _ = writeln!(f, "");
         if let Some(location) = &self.location {
             match location {
-                Location::LineAndCol { line, column } => {
+                Location::LineAndCol { line, column, .. } => {
                     let _ = writeln!(f, "    msg: {}", self.description);
                     let _ = writeln!(f, "   file: {}", self.input_file.display());
                     let _ = writeln!(f, "   line: {}", line);
@@ -236,7 +251,14 @@ steps
 "#;
         let srcs = DocSource::from_str(input)?;
         let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
-        insta::assert_debug_snapshot!(doc);
+        insta::assert_debug_snapshot!(doc?.errors);
         Ok(())
+    }
+    #[test]
+    fn test_regex() {
+        let re = regex::Regex::new("at line (\\d+)").unwrap();
+        let input = "did not find expected key at line 3 column 1";
+        let after = re.replace_all(input, "at line 12");
+        dbg!(after);
     }
 }

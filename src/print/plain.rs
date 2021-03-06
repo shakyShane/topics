@@ -89,16 +89,25 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
             );
             if let Some(error_loc) = &loc_err.location {
                 match error_loc {
-                    Location::LineAndCol { line, .. } => {
+                    Location::LineAndCol {
+                        line,
+                        line_end,
+                        line_start,
+                        ..
+                    } => {
                         PrettyPrinter::new()
                             .header(true)
                             .line_numbers(true)
                             .grid(true)
                             .highlight(*line)
+                            .line_ranges(LineRanges::from(vec![LineRange::new(
+                                *line_start,
+                                *line_end,
+                            )]))
                             .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
                                 .name(&doc.input_file) // Dummy name provided to detect the syntax.
                                 .kind("File")
-                                .title(&loc_err.input_file.display().to_string())])
+                                .title(format!("{}:{}", &loc_err.input_file.display().to_string(), line))])
                             .print()
                             .unwrap();
                     }
@@ -117,7 +126,7 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                             .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
                                 .name(&doc.input_file) // Dummy name provided to detect the syntax.
                                 .kind("File")
-                                .title(&loc_err.input_file.display().to_string())])
+                                .title(format!("{}:{}", &loc_err.input_file.display().to_string(), line_start))])
                             .print()
                             .unwrap();
                     }
