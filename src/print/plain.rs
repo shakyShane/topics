@@ -7,8 +7,7 @@ use crate::{
     items::{Topic, ItemWrap},
     print::Print
 };
-use bat::line_range::LineRange;
-use bat::line_range::LineRanges;
+use bat::line_range::{LineRange, LineRanges};
 use bat::Input;
 use bat::PrettyPrinter;
 use std::io::ErrorKind;

@@ -28,6 +28,7 @@ fn from_opt(ctx: &Context) -> SubCommandResult<()> {
     match ctx.opts.cmd.as_ref() {
         Some(cmd) => match cmd {
             SubCommandItems::Print(print) => print.exec(&ctx),
+            SubCommandItems::Generate(gen) => gen.exec(&ctx),
         },
         None => {
             println!("no command given");

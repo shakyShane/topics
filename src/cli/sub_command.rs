@@ -1,4 +1,4 @@
-use crate::cli::PrintCmd;
+use crate::cli::{PrintCmd, GenerateCmd};
 use crate::context::Context;
 
 pub trait SubCommand {
@@ -16,4 +16,5 @@ pub enum SubCommandError {
 #[derive(Debug, Clone, structopt::StructOpt)]
 pub enum SubCommandItems {
     Print(PrintCmd),
+    Generate(GenerateCmd),
 }
