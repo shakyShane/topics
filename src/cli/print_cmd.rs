@@ -73,8 +73,8 @@ impl SubCommand for PrintCmd {
         for title in selections.iter().map(|idx| titles[*idx]) {
             for doc in &docs {
                 if let Some(topic) = doc.topics.get(title) {
-                    self.print_kind.print_heading("Topic", &topic.name);
-                    self.print_kind.print_topic(&topic, &doc, &ctx);
+                    let _ = self.print_kind.print_heading("Topic", &topic.name);
+                    let _ = self.print_kind.print_topic(&topic, &doc, &ctx);
                 }
             }
         }

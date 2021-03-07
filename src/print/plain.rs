@@ -1,10 +1,16 @@
-use crate::context::Context;
-use crate::doc::{Doc, DocError, DocResult, Location};
-use crate::item::ItemWrap;
-use crate::print::Print;
-use crate::topic::Topic;
-use bat::line_range::{LineRange, LineRanges};
-use bat::{Input, PrettyPrinter};
+use crate::{
+    doc::DocResult,
+    doc::DocError,
+    doc::Doc,
+    context::Context,
+    doc::Location,
+    items::{Topic, ItemWrap},
+    print::Print
+};
+use bat::line_range::LineRange;
+use bat::line_range::LineRanges;
+use bat::Input;
+use bat::PrettyPrinter;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
@@ -21,8 +27,8 @@ impl Print for PlainPrinter {
             doc.input_file.display()
         );
         for (_index, (_name, topic)) in doc.topics.iter().enumerate() {
-            self.print_heading("Topic", &topic.name);
-            self.print_topic(&topic, &doc, &ctx);
+            let _ = self.print_heading("Topic", &topic.name);
+            let _ = self.print_topic(&topic, &doc, &ctx);
         }
         Ok(())
     }

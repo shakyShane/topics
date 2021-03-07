@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct DependencyCheck {
     pub verify: String,
     pub name: String,

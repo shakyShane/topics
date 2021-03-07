@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::doc::{Doc, DocResult};
+use crate::items::topic::Topic;
 use crate::print::{md, plain};
-use crate::topic::Topic;
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 

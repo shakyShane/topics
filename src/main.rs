@@ -1,23 +1,16 @@
+use crate::cli::{SubCommand, SubCommandItems, SubCommandResult};
+use crate::context::Context;
+use crate::opt::Opt;
+
 mod cli;
-mod command;
 mod context;
 mod cwd;
-mod dependency;
 mod doc;
 mod doc_src;
-mod file_exists;
 mod host;
-mod instruction;
-mod item;
+mod items;
 mod opt;
-mod output;
 mod print;
-mod topic;
-
-use crate::context::Context;
-
-use crate::cli::{SubCommand, SubCommandItems, SubCommandResult};
-use crate::opt::Opt;
 
 fn main() -> anyhow::Result<()> {
     // std::env::set_var("RUST_LOG", "topics=trace");

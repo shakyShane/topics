@@ -1,15 +1,14 @@
-use crate::command::Command;
-use crate::context::Context;
-use crate::dependency::DependencyCheck;
-use crate::doc_src::DocSource;
-use crate::instruction::Instruction;
-use crate::item::Item;
-use crate::topic::Topic;
-
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
+
+use crate::items::item::Item;
+use crate::{
+    context::Context,
+    doc_src::DocSource,
+    items::{Command, DependencyCheck, Instruction, Topic},
+};
 
 #[derive(Debug, Default)]
 pub struct Doc {

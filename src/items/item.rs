@@ -1,11 +1,10 @@
-use crate::command::Command;
-use crate::dependency::DependencyCheck;
-use crate::file_exists::FileExistsCheck;
 use crate::host::HostEntriesCheck;
-use crate::instruction::Instruction;
-use crate::topic::Topic;
+use crate::items::DependencyCheck;
+use crate::items::FileExistsCheck;
+use crate::items::Topic;
+use crate::items::{Command, Instruction};
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(tag = "kind")]
 pub enum Item {
     Command(Command),
@@ -16,7 +15,7 @@ pub enum Item {
     Topic(Topic),
 }
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(untagged)]
 pub enum ItemWrap {
     Named(String),
@@ -40,8 +39,7 @@ impl Item {
 mod test {
     use super::*;
 
-    #[test]
-    fn test_deserialize() -> anyhow::Result<()> {
+    fn test_item() -> Item {
         let input = r#"
         kind: Topic
         name: run tests
@@ -50,8 +48,22 @@ mod test {
               name: call
               instruction: Call your manager
         "#;
-        let t: Topic = serde_yaml::from_str(input)?;
-        dbg!(t);
+        serde_yaml::from_str(input).expect("test doesn't fail")
+    }
+
+    #[test]
+    fn test_deserialize() -> anyhow::Result<()> {
+        let _ = test_item();
+        Ok(())
+    }
+
+    #[test]
+    fn test_serialize() -> anyhow::Result<()> {
+        // let t = test_item();
+        let item = Item::Topic(Topic::default());
+        let as_str = serde_yaml::to_string(&item)?;
+        println!("|{}|", as_str);
+
         Ok(())
     }
 }
