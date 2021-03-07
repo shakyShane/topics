@@ -1,5 +1,5 @@
 use crate::host::HostEntriesCheck;
-use crate::items::DependencyCheck;
+use crate::items::{DependencyCheck, TaskGroup};
 use crate::items::FileExistsCheck;
 use crate::items::Topic;
 use crate::items::{Command, Instruction};
@@ -13,6 +13,7 @@ pub enum Item {
     Instruction(Instruction),
     HostEntriesCheck(HostEntriesCheck),
     Topic(Topic),
+    TaskGroup(TaskGroup),
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -31,6 +32,7 @@ impl Item {
             Item::Instruction(inst) => inst.name.clone(),
             Item::HostEntriesCheck(hec) => hec.name.clone(),
             Item::Topic(top) => top.name.clone(),
+            Item::TaskGroup(tg) => tg.name.clone()
         }
     }
 }

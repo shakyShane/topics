@@ -1,0 +1,42 @@
+kind: Topic
+name: Run all unit tests
+deps:
+  - Frontend related machine setup
+steps:
+  - Run all unit tests command
+
+---
+
+kind: TaskGroup
+name: Frontend related machine setup
+steps:
+  - Node JS installed
+  - Yarn installed
+  - .npmrc setup
+
+---
+
+kind: DependencyCheck
+name: Node JS installed
+verify: node -v
+url: https://www.nodejs.org
+
+---
+
+kind: DependencyCheck
+name: Yarn installed
+verify: yarn -v
+url: https://yarn.sh/legacy
+
+---
+
+kind: DependencyCheck
+name: .npmrc setup
+verify: cat ~/.npmrc
+
+---
+
+kind: Command
+cwd: containers/www/client
+name: Run all unit tests command
+command: BABEL_ENV=test jest --runInBand

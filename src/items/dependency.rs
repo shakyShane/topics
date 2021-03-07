@@ -3,5 +3,5 @@ pub struct DependencyCheck {
     pub verify: String,
     pub name: String,
     pub autofix: Option<String>,
-    pub url: String,
+    pub url: Option<String>,
 }

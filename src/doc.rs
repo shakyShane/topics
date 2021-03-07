@@ -83,6 +83,9 @@ impl Doc {
                     Item::Topic(t) => {
                         doc.topics.insert(t.name.clone(), t.clone());
                     }
+                    Item::TaskGroup(_) => {
+                        println!("TaskGroup not implemented yet")
+                    }
                 },
             };
         }
