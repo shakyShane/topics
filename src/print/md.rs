@@ -28,6 +28,10 @@ impl Print for MdPrinter {
         println!("later..");
         Ok(())
     }
+
+    fn print_error(&self, _msg: &str, _ctx: &Context) {
+        unimplemented!()
+    }
 }
 
 impl MdPrinter {

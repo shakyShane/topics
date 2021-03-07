@@ -1,5 +1,6 @@
 use crate::cli::{SubCommand, SubCommandError, SubCommandResult};
 use crate::context::Context;
+use crate::db::Db;
 use crate::doc::Doc;
 use crate::print::{Print, PrintKind};
 use std::path::PathBuf;
@@ -28,15 +29,20 @@ impl SubCommand for PrintCmd {
             return Err(SubCommandError::Unknown);
         }
 
-        if self.all {
-            let _ = self.print_kind.print_all(&good, &ctx);
-            return Ok(());
-        }
-
         let docs = good
             .into_iter()
             .map(|doc| doc.expect("guarded previously"))
             .collect::<Vec<Doc>>();
+
+        if let Err(e) = Db::try_from_docs(&docs) {
+            self.print_kind.print_error(&e.to_string(), &ctx);
+            return Err(SubCommandError::Handled);
+        }
+
+        if self.all {
+            let _ = self.print_kind.print_all(&docs, &ctx);
+            return Ok(());
+        }
 
         // if we get here, files were valid, but NO topics were selected
         let _ = self.print_kind.print_welcome(&docs, &ctx);

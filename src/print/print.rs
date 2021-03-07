@@ -8,6 +8,7 @@ use std::str::FromStr;
 pub trait Print: Debug {
     fn print(&self, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()>;
     fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()>;
+    fn print_error(&self, msg: &str, _ctx: &Context);
     fn print_heading(&self, kind: &str, message: &str) {
         println!("[default impl heading]");
         println!("{} {}", kind, message);
@@ -17,7 +18,7 @@ pub trait Print: Debug {
         println!("{:?}", topic);
         Ok(())
     }
-    fn print_all(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()> {
         println!("[default impl] printing {} doc(s)", docs.len());
         Ok(())
     }
@@ -79,6 +80,13 @@ impl Print for PrintKind {
         }
     }
 
+    fn print_error(&self, msg: &str, ctx: &Context) {
+        match self {
+            PrintKind::Plain => (plain::PlainPrinter).print_error(msg, ctx),
+            _ => todo!("implement others for print_topic"),
+        }
+    }
+
     fn print_heading(&self, kind: &str, message: &str) {
         match self {
             PrintKind::Plain => (plain::PlainPrinter).print_heading(kind, message),
@@ -93,7 +101,7 @@ impl Print for PrintKind {
         }
     }
 
-    fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &Vec<Doc>, ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_all(docs, ctx),
             PrintKind::Plain => (plain::PlainPrinter).print_all(docs, ctx),

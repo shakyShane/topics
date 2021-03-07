@@ -34,6 +34,12 @@ impl Context {
             .map(|pb| Doc::from_path_buf(pb, &self))
             .collect()
     }
+    pub fn read_docs_unwrapped(&self, files: &Vec<PathBuf>) -> Vec<Doc> {
+        files
+            .iter()
+            .map(|pb| Doc::from_path_buf(pb, &self).expect("read_docs_unwrapped"))
+            .collect()
+    }
     pub fn _cwd(&self) -> PathBuf {
         self.opts.cwd.0.clone()
     }

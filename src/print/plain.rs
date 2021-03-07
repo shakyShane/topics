@@ -42,6 +42,10 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
+    fn print_error(&self, msg: &str, _ctx: &Context) {
+        print_error_heading("Problems detected", msg);
+    }
+
     fn print_heading(&self, kind: &str, message: &str) {
         plain_print_heading(kind, message);
     }
@@ -77,14 +81,10 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
-    fn print_all(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &Vec<Doc>, ctx: &Context) -> anyhow::Result<()> {
         println!("Printing {} doc(s) in Plain format", docs.len());
         for doc in docs {
-            if let Ok(doc) = doc {
-                let _ = self.print(&doc, &ctx);
-            } else {
-                eprintln!("could not print a document as it had errored")
-            }
+            let _ = self.print(&doc, &ctx);
         }
         Ok(())
     }
