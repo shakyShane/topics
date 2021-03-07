@@ -1,4 +1,4 @@
-use crate::cli::{PrintCmd, GenerateCmd};
+use crate::cli::{GenerateCmd, PrintCmd};
 use crate::context::Context;
 
 pub trait SubCommand {

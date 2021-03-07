@@ -1,11 +1,11 @@
 use crate::{
-    doc::DocResult,
-    doc::DocError,
-    doc::Doc,
     context::Context,
+    doc::Doc,
+    doc::DocError,
+    doc::DocResult,
     doc::Location,
-    items::{Topic, ItemWrap},
-    print::Print
+    items::{ItemWrap, Topic},
+    print::Print,
 };
 use bat::line_range::{LineRange, LineRanges};
 use bat::Input;
@@ -44,22 +44,22 @@ impl Print for PlainPrinter {
 
     fn print_topic(&self, topic: &Topic, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()> {
         println!();
-        println!("  - Dependencies:");
+        println!("{:1$}- Dependencies:", " ", 2);
         for dep in &topic.deps {
             match dep {
                 ItemWrap::Named(name) => {
-                    println!("     - {}", name);
+                    println!("{:width$}- {name}", " ", name = name, width = 4);
                 }
                 ItemWrap::Item(item) => {
                     println!("     - {}", item.name());
                 }
             }
         }
-        println!("  - Steps:");
+        println!("{:1$}- Steps:", " ", 2);
         for step in &topic.steps {
             match step {
                 ItemWrap::Named(name) => {
-                    println!("     - {}", name);
+                    println!("{:width$}- {name}", " ", name = name, width = 4);
                 }
                 ItemWrap::Item(item) => {
                     println!("     - {}", item.name());

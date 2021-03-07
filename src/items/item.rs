@@ -1,8 +1,9 @@
 use crate::host::HostEntriesCheck;
-use crate::items::{DependencyCheck, TaskGroup};
 use crate::items::FileExistsCheck;
 use crate::items::Topic;
 use crate::items::{Command, Instruction};
+use crate::items::{DependencyCheck, TaskGroup};
+use std::str::FromStr;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(tag = "kind")]
@@ -32,7 +33,24 @@ impl Item {
             Item::Instruction(inst) => inst.name.clone(),
             Item::HostEntriesCheck(hec) => hec.name.clone(),
             Item::Topic(top) => top.name.clone(),
-            Item::TaskGroup(tg) => tg.name.clone()
+            Item::TaskGroup(tg) => tg.name.clone(),
+        }
+    }
+}
+
+impl FromStr for Item {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Topic" | "topic" => Ok(Item::Topic(Default::default())),
+            "TaskGroup" | "tg" | "task-group" => Ok(Item::TaskGroup(Default::default())),
+            "Command" | "command" | "cmd" => Ok(Item::Command(Default::default())),
+            "Instruction" | "inst" | "instruction" => Ok(Item::Instruction(Default::default())),
+            "DependencyCheck" | "dep" | "dep-check" => {
+                Ok(Item::DependencyCheck(Default::default()))
+            }
+            _s => Err(anyhow::anyhow!("Not supported yet: {}", _s)),
         }
     }
 }

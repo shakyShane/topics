@@ -259,11 +259,4 @@ steps
         insta::assert_debug_snapshot!(doc?.errors);
         Ok(())
     }
-    #[test]
-    fn test_regex() {
-        let re = regex::Regex::new("at line (\\d+)").unwrap();
-        let input = "did not find expected key at line 3 column 1";
-        let after = re.replace_all(input, "at line 12");
-        dbg!(after);
-    }
 }

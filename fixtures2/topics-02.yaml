@@ -1,7 +1,7 @@
 kind: Topic
 name: Run all unit tests
 deps:
-  - Frontend related machine setup
+  - Frontend related setup
 steps:
   - Run all unit tests command
 
@@ -13,6 +13,7 @@ steps:
   - Node JS installed
   - Yarn installed
   - .npmrc setup
+  - Install NPM dependencies
 
 ---
 
@@ -22,6 +23,7 @@ verify: node -v
 url: https://www.nodejs.org
 
 ---
+
 
 kind: DependencyCheck
 name: Yarn installed
@@ -40,3 +42,32 @@ kind: Command
 cwd: containers/www/client
 name: Run all unit tests command
 command: BABEL_ENV=test jest --runInBand
+
+---
+
+kind: Command
+cwd: .
+name: Install NPM dependencies
+command: yarn
+
+---
+
+kind: Topic
+name: Run synk security scan on NPM modules
+deps:
+  - snyk cli tools installed
+steps:
+  - Snyk check package.json
+
+---
+
+kind: DependencyCheck
+name: Snyk CLI installed
+verify: snyk --version
+
+---
+
+kind: Command
+cwd: .
+name: Snyk check package.json
+command: snyk check package.json

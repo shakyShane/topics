@@ -5,6 +5,7 @@ use crate::opt::Opt;
 mod cli;
 mod context;
 mod cwd;
+mod db;
 mod doc;
 mod doc_src;
 mod host;
