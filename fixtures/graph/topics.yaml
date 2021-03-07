@@ -1,0 +1,26 @@
+---
+kind: Topic
+name: "Frontend Setup"
+steps:
+  - install node
+  - install yarn
+  - .npmrc exists
+
+---
+
+kind: Topic
+name: "Kubernetes setup"
+deps:
+  - .npmrc exists
+steps:
+  - install docker
+  - install skaffold
+
+---
+
+kind: Topic
+name: "Run client unit tests"
+deps:
+  - Frontend Setup
+steps:
+  - run unit tests command

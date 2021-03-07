@@ -18,6 +18,10 @@ pub struct PlainPrinter;
 
 impl Print for PlainPrinter {
     fn print(&self, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
+        if doc.topics.is_empty() {
+            log::trace!("No topics in {}", doc.input_file.display());
+            return Ok(());
+        }
         let topic_len = doc.topics.len();
         println!(
             "\n{} Topic{} from `{}`",
@@ -44,25 +48,29 @@ impl Print for PlainPrinter {
 
     fn print_topic(&self, topic: &Topic, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()> {
         println!();
-        println!("{:1$}- Dependencies:", " ", 2);
-        for dep in &topic.deps {
-            match dep {
-                ItemWrap::Named(name) => {
-                    println!("{:width$}- {name}", " ", name = name, width = 4);
-                }
-                ItemWrap::Item(item) => {
-                    println!("     - {}", item.name());
+        if !topic.deps.is_empty() {
+            println!("{:1$}- Dependencies:", " ", 2);
+            for dep in &topic.deps {
+                match dep {
+                    ItemWrap::Named(name) => {
+                        println!("{:width$}- {name}", " ", name = name, width = 4);
+                    }
+                    ItemWrap::Item(item) => {
+                        println!("     - {}", item.name());
+                    }
                 }
             }
         }
-        println!("{:1$}- Steps:", " ", 2);
-        for step in &topic.steps {
-            match step {
-                ItemWrap::Named(name) => {
-                    println!("{:width$}- {name}", " ", name = name, width = 4);
-                }
-                ItemWrap::Item(item) => {
-                    println!("     - {}", item.name());
+        if !topic.steps.is_empty() {
+            println!("{:1$}- Steps:", " ", 2);
+            for step in &topic.steps {
+                match step {
+                    ItemWrap::Named(name) => {
+                        println!("{:width$}- {name}", " ", name = name, width = 4);
+                    }
+                    ItemWrap::Item(item) => {
+                        println!("     - {}", item.name());
+                    }
                 }
             }
         }

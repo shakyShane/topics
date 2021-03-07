@@ -43,6 +43,7 @@ impl FromStr for Item {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
+            "FileExistsCheck" | "fec" => Ok(Item::FileExistsCheck(Default::default())),
             "Topic" | "topic" => Ok(Item::Topic(Default::default())),
             "TaskGroup" | "tg" | "task-group" => Ok(Item::TaskGroup(Default::default())),
             "Command" | "command" | "cmd" => Ok(Item::Command(Default::default())),

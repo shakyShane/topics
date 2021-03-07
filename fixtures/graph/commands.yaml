@@ -1,0 +1,5 @@
+---
+kind: Command
+name: run unit tests command
+cwd: "./"
+command: "jest --runInBand"

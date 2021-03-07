@@ -1,0 +1,34 @@
+---
+kind: DependencyCheck
+verify: node -v
+name: install node
+autofix: ~
+url: "https://nodejs.org"
+
+---
+kind: DependencyCheck
+verify: node -v
+name: install yarn
+autofix: ~
+url: "https://yarn.org"
+
+---
+kind: DependencyCheck
+verify: node -v
+name: "install skaffold"
+autofix: ~
+url: "https://skaffold.org"
+
+---
+kind: DependencyCheck
+verify: node -v
+name: "install docker"
+autofix: ~
+url: "https://dockerformac.org"
+
+---
+kind: FileExistsCheck
+name: ".npmrc exists"
+cwd: "./"
+path: .npmrc
+

@@ -1,6 +1,0 @@
-topics:
-  - name: "Commit files"
-    steps:
-      - kind: Instruction
-        instruction: |
-          Do it correctly
