@@ -8,7 +8,7 @@ use crate::print::Print;
 pub struct MdPrinter;
 
 impl Print for MdPrinter {
-    fn print(&self, _d: &Doc, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_doc(&self, _d: &Doc, _ctx: &Context) -> anyhow::Result<()> {
         println!("{:?}", self);
         // let output = Self::print_md_doc(d, ctx.opts.index)?;
         // PrettyPrinter::new()

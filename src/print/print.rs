@@ -6,7 +6,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
 pub trait Print: Debug {
-    fn print(&self, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()>;
+    fn print_doc(&self, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()>;
     fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()>;
     fn print_error(&self, msg: &str, _ctx: &Context);
     fn print_heading(&self, kind: &str, message: &str) {
@@ -60,10 +60,10 @@ impl Default for PrintKind {
 }
 
 impl Print for PrintKind {
-    fn print(&self, d: &Doc, ctx: &Context) -> anyhow::Result<()> {
+    fn print_doc(&self, d: &Doc, ctx: &Context) -> anyhow::Result<()> {
         match self {
-            PrintKind::Markdown => (md::MdPrinter).print(d, ctx),
-            PrintKind::Plain => (plain::PlainPrinter).print(d, ctx),
+            PrintKind::Markdown => (md::MdPrinter).print_doc(d, ctx),
+            PrintKind::Plain => (plain::PlainPrinter).print_doc(d, ctx),
             PrintKind::Json => {
                 todo!("implement json")
             }

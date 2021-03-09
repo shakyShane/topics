@@ -17,7 +17,7 @@ use std::path::PathBuf;
 pub struct PlainPrinter;
 
 impl Print for PlainPrinter {
-    fn print(&self, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
+    fn print_doc(&self, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
         if doc.topics.is_empty() {
             log::trace!("No topics in {}", doc.input_file.display());
             return Ok(());
@@ -30,7 +30,6 @@ impl Print for PlainPrinter {
             doc.input_file.display()
         );
         for (_index, (_name, topic)) in doc.topics.iter().enumerate() {
-            let _ = self.print_heading("Topic", &topic.name);
             let _ = self.print_topic(&topic, &doc, &ctx);
         }
         Ok(())
@@ -51,6 +50,7 @@ impl Print for PlainPrinter {
     }
 
     fn print_topic(&self, topic: &Topic, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()> {
+        let _ = self.print_heading("Topic", &topic.name);
         println!();
         if !topic.deps.is_empty() {
             println!("{:1$}- Dependencies:", " ", 2);
@@ -84,7 +84,7 @@ impl Print for PlainPrinter {
     fn print_all(&self, docs: &Vec<Doc>, ctx: &Context) -> anyhow::Result<()> {
         println!("Printing {} doc(s) in Plain format", docs.len());
         for doc in docs {
-            let _ = self.print(&doc, &ctx);
+            let _ = self.print_doc(&doc, &ctx);
         }
         Ok(())
     }
@@ -151,7 +151,7 @@ fn print_doc_error(doc_err: &DocError) {
                 }
                 ErrorKind::Other => {}
                 _ => {
-                    eprintln!("An unknown error occured");
+                    eprintln!("An unknown error occurred");
                 }
             }
             use ansi_term::Colour::Green;
