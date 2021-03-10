@@ -8,22 +8,6 @@ use crate::print::Print;
 pub struct MdPrinter;
 
 impl Print for MdPrinter {
-    fn print_doc(&self, _d: &Doc, _ctx: &Context) -> anyhow::Result<()> {
-        println!("{:?}", self);
-        // let output = Self::print_md_doc(d, ctx.opts.index)?;
-        // PrettyPrinter::new()
-        //     .header(true)
-        //     // .grid(true)
-        //     // .line_numbers(true)
-        //     .inputs(vec![Input::from_bytes(output.body.as_bytes())
-        //         .name("topics.md") // Dummy name provided to detect the syntax.
-        //         .kind("File")
-        //         .title(output.title)])
-        //     .print()
-        //     .unwrap();
-        Ok(())
-    }
-
     fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()> {
         println!("later..");
         Ok(())

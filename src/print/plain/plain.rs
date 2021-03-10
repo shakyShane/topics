@@ -1,3 +1,4 @@
+use crate::db::Db;
 use crate::{
     context::Context,
     doc::Doc,
@@ -17,24 +18,6 @@ use std::path::PathBuf;
 pub struct PlainPrinter;
 
 impl Print for PlainPrinter {
-    fn print_doc(&self, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
-        if doc.topics.is_empty() {
-            log::trace!("No topics in {}", doc.input_file.display());
-            return Ok(());
-        }
-        let topic_len = doc.topics.len();
-        println!(
-            "\n{} Topic{} from `{}`",
-            topic_len,
-            if topic_len == 1 { "" } else { "s" },
-            doc.input_file.display()
-        );
-        for (_index, (_name, topic)) in doc.topics.iter().enumerate() {
-            let _ = self.print_topic(&topic, &doc, &ctx);
-        }
-        Ok(())
-    }
-
     fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()> {
         plain_print_heading("Topics", "What would you like to do today?");
         println!();
@@ -49,7 +32,13 @@ impl Print for PlainPrinter {
         plain_print_heading(kind, message);
     }
 
-    fn print_topic(&self, topic: &Topic, _doc: &Doc, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_topic(
+        &self,
+        topic: &Topic,
+        _db: &Db,
+        _doc: &Doc,
+        _ctx: &Context,
+    ) -> anyhow::Result<()> {
         let _ = self.print_heading("Topic", &topic.name);
         println!();
         if !topic.deps.is_empty() {
@@ -81,10 +70,11 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
-    fn print_all(&self, docs: &Vec<Doc>, ctx: &Context) -> anyhow::Result<()> {
-        println!("Printing {} doc(s) in Plain format", docs.len());
+    fn print_all(&self, docs: &Vec<Doc>, db: &Db, ctx: &Context) -> anyhow::Result<()> {
         for doc in docs {
-            let _ = self.print_doc(&doc, &ctx);
+            for (_, topic) in &doc.topics {
+                let _ = self.print_topic(&topic, &db, &doc, &ctx);
+            }
         }
         Ok(())
     }

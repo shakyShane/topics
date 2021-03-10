@@ -34,13 +34,17 @@ impl SubCommand for PrintCmd {
             .map(|doc| doc.expect("guarded previously"))
             .collect::<Vec<Doc>>();
 
-        if let Err(e) = Db::try_from_docs(&docs) {
+        let db = Db::try_from_docs(&docs);
+
+        if let Err(e) = db {
             self.print_kind.print_error(&e.to_string(), &ctx);
             return Err(SubCommandError::Handled);
         }
 
+        let db = db.expect("previously guarded");
+
         if self.all {
-            let _ = self.print_kind.print_all(&docs, &ctx);
+            let _ = self.print_kind.print_all(&docs, &db, &ctx);
             return Ok(());
         }
 
@@ -79,7 +83,7 @@ impl SubCommand for PrintCmd {
         for title in selections.iter().map(|idx| titles[*idx]) {
             for doc in &docs {
                 if let Some(topic) = doc.topics.get(title) {
-                    let _ = self.print_kind.print_topic(&topic, &doc, &ctx);
+                    let _ = self.print_kind.print_topic(&topic, &db, &doc, &ctx);
                 }
             }
         }
