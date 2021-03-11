@@ -28,6 +28,11 @@ impl SubCommand for PrintCmd {
             let _ = self.print_kind.print_errors(&bad, &ctx);
             return Err(SubCommandError::Unknown);
         }
+        if good.is_empty() {
+            let err = SubCommandError::Empty;
+            self.print_kind.print_error(&err.to_string(), &ctx);
+            return Err(err);
+        }
 
         let docs = good
             .into_iter()

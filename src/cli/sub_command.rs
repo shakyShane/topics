@@ -13,6 +13,8 @@ pub enum SubCommandError {
     Handled,
     #[error("unknown error occurred")]
     Unknown,
+    #[error("No documents were loaded")]
+    Empty,
 }
 
 #[derive(Debug, Clone, structopt::StructOpt)]

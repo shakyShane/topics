@@ -7,7 +7,7 @@ type ItemGraph = HashMap<String, HashSet<String>>;
 #[derive(Debug)]
 pub struct Db {
     items: ItemGraph,
-    items_2: HashMap<String, Item>,
+    pub items_2: HashMap<String, Item>,
 }
 
 impl Db {

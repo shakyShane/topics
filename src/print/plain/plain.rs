@@ -13,6 +13,7 @@ use bat::Input;
 use bat::PrettyPrinter;
 use std::io::ErrorKind;
 use std::path::PathBuf;
+use crate::items::Item;
 
 #[derive(Debug)]
 pub struct PlainPrinter;
@@ -47,9 +48,15 @@ impl Print for PlainPrinter {
                 match dep {
                     ItemWrap::Named(name) => {
                         println!("{:width$}- {name}", " ", name = name, width = 4);
+                        let matched = _db.items_2.get(name);
+                        if let Some(matched_item) = matched {
+                            print_item(matched_item, 6);
+                            // println!("{:width$}- {name}", " ", name = name, width = 4);
+                        }
                     }
                     ItemWrap::Item(item) => {
-                        println!("     - {}", item.name());
+                        // println!("     - {}", item.name());
+                        todo!("topic.deps ItemWrap::Item")
                     }
                 }
             }
@@ -62,7 +69,8 @@ impl Print for PlainPrinter {
                         println!("{:width$}- {name}", " ", name = name, width = 4);
                     }
                     ItemWrap::Item(item) => {
-                        println!("     - {}", item.name());
+                        // println!("     - {}", item.name());
+                        todo!("topic.steps ItemWrap::Item")
                     }
                 }
             }
@@ -173,6 +181,35 @@ fn plain_print_heading(kind: &str, message: &str) {
         Green.paint("]"),
     ];
     eprintln!("{} {}", ANSIStrings(strings), Green.bold().paint(message));
+}
+
+fn print_item(item: &Item, width: usize) {
+    match item {
+        Item::Command(_) => {}
+        Item::FileExistsCheck(_) => {}
+        Item::DependencyCheck(_) => {}
+        Item::Instruction(_) => {}
+        Item::HostEntriesCheck(_) => {}
+        Item::Topic(topic) => {
+            for dep in &topic.deps {
+                match dep {
+                    ItemWrap::Named(name) => {
+                        println!("{:width$}- {name}", " ", name = name, width = width);
+                    }
+                    _ => todo!("not implemented yet")
+                }
+            }
+            for dep in &topic.steps {
+                match dep {
+                    ItemWrap::Named(name) => {
+                        println!("{:width$}- {name}", " ", name = name, width = width);
+                    }
+                    _ => todo!("not implemented yet")
+                }
+            }
+        }
+        Item::TaskGroup(_) => {}
+    }
 }
 
 fn print_error(doc: &Doc, doc_err: &DocError) {
