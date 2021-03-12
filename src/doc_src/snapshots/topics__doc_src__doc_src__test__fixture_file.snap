@@ -5,31 +5,33 @@ expression: d
 ---
 DocSource {
     file_content: "kind: Topic\nname: Run unit tests\ndeps:\n  - global-node\nsteps:\n  - kind: Instruction\n    name: check-hithub-checkin\n    instruction: |\n      Don\'t forget to check in the changes\n\n---\n\nkind: DependencyCheck\nname: global-node\nverify: node -v\nurl: https://www.nodejs.org\n\n---\n\nkind: DependencyCheck\nname: global-yarn\nverify: yarn -v\nurl: https://yarn.sh/legacy\n\n---\n\nkind: Topic\nname: Run screen shot tests\ndeps:\n  - global-node\n  - global-yarn\nsteps:\n  - github-checkin\n\n---\n\nkind: Instruction\nname: github-checkin\ninstruction: Don\'t forget to check in",
-    doc_src_items: [
-        DocSourceItem {
-            line_start: 0,
-            line_end: 10,
-            content: "kind: Topic\nname: Run unit tests\ndeps:\n  - global-node\nsteps:\n  - kind: Instruction\n    name: check-hithub-checkin\n    instruction: |\n      Don\'t forget to check in the changes\n",
-        },
-        DocSourceItem {
-            line_start: 11,
-            line_end: 17,
-            content: "\nkind: DependencyCheck\nname: global-node\nverify: node -v\nurl: https://www.nodejs.org\n",
-        },
-        DocSourceItem {
-            line_start: 18,
-            line_end: 24,
-            content: "\nkind: DependencyCheck\nname: global-yarn\nverify: yarn -v\nurl: https://yarn.sh/legacy\n",
-        },
-        DocSourceItem {
-            line_start: 25,
-            line_end: 34,
-            content: "\nkind: Topic\nname: Run screen shot tests\ndeps:\n  - global-node\n  - global-yarn\nsteps:\n  - github-checkin\n",
-        },
-        DocSourceItem {
-            line_start: 35,
-            line_end: 39,
-            content: "\nkind: Instruction\nname: github-checkin\ninstruction: Don\'t forget to check in",
-        },
-    ],
+    doc_src_items: DocSourceItems {
+        items: [
+            DocSourceItem {
+                line_start: 0,
+                line_end: 10,
+                content: "kind: Topic\nname: Run unit tests\ndeps:\n  - global-node\nsteps:\n  - kind: Instruction\n    name: check-hithub-checkin\n    instruction: |\n      Don\'t forget to check in the changes\n",
+            },
+            DocSourceItem {
+                line_start: 11,
+                line_end: 17,
+                content: "\nkind: DependencyCheck\nname: global-node\nverify: node -v\nurl: https://www.nodejs.org\n",
+            },
+            DocSourceItem {
+                line_start: 18,
+                line_end: 24,
+                content: "\nkind: DependencyCheck\nname: global-yarn\nverify: yarn -v\nurl: https://yarn.sh/legacy\n",
+            },
+            DocSourceItem {
+                line_start: 25,
+                line_end: 34,
+                content: "\nkind: Topic\nname: Run screen shot tests\ndeps:\n  - global-node\n  - global-yarn\nsteps:\n  - github-checkin\n",
+            },
+            DocSourceItem {
+                line_start: 35,
+                line_end: 39,
+                content: "\nkind: Instruction\nname: github-checkin\ninstruction: Don\'t forget to check in",
+            },
+        ],
+    },
 }

@@ -8,13 +8,15 @@ Ok(
         input_file: "/input-yaml.yml",
         source: DocSource {
             file_content: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
-            doc_src_items: [
-                DocSourceItem {
-                    line_start: 0,
-                    line_end: 4,
-                    content: "\nkind: Topic\nname: Run screen shot tests\ndeps",
-                },
-            ],
+            doc_src_items: DocSourceItems {
+                items: [
+                    DocSourceItem {
+                        line_start: 0,
+                        line_end: 4,
+                        content: "\nkind: Topic\nname: Run screen shot tests\ndeps",
+                    },
+                ],
+            },
         },
         topics: {},
         instructions: {},

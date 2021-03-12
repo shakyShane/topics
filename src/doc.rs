@@ -35,7 +35,7 @@ impl Doc {
         lazy_static::lazy_static! {
             static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
         }
-        for src in &doc.source.doc_src_items {
+        for src in &doc.source.doc_src_items.items {
             let item: Result<Item, DocError> = serde_yaml::from_str(&src.content).map_err(|e| {
                 let mut err = LocationError {
                     input_file_src: doc.source.file_content.clone(),
@@ -185,7 +185,7 @@ steps:
   - github-checkin
 "#;
         let doc = Doc::from_str(input)?;
-        assert_eq!(doc.source.doc_src_items.len(), 1);
+        assert_eq!(doc.source.doc_src_items.items.len(), 1);
         Ok(())
     }
 
@@ -210,7 +210,7 @@ name: help-me-instruction
 ---
 "#;
         let doc = Doc::from_str(input)?;
-        assert_eq!(doc.source.doc_src_items.len(), 2);
+        assert_eq!(doc.source.doc_src_items.items.len(), 2);
         Ok(())
     }
 
