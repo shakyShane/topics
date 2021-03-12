@@ -640,6 +640,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "multi_yaml"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "insta",
+ "serde",
+ "serde_yaml",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1155,12 +1165,17 @@ dependencies = [
  "insta",
  "lazy_static",
  "log",
+ "multi_yaml",
  "regex",
  "serde",
  "serde_yaml",
  "structopt",
  "thiserror",
 ]
+
+[[package]]
+name = "topics_core"
+version = "0.1.0"
 
 [[package]]
 name = "ucd-trie"

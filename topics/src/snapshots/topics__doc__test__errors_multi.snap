@@ -1,5 +1,5 @@
 ---
-source: src/doc.rs
+source: topics/src/doc.rs
 expression: doc?.errors
 
 ---

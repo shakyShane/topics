@@ -102,6 +102,9 @@ impl Print for PlainPrinter {
                             acc
                         }
                         DocError::SerdeYamlErr(_) => unreachable!("shouldn't get here"),
+                        DocError::Unknown(_e) => {
+                            todo!("how to handle this...")
+                        }
                     },
                 });
 
@@ -222,6 +225,9 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
         } => {
             // eprintln!("{}", doc_err);
             // println!("{}", original.to_string());
+        }
+        DocError::Unknown(err_message) => {
+            print_error_heading("Error", &err_message);
         }
         DocError::SerdeYamlErr(loc_err) => {
             print_error_heading("YAML error", &loc_err.description);

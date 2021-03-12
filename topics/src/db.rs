@@ -80,9 +80,9 @@ mod test {
     #[test]
     fn test() -> anyhow::Result<()> {
         let ctx = Context::default();
-        let doc1 = PathBuf::from("fixtures/graph/commands.yaml");
-        let doc2 = PathBuf::from("fixtures/graph/deps.yaml");
-        let doc3 = PathBuf::from("fixtures/graph/topics.yaml");
+        let doc1 = PathBuf::from("../fixtures/graph/commands.yaml");
+        let doc2 = PathBuf::from("../fixtures/graph/deps.yaml");
+        let doc3 = PathBuf::from("../fixtures/graph/topics.yaml");
         let docs = vec![doc1, doc2, doc3];
         let good = ctx.read_docs_unwrapped(&docs);
         assert_eq!(good.len(), 3);
@@ -93,7 +93,7 @@ mod test {
     #[test]
     fn test_cycle_detection() -> anyhow::Result<()> {
         let ctx = Context::default();
-        let doc1 = PathBuf::from("fixtures/cycle/topics.yaml");
+        let doc1 = PathBuf::from("../fixtures/cycle/topics.yaml");
         let docs = vec![doc1];
         let good = ctx.read_docs_unwrapped(&docs);
         assert_eq!(good.len(), 1);

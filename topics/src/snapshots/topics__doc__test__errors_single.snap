@@ -1,5 +1,5 @@
 ---
-source: src/doc.rs
+source: topics/src/doc.rs
 expression: doc
 
 ---
@@ -8,9 +8,9 @@ Ok(
         input_file: "/input-yaml.yml",
         source: DocSource {
             file_content: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
-            doc_src_items: DocSourceItems {
+            doc_src_items: MultiYaml {
                 items: [
-                    DocSourceItem {
+                    YamlDoc {
                         line_start: 0,
                         line_end: 4,
                         content: "\nkind: Topic\nname: Run screen shot tests\ndeps",

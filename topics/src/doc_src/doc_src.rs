@@ -1,14 +1,14 @@
 use crate::context::Context;
 
 use crate::doc::{DocError, DocResult};
-use crate::doc_src::DocSourceItems;
 use std::path::PathBuf;
 use std::str::FromStr;
+use multi_yaml::MultiYaml;
 
 #[derive(Debug, Default)]
 pub struct DocSource {
     pub file_content: String,
-    pub doc_src_items: DocSourceItems,
+    pub doc_src_items: MultiYaml,
 }
 
 impl DocSource {
@@ -19,7 +19,7 @@ impl DocSource {
             abs: abs.clone(),
             original: e,
         })?;
-        let items = DocSourceItems::from_str(&file_str)?;
+        let items = MultiYaml::from_str(&file_str)?;
         let new_self = Self {
             file_content: file_str,
             doc_src_items: items,
@@ -32,7 +32,7 @@ impl FromStr for DocSource {
     type Err = DocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items = DocSourceItems::from_str(&s)?;
+        let items = MultiYaml::from_str(&s)?;
         Ok(Self {
             file_content: s.to_string(),
             doc_src_items: items,
@@ -51,7 +51,7 @@ mod test {
     #[test]
     fn test_fixture_file() -> anyhow::Result<()> {
         let ctx = Context::from_vec(&[]);
-        let pb = current_dir()?.join("fixtures2/topics.yaml");
+        let pb = current_dir()?.join("../fixtures2/topics.yaml");
         let d = DocSource::from_path_buf(&pb, &ctx)?;
         insta::assert_debug_snapshot!(d);
         Ok(())

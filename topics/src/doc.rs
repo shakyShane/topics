@@ -9,6 +9,7 @@ use crate::{
     doc_src::DocSource,
     items::{Command, DependencyCheck, Instruction, Topic},
 };
+use anyhow::Error;
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -110,6 +111,14 @@ pub enum DocError {
         .0
     )]
     SerdeYamlErr(LocationError),
+    #[error("{}", .0)]
+    Unknown(String),
+}
+
+impl From<anyhow::Error> for DocError {
+    fn from(e: anyhow::Error) -> Self {
+        DocError::Unknown(e.to_string())
+    }
 }
 
 #[derive(Debug)]

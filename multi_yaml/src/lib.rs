@@ -1,28 +1,26 @@
-use crate::doc::{DocError, DocResult};
-
 #[derive(Debug, Default)]
-pub struct DocSourceItems {
-    pub items: Vec<DocSourceItem>,
+pub struct MultiYaml {
+    pub items: Vec<YamlDoc>,
 }
 
 #[derive(Debug)]
-pub struct DocSourceItem {
+pub struct YamlDoc {
     pub line_start: usize,
     pub line_end: usize,
     pub content: String,
 }
 
 /// Create from a str
-impl std::str::FromStr for DocSourceItems {
-    type Err = DocError;
+impl std::str::FromStr for MultiYaml {
+    type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Self::parse(s)
     }
 }
 
-impl DocSourceItems {
-    fn parse(str: &str) -> DocResult<Self> {
-        let mut items: Vec<DocSourceItem> = vec![];
+impl MultiYaml {
+    fn parse(str: &str) -> Result<Self, anyhow::Error> {
+        let mut items: Vec<YamlDoc> = vec![];
         let split = str.lines().collect::<Vec<&str>>();
         let mut peek = split.iter().enumerate().peekable();
         let mut start = 0;
@@ -54,7 +52,7 @@ impl DocSourceItems {
 
         for (start, end) in docs {
             let content = split[start..end].join("\n");
-            items.push(DocSourceItem {
+            items.push(YamlDoc {
                 line_start: start,
                 line_end: end,
                 content,
@@ -82,7 +80,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let doc = DocSourceItems::from_str(input)?;
+        let doc = MultiYaml::from_str(input)?;
         assert_eq!(doc.items.len(), 1);
         Ok(())
     }
@@ -100,7 +98,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let srcs = DocSourceItems::from_str(input)?;
+        let srcs = MultiYaml::from_str(input)?;
         insta::assert_debug_snapshot!(srcs);
         Ok(())
     }
@@ -120,7 +118,7 @@ steps:
 ---
 ---
 "#;
-        let srcs = DocSourceItems::from_str(input)?;
+        let srcs = MultiYaml::from_str(input)?;
         insta::assert_debug_snapshot!(srcs);
         Ok(())
     }
