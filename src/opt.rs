@@ -23,6 +23,7 @@ impl Opt {
         // }
         // opts
     }
+    #[cfg(test)]
     pub fn from_vec(input: &[&str]) -> Self {
         Opt::from_iter(input)
         // let mut opts: Opt = Opt::from_iter(input);

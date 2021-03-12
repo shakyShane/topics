@@ -13,6 +13,7 @@ impl Context {
             opts: (*opt).clone(),
         }
     }
+    #[cfg(test)]
     pub fn from_vec(input: &[&str]) -> Self {
         Self::from_opts(&Opt::from_vec(input))
     }
@@ -34,6 +35,7 @@ impl Context {
             .map(|pb| Doc::from_path_buf(pb, &self))
             .collect()
     }
+    #[cfg(test)]
     pub fn read_docs_unwrapped(&self, files: &Vec<PathBuf>) -> Vec<Doc> {
         files
             .iter()

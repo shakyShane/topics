@@ -1,4 +1,5 @@
 use crate::db::Db;
+use crate::items::Item;
 use crate::{
     context::Context,
     doc::Doc,
@@ -13,7 +14,6 @@ use bat::Input;
 use bat::PrettyPrinter;
 use std::io::ErrorKind;
 use std::path::PathBuf;
-use crate::items::Item;
 
 #[derive(Debug)]
 pub struct PlainPrinter;
@@ -25,8 +25,9 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
-    fn print_error(&self, msg: &str, _ctx: &Context) {
+    fn print_error(&self, msg: &str, _ctx: &Context) -> anyhow::Result<()> {
         print_error_heading("Problems detected", msg);
+        Ok(())
     }
 
     fn print_heading(&self, kind: &str, message: &str) {
@@ -54,7 +55,7 @@ impl Print for PlainPrinter {
                             // println!("{:width$}- {name}", " ", name = name, width = 4);
                         }
                     }
-                    ItemWrap::Item(item) => {
+                    ItemWrap::Item(_item) => {
                         // println!("     - {}", item.name());
                         todo!("topic.deps ItemWrap::Item")
                     }
@@ -68,7 +69,7 @@ impl Print for PlainPrinter {
                     ItemWrap::Named(name) => {
                         println!("{:width$}- {name}", " ", name = name, width = 4);
                     }
-                    ItemWrap::Item(item) => {
+                    ItemWrap::Item(_item) => {
                         // println!("     - {}", item.name());
                         todo!("topic.steps ItemWrap::Item")
                     }
@@ -196,7 +197,7 @@ fn print_item(item: &Item, width: usize) {
                     ItemWrap::Named(name) => {
                         println!("{:width$}- {name}", " ", name = name, width = width);
                     }
-                    _ => todo!("not implemented yet")
+                    _ => todo!("not implemented yet"),
                 }
             }
             for dep in &topic.steps {
@@ -204,7 +205,7 @@ fn print_item(item: &Item, width: usize) {
                     ItemWrap::Named(name) => {
                         println!("{:width$}- {name}", " ", name = name, width = width);
                     }
-                    _ => todo!("not implemented yet")
+                    _ => todo!("not implemented yet"),
                 }
             }
         }

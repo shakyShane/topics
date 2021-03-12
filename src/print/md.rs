@@ -13,7 +13,7 @@ impl Print for MdPrinter {
         Ok(())
     }
 
-    fn print_error(&self, _msg: &str, _ctx: &Context) {
+    fn print_error(&self, _msg: &str, _ctx: &Context) -> anyhow::Result<()> {
         unimplemented!()
     }
 }

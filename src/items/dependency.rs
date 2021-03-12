@@ -7,14 +7,6 @@ pub struct DependencyCheck {
 }
 
 impl DependencyCheck {
-    pub fn new() -> Self {
-        Self {
-            verify: "".to_string(),
-            name: "".to_string(),
-            autofix: None,
-            url: None,
-        }
-    }
     pub fn minimal(name: &str, verify: &str) -> Self {
         Self {
             verify: name.to_string(),

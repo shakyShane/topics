@@ -30,7 +30,7 @@ impl SubCommand for PrintCmd {
         }
         if good.is_empty() {
             let err = SubCommandError::Empty;
-            self.print_kind.print_error(&err.to_string(), &ctx);
+            let _ = self.print_kind.print_error(&err.to_string(), &ctx);
             return Err(err);
         }
 
@@ -42,7 +42,7 @@ impl SubCommand for PrintCmd {
         let db = Db::try_from_docs(&docs);
 
         if let Err(e) = db {
-            self.print_kind.print_error(&e.to_string(), &ctx);
+            let _ = self.print_kind.print_error(&e.to_string(), &ctx);
             return Err(SubCommandError::Handled);
         }
 

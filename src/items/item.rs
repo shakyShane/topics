@@ -24,19 +24,19 @@ pub enum ItemWrap {
     Item(Item),
 }
 
-impl Item {
-    pub fn name(&self) -> String {
-        match self {
-            Item::Command(cmd) => cmd.name.clone(),
-            Item::FileExistsCheck(fec) => fec.name.clone(),
-            Item::DependencyCheck(dc) => dc.name.clone(),
-            Item::Instruction(inst) => inst.name.clone(),
-            Item::HostEntriesCheck(hec) => hec.name.clone(),
-            Item::Topic(top) => top.name.clone(),
-            Item::TaskGroup(tg) => tg.name.clone(),
-        }
-    }
-}
+// impl Item {
+//     pub fn name(&self) -> String {
+//         match self {
+//             Item::Command(cmd) => cmd.name.clone(),
+//             Item::FileExistsCheck(fec) => fec.name.clone(),
+//             Item::DependencyCheck(dc) => dc.name.clone(),
+//             Item::Instruction(inst) => inst.name.clone(),
+//             Item::HostEntriesCheck(hec) => hec.name.clone(),
+//             Item::Topic(top) => top.name.clone(),
+//             Item::TaskGroup(tg) => tg.name.clone(),
+//         }
+//     }
+// }
 
 impl FromStr for Item {
     type Err = anyhow::Error;

@@ -8,7 +8,7 @@ use std::str::FromStr;
 
 pub trait Print: Debug {
     fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()>;
-    fn print_error(&self, msg: &str, _ctx: &Context);
+    fn print_error(&self, msg: &str, _ctx: &Context) -> anyhow::Result<()>;
     fn print_heading(&self, kind: &str, message: &str) {
         println!("[default impl heading]");
         println!("{} {}", kind, message);
@@ -76,7 +76,7 @@ impl Print for PrintKind {
         }
     }
 
-    fn print_error(&self, msg: &str, ctx: &Context) {
+    fn print_error(&self, msg: &str, ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Plain => (plain::PlainPrinter).print_error(msg, ctx),
             _ => todo!("implement others for print_topic"),
