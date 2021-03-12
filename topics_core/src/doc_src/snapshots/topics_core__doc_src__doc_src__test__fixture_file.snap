@@ -1,5 +1,5 @@
 ---
-source: topics/src/doc_src/doc_src.rs
+source: topics_core/src/doc_src/doc_src.rs
 expression: d
 
 ---

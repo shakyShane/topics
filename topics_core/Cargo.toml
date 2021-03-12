@@ -7,3 +7,19 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = { version = "1.0.123", features = ["derive"] }
+serde_yaml = "0.8.17"
+anyhow = "1.0.38"
+thiserror = "1.0.24"
+structopt = "0.3.21"
+env_logger = "0.8.3"
+log = "0.4.14"
+bat = { version = "0.17.1" }
+ansi_term = "0.12.1"
+regex = "1.4.3"
+lazy_static = "1.4.0"
+dialoguer = "0.7.1"
+multi_yaml = { path = "../multi_yaml", version = "0.1.0" }
+
+[dev-dependencies]
+insta = "1.7.0"

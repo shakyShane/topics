@@ -9,7 +9,6 @@ use crate::{
     doc_src::DocSource,
     items::{Command, DependencyCheck, Instruction, Topic},
 };
-use anyhow::Error;
 
 #[derive(Debug, Default)]
 pub struct Doc {

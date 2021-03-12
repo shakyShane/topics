@@ -1,9 +1,9 @@
 use crate::context::Context;
 
 use crate::doc::{DocError, DocResult};
+use multi_yaml::MultiYaml;
 use std::path::PathBuf;
 use std::str::FromStr;
-use multi_yaml::MultiYaml;
 
 #[derive(Debug, Default)]
 pub struct DocSource {
