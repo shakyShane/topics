@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Default)]
 pub struct DocSource {
+    pub input_file: Option<PathBuf>,
     pub file_content: String,
     pub doc_src_items: MultiYaml,
 }
@@ -21,6 +22,7 @@ impl DocSource {
         })?;
         let items = MultiYaml::from_str(&file_str)?;
         let new_self = Self {
+            input_file: Some(pb.clone()),
             file_content: file_str,
             doc_src_items: items,
         };
@@ -34,6 +36,7 @@ impl FromStr for DocSource {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let items = MultiYaml::from_str(&s)?;
         Ok(Self {
+            input_file: None,
             file_content: s.to_string(),
             doc_src_items: items,
         })

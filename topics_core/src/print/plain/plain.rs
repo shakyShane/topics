@@ -48,7 +48,7 @@ impl Print for PlainPrinter {
 
     fn print_all(&self, docs: &Vec<Doc>, db: &Db, ctx: &Context) -> anyhow::Result<()> {
         for doc in docs {
-            for (_, topic) in &doc.topics {
+            for topic in &doc.topics() {
                 let _ = self.print_topic(&topic, &db, &doc, &ctx);
             }
         }
@@ -60,7 +60,10 @@ impl Print for PlainPrinter {
             docs.iter()
                 .fold(vec![], |mut acc, doc_result| match doc_result {
                     Ok(doc) => {
-                        acc.push((doc.errors.len(), doc.input_file.clone()));
+                        acc.push((
+                            doc.errors.len(),
+                            doc.source.input_file.clone().unwrap_or_default(),
+                        ));
                         acc
                     }
                     Err(e) => match e {
@@ -143,7 +146,7 @@ fn print_item_wrap(item_wrap: &ItemWrap, db: &Db, width: usize) {
             let matched = db.item_map.get(name);
             match matched {
                 Some(matched_item) => {
-                    print_item_line(matched_item, &db, width);
+                    print_item_line(&matched_item.item, &db, width);
                 }
                 None => {
                     println!(
@@ -212,6 +215,12 @@ fn plain_print_heading(kind: &str, message: &str) {
 }
 
 fn print_error(doc: &Doc, doc_err: &DocError) {
+    let name = doc
+        .source
+        .input_file
+        .as_ref()
+        .map(|f| f.display().to_string())
+        .unwrap_or_default();
     match doc_err {
         DocError::PathRead {
             pb: _,
@@ -244,11 +253,15 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                                 *line_end,
                             )]))
                             .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
-                                .name(&doc.input_file) // Dummy name provided to detect the syntax.
+                                .name(&name) // Dummy name provided to detect the syntax.
                                 .kind("File")
                                 .title(format!(
                                     "{}:{}",
-                                    &loc_err.input_file.display().to_string(),
+                                    &loc_err
+                                        .input_file
+                                        .as_ref()
+                                        .map(|f| f.display().to_string())
+                                        .unwrap_or_default(),
                                     line
                                 ))])
                             .print()
@@ -267,11 +280,15 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                                 *line_end,
                             )]))
                             .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
-                                .name(&doc.input_file) // Dummy name provided to detect the syntax.
+                                .name(&name) // Dummy name provided to detect the syntax.
                                 .kind("File")
                                 .title(format!(
                                     "{}:{}",
-                                    &loc_err.input_file.display().to_string(),
+                                    &loc_err
+                                        .input_file
+                                        .as_ref()
+                                        .map(|f| f.display().to_string())
+                                        .unwrap_or_default(),
                                     line_start
                                 ))])
                             .print()

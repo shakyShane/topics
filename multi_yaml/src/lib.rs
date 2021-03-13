@@ -3,7 +3,7 @@ pub struct MultiYaml {
     pub items: Vec<YamlDoc>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct YamlDoc {
     pub line_start: usize,
     pub line_end: usize,

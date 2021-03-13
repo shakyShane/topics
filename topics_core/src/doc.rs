@@ -1,39 +1,75 @@
-use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
 
 use crate::items::item::Item;
-use crate::items::FileExistsCheck;
-use crate::{
-    context::Context,
-    doc_src::DocSource,
-    items::{Command, DependencyCheck, Instruction, Topic},
-};
+
+use crate::{context::Context, doc_src::DocSource, items::Topic};
+use multi_yaml::YamlDoc;
 
 #[derive(Debug, Default)]
 pub struct Doc {
-    pub input_file: PathBuf,
     pub source: DocSource,
-    pub topics: HashMap<String, Topic>,
-    pub instructions: HashMap<String, Instruction>,
-    pub dep_checks: HashMap<String, DependencyCheck>,
-    pub commands: HashMap<String, Command>,
-    pub file_checks: HashMap<String, FileExistsCheck>,
+    pub items: Vec<ItemTracked>,
     pub errors: Vec<DocError>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ItemTracked {
+    pub item: Item,
+    pub src_doc: YamlDoc,
+    pub input_file: Option<PathBuf>,
 }
 
 pub type DocResult<T, E = DocError> = core::result::Result<T, E>;
 
 impl Doc {
+    pub fn topics(&self) -> Vec<Topic> {
+        self.items
+            .iter()
+            .filter_map(|item| match item {
+                ItemTracked {
+                    item: Item::Topic(topic),
+                    ..
+                } => Some(topic.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+    pub fn topic_names(&self) -> Vec<&str> {
+        self.items
+            .iter()
+            .filter_map(|item| match item {
+                ItemTracked {
+                    item: Item::Topic(topic),
+                    ..
+                } => Some(topic.name.as_str()),
+                _ => None,
+            })
+            .collect()
+    }
+    pub fn topic_by_name(&self, name: &str) -> Option<&Topic> {
+        self.items.iter().find_map(|item| match item {
+            ItemTracked {
+                item: Item::Topic(topic),
+                ..
+            } => {
+                if topic.name == name {
+                    Some(topic)
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        })
+    }
     pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
         let doc_src = DocSource::from_path_buf(&pb, ctx)?;
         Self::from_doc_src(&pb, doc_src, &ctx)
     }
-    pub fn from_doc_src(pb: &PathBuf, doc_srcs: DocSource, _ctx: &Context) -> DocResult<Self> {
+    pub fn from_doc_src(_pb: &PathBuf, doc_src: DocSource, _ctx: &Context) -> DocResult<Self> {
         let mut doc = Doc::default();
-        doc.input_file = pb.clone();
-        doc.source = doc_srcs;
+        doc.source = doc_src;
         lazy_static::lazy_static! {
             static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
         }
@@ -45,7 +81,7 @@ impl Doc {
                         line_start: src.line_start + 1,
                         line_end: src.line_end,
                     }),
-                    input_file: doc.input_file.clone(),
+                    input_file: doc.source.input_file.clone(),
                     description: e.to_string(),
                 };
                 if let Some(location) = e.location() {
@@ -70,27 +106,13 @@ impl Doc {
                 Err(doc_err) => {
                     doc.errors.push(doc_err);
                 }
-                Ok(item) => match item {
-                    Item::Command(cmd) => {
-                        doc.commands.insert(cmd.name.clone(), cmd.clone());
-                    }
-                    Item::FileExistsCheck(fec) => {
-                        doc.file_checks.insert(fec.name.clone(), fec.clone());
-                    }
-                    Item::DependencyCheck(dc) => {
-                        doc.dep_checks.insert(dc.name.clone(), dc.clone());
-                    }
-                    Item::Instruction(inst) => {
-                        doc.instructions.insert(inst.name.clone(), inst.clone());
-                    }
-                    Item::HostEntriesCheck(_) => {}
-                    Item::Topic(t) => {
-                        doc.topics.insert(t.name.clone(), t.clone());
-                    }
-                    Item::TaskGroup(_) => {
-                        println!("TaskGroup not implemented yet")
-                    }
-                },
+                Ok(item) => {
+                    doc.items.push(ItemTracked {
+                        item,
+                        src_doc: src.clone(),
+                        input_file: doc.source.input_file.clone(),
+                    });
+                }
             };
         }
         Ok(doc)
@@ -127,7 +149,7 @@ impl From<anyhow::Error> for DocError {
 #[derive(Debug)]
 pub struct LocationError {
     pub location: Option<Location>,
-    pub input_file: PathBuf,
+    pub input_file: Option<PathBuf>,
     pub input_file_src: String,
     pub description: String,
 }
@@ -154,7 +176,14 @@ impl Display for LocationError {
             match location {
                 Location::LineAndCol { line, column, .. } => {
                     let _ = writeln!(f, "    msg: {}", self.description);
-                    let _ = writeln!(f, "   file: {}", self.input_file.display());
+                    let _ = writeln!(
+                        f,
+                        "   file: {}",
+                        self.input_file
+                            .as_ref()
+                            .map(|f| f.display().to_string())
+                            .unwrap_or("None".to_string())
+                    );
                     let _ = writeln!(f, "   line: {}", line);
                     let _ = writeln!(f, " column: {}", column);
                 }
@@ -163,7 +192,14 @@ impl Display for LocationError {
                     line_end,
                 } => {
                     let _ = writeln!(f, "           msg: {}", self.description);
-                    let _ = writeln!(f, "          file: {}", self.input_file.display());
+                    let _ = writeln!(
+                        f,
+                        "          file: {}",
+                        self.input_file
+                            .as_ref()
+                            .map(|f| f.display().to_string())
+                            .unwrap_or("None".to_string())
+                    );
                     let _ = writeln!(f, " between lines: {} & {}", line_start, line_end);
                 }
             }

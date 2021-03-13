@@ -4,6 +4,9 @@ expression: d
 
 ---
 DocSource {
+    input_file: Some(
+        "/Users/shaneosbourne/WebstormProjects/topics/topics_core/../fixtures2/topics.yaml",
+    ),
     file_content: "kind: Topic\nname: Run unit tests\ndeps:\n  - global-node\nsteps:\n  - kind: Instruction\n    name: check-hithub-checkin\n    instruction: |\n      Don\'t forget to check in the changes\n\n---\n\nkind: DependencyCheck\nname: global-node\nverify: node -v\nurl: https://www.nodejs.org\n\n---\n\nkind: DependencyCheck\nname: global-yarn\nverify: yarn -v\nurl: https://yarn.sh/legacy\n\n---\n\nkind: Topic\nname: Run screen shot tests\ndeps:\n  - global-node\n  - global-yarn\nsteps:\n  - github-checkin\n\n---\n\nkind: Instruction\nname: github-checkin\ninstruction: Don\'t forget to check in",
     doc_src_items: MultiYaml {
         items: [

@@ -3,3 +3,11 @@ kind: Command
 name: run unit tests command
 cwd: "./"
 command: "jest --runInBand"
+
+
+---
+
+kind: Command
+name: unused command here
+cwd: "./"
+command: "echo hello!"

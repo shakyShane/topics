@@ -58,9 +58,9 @@ impl SubCommand for PrintCmd {
 
         let titles = docs
             .iter()
-            .map(|doc| doc.topics.keys())
+            .map(|doc| doc.topic_names())
             .flatten()
-            .collect::<Vec<&String>>();
+            .collect::<Vec<&str>>();
 
         use dialoguer::MultiSelect;
 
@@ -87,7 +87,7 @@ impl SubCommand for PrintCmd {
         // dbg!(selections);
         for title in selections.iter().map(|idx| titles[*idx]) {
             for doc in &docs {
-                if let Some(topic) = doc.topics.get(title) {
+                if let Some(topic) = doc.topic_by_name(&title) {
                     let _ = self.print_kind.print_topic(&topic, &db, &doc, &ctx);
                 }
             }

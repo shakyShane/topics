@@ -14,7 +14,7 @@ expression: doc?.errors
                     column: 1,
                 },
             ),
-            input_file: "/input-yaml.yml",
+            input_file: None,
             input_file_src: "---\n\nkind: DependencyCheck\nname: global-node\nverify: node -v\nurl: https://www.nodejs.org\n\n---\n\nkind: DependencyCheck\nname: global-yarn\nverify: yarn -v\nurl: https://yarn.sh/legacy\n\n---\n\nkind: Topic\nname: Run screen shot tests\ndeps:\n  - global-node\n  - global-yarn\nsteps\n",
             description: "while parsing a block mapping, did not find expected key at line 22 column 1",
         },
