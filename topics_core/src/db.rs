@@ -35,14 +35,17 @@ impl Db {
                     }
                 }
             }
-            for (name, _topic) in &doc.commands {
+            for (name, cmd) in &doc.commands {
                 graph.entry(name.clone()).or_insert(HashSet::new());
+                items_2.insert(name.to_owned(), Item::Command(cmd.clone()));
             }
-            for (name, _topic) in &doc.dep_checks {
+            for (name, dep_check) in &doc.dep_checks {
                 graph.entry(name.clone()).or_insert(HashSet::new());
+                items_2.insert(name.to_owned(), Item::DependencyCheck(dep_check.clone()));
             }
-            for (name, _topic) in &doc.instructions {
+            for (name, instruction) in &doc.instructions {
                 graph.entry(name.clone()).or_insert(HashSet::new());
+                items_2.insert(name.to_owned(), Item::Instruction(instruction.clone()));
             }
         }
         let _ = detect_cycle(&graph)?;
