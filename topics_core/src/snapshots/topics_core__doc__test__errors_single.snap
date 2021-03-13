@@ -22,6 +22,7 @@ Ok(
         instructions: {},
         dep_checks: {},
         commands: {},
+        file_checks: {},
         errors: [
             SerdeYamlErr(
                 LocationError {

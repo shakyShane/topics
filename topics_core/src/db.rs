@@ -6,18 +6,18 @@ type ItemGraph = HashMap<String, HashSet<String>>;
 
 #[derive(Debug)]
 pub struct Db {
-    items: ItemGraph,
-    pub items_2: HashMap<String, Item>,
+    graph: ItemGraph,
+    pub item_map: HashMap<String, Item>,
 }
 
 impl Db {
     pub fn try_from_docs<'a>(docs: &Vec<Doc>) -> anyhow::Result<Self> {
         let mut graph: ItemGraph = HashMap::new();
-        let mut items_2: HashMap<String, Item> = HashMap::new();
+        let mut item_map: HashMap<String, Item> = HashMap::new();
         for doc in docs {
             for (topic_name, topic) in &doc.topics {
                 let entry = graph.entry(topic_name.clone()).or_insert(HashSet::new());
-                items_2.insert(topic_name.to_owned(), Item::Topic(topic.clone()));
+                item_map.insert(topic_name.to_owned(), Item::Topic(topic.clone()));
                 for dep in &topic.deps {
                     match dep {
                         ItemWrap::Named(item_name) => {
@@ -37,22 +37,23 @@ impl Db {
             }
             for (name, cmd) in &doc.commands {
                 graph.entry(name.clone()).or_insert(HashSet::new());
-                items_2.insert(name.to_owned(), Item::Command(cmd.clone()));
+                item_map.insert(name.to_owned(), Item::Command(cmd.clone()));
             }
             for (name, dep_check) in &doc.dep_checks {
                 graph.entry(name.clone()).or_insert(HashSet::new());
-                items_2.insert(name.to_owned(), Item::DependencyCheck(dep_check.clone()));
+                item_map.insert(name.to_owned(), Item::DependencyCheck(dep_check.clone()));
             }
             for (name, instruction) in &doc.instructions {
                 graph.entry(name.clone()).or_insert(HashSet::new());
-                items_2.insert(name.to_owned(), Item::Instruction(instruction.clone()));
+                item_map.insert(name.to_owned(), Item::Instruction(instruction.clone()));
+            }
+            for (name, file_check) in &doc.file_checks {
+                graph.entry(name.clone()).or_insert(HashSet::new());
+                item_map.insert(name.to_owned(), Item::FileExistsCheck(file_check.clone()));
             }
         }
         let _ = detect_cycle(&graph)?;
-        Ok(Self {
-            items: graph,
-            items_2,
-        })
+        Ok(Self { graph, item_map })
     }
 }
 

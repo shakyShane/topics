@@ -24,19 +24,31 @@ pub enum ItemWrap {
     Item(Item),
 }
 
-// impl Item {
-//     pub fn name(&self) -> String {
-//         match self {
-//             Item::Command(cmd) => cmd.name.clone(),
-//             Item::FileExistsCheck(fec) => fec.name.clone(),
-//             Item::DependencyCheck(dc) => dc.name.clone(),
-//             Item::Instruction(inst) => inst.name.clone(),
-//             Item::HostEntriesCheck(hec) => hec.name.clone(),
-//             Item::Topic(top) => top.name.clone(),
-//             Item::TaskGroup(tg) => tg.name.clone(),
-//         }
-//     }
-// }
+impl Item {
+    pub fn name(&self) -> String {
+        match self {
+            Item::Command(cmd) => cmd.name.clone(),
+            Item::FileExistsCheck(fec) => fec.name.clone(),
+            Item::DependencyCheck(dc) => dc.name.clone(),
+            Item::Instruction(inst) => inst.name.clone(),
+            Item::HostEntriesCheck(hec) => hec.name.clone(),
+            Item::Topic(top) => top.name.clone(),
+            Item::TaskGroup(tg) => tg.name.clone(),
+        }
+    }
+    pub fn kind_name(&self) -> String {
+        match self {
+            Item::Command(_) => "Command",
+            Item::FileExistsCheck(_) => "File Exists Check",
+            Item::DependencyCheck(_) => "Dependency Check",
+            Item::Instruction(_) => "Instruction",
+            Item::HostEntriesCheck(_) => "Host Entries Check",
+            Item::Topic(_) => "Topic",
+            Item::TaskGroup(_) => "Task Group",
+        }
+        .to_string()
+    }
+}
 
 impl FromStr for Item {
     type Err = anyhow::Error;

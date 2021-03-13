@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use crate::items::item::Item;
+use crate::items::FileExistsCheck;
 use crate::{
     context::Context,
     doc_src::DocSource,
@@ -18,6 +19,7 @@ pub struct Doc {
     pub instructions: HashMap<String, Instruction>,
     pub dep_checks: HashMap<String, DependencyCheck>,
     pub commands: HashMap<String, Command>,
+    pub file_checks: HashMap<String, FileExistsCheck>,
     pub errors: Vec<DocError>,
 }
 
@@ -72,7 +74,9 @@ impl Doc {
                     Item::Command(cmd) => {
                         doc.commands.insert(cmd.name.clone(), cmd.clone());
                     }
-                    Item::FileExistsCheck(_) => {}
+                    Item::FileExistsCheck(fec) => {
+                        doc.file_checks.insert(fec.name.clone(), fec.clone());
+                    }
                     Item::DependencyCheck(dc) => {
                         doc.dep_checks.insert(dc.name.clone(), dc.clone());
                     }

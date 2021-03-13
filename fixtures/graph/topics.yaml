@@ -15,6 +15,7 @@ deps:
 steps:
   - install docker
   - install skaffold
+  - install helm
 
 ---
 
