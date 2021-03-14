@@ -6,6 +6,7 @@ use crate::items::item::Item;
 
 use crate::{context::Context, doc_src::DocSource, items::Topic};
 use multi_yaml::YamlDoc;
+use serde_yaml::{Error, Value};
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -22,6 +23,10 @@ pub struct ItemTracked {
 }
 
 pub type DocResult<T, E = DocError> = core::result::Result<T, E>;
+
+lazy_static::lazy_static! {
+    static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
+}
 
 impl Doc {
     pub fn topics(&self) -> Vec<Topic> {
@@ -72,38 +77,9 @@ impl Doc {
             source: doc_src,
             ..Default::default()
         };
-        lazy_static::lazy_static! {
-            static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
-        }
         for src in &doc.source.doc_src_items.items {
-            let item: Result<Item, DocError> = serde_yaml::from_str(&src.content).map_err(|e| {
-                let mut err = LocationError {
-                    input_file_src: doc.source.file_content.clone(),
-                    location: Some(Location::Region {
-                        line_start: src.line_start + 1,
-                        line_end: src.line_end,
-                    }),
-                    input_file: doc.source.input_file.clone(),
-                    description: e.to_string(),
-                };
-                if let Some(location) = e.location() {
-                    let real_line = location.line() + src.line_start;
-                    err.location = Some(Location::LineAndCol {
-                        line: real_line,
-                        column: location.column(),
-                        line_start: src.line_start + 1,
-                        line_end: src.line_end,
-                    });
-                    err.description = RE
-                        .replace_all(
-                            err.description.as_str(),
-                            format!("at line {}", real_line).as_str(),
-                        )
-                        .to_string()
-                }
-                DocError::SerdeYamlErr(err)
-            });
-
+            let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
+                .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
             match item {
                 Err(doc_err) => {
                     doc.errors.push(doc_err);
@@ -146,6 +122,38 @@ impl From<anyhow::Error> for DocError {
     fn from(e: anyhow::Error) -> Self {
         DocError::Unknown(e.to_string())
     }
+}
+
+fn from_serde_yaml_error(
+    doc: &Doc,
+    yaml_doc: &YamlDoc,
+    serde_error: &serde_yaml::Error,
+) -> DocError {
+    let mut err = LocationError {
+        input_file_src: doc.source.file_content.clone(),
+        location: Some(Location::Region {
+            line_start: yaml_doc.line_start + 1,
+            line_end: yaml_doc.line_end,
+        }),
+        input_file: doc.source.input_file.clone(),
+        description: serde_error.to_string(),
+    };
+    if let Some(location) = serde_error.location() {
+        let real_line = location.line() + yaml_doc.line_start;
+        err.location = Some(Location::LineAndCol {
+            line: real_line,
+            column: location.column(),
+            line_start: yaml_doc.line_start + 1,
+            line_end: yaml_doc.line_end,
+        });
+        err.description = RE
+            .replace_all(
+                err.description.as_str(),
+                format!("at line {}", real_line).as_str(),
+            )
+            .to_string()
+    }
+    DocError::SerdeYamlErr(err)
 }
 
 #[derive(Debug)]
@@ -233,6 +241,33 @@ deps:
   - global-yarn
 steps:
   - github-checkin
+"#;
+        let doc = Doc::from_str(input)?;
+        assert_eq!(doc.source.doc_src_items.items.len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_doc() -> anyhow::Result<()> {
+        let input = r#"
+
+"#;
+        let doc = Doc::from_str(input)?;
+        assert_eq!(doc.errors.len(), 0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_multi_empty_doc() -> anyhow::Result<()> {
+        let input = r#"
+
+---
+
+
+
+
+---
+
 "#;
         let doc = Doc::from_str(input)?;
         assert_eq!(doc.source.doc_src_items.items.len(), 1);

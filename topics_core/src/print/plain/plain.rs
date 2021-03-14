@@ -80,12 +80,15 @@ impl Print for PlainPrinter {
 
         print_error_heading("Problems detected", "Please review the following:");
         eprintln!();
-        summary.iter().for_each(|(num, file)| {
+        summary.iter().for_each(|(num_errors, file)| {
             use ansi_term::Colour::{Cyan, Red};
             eprintln!(
                 "    {} in {}",
-                Red.bold()
-                    .paint(format!("{} error{}", num, if *num == 1 { "" } else { "s" })),
+                Red.bold().paint(format!(
+                    "{} error{}",
+                    num_errors,
+                    if *num_errors == 1 { "" } else { "s" }
+                )),
                 Cyan.paint(file.display().to_string())
             )
         });
@@ -93,8 +96,6 @@ impl Print for PlainPrinter {
         for doc_result in docs {
             match doc_result {
                 Ok(doc) => {
-                    // eprintln!("{} errors found in {}", doc.input_file.display());
-
                     for error in &doc.errors {
                         print_error(&doc, &error);
                     }
