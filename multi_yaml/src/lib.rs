@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 #[derive(Debug, Default)]
 pub struct MultiYaml {
     pub items: Vec<YamlDoc>,
@@ -19,6 +21,7 @@ impl std::str::FromStr for MultiYaml {
 }
 
 impl MultiYaml {
+    #[allow(clippy::unnecessary_wraps)]
     fn parse(str: &str) -> Result<Self, anyhow::Error> {
         let mut items: Vec<YamlDoc> = vec![];
         let split = str.lines().collect::<Vec<&str>>();
@@ -37,12 +40,10 @@ impl MultiYaml {
                 start = line + 1;
             } else if peek.peek().is_none() {
                 end_line = line + 1;
-                if end < start {
-                    docs.push((start, line + 1))
-                } else {
-                    if end > start {
-                        docs.push((start, end))
-                    }
+                match end.cmp(&start) {
+                    Ordering::Less => docs.push((start, line + 1)),
+                    Ordering::Equal => {}
+                    Ordering::Greater => docs.push((start, end)),
                 }
             }
         }

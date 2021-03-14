@@ -20,23 +20,20 @@ impl Context {
     pub fn join_path(&self, pb: impl Into<PathBuf>) -> PathBuf {
         self.opts.cwd.join_path(pb)
     }
-    pub fn read_docs_split(
-        &self,
-        files: &Vec<PathBuf>,
-    ) -> (Vec<DocResult<Doc>>, Vec<DocResult<Doc>>) {
+    pub fn read_docs_split(&self, files: &[PathBuf]) -> (Vec<DocResult<Doc>>, Vec<DocResult<Doc>>) {
         self.read_docs(&files).into_iter().partition(|a| match a {
             Ok(doc) => doc.errors.is_empty(),
             Err(_) => false,
         })
     }
-    pub fn read_docs(&self, files: &Vec<PathBuf>) -> Vec<DocResult<Doc>> {
+    pub fn read_docs(&self, files: &[PathBuf]) -> Vec<DocResult<Doc>> {
         files
             .iter()
             .map(|pb| Doc::from_path_buf(pb, &self))
             .collect()
     }
     #[cfg(test)]
-    pub fn read_docs_unwrapped(&self, files: &Vec<PathBuf>) -> Vec<Doc> {
+    pub fn read_docs_unwrapped(&self, files: &[PathBuf]) -> Vec<Doc> {
         files
             .iter()
             .map(|pb| Doc::from_path_buf(pb, &self).expect("read_docs_unwrapped"))

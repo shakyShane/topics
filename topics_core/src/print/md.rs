@@ -8,7 +8,7 @@ use crate::print::Print;
 pub struct MdPrinter;
 
 impl Print for MdPrinter {
-    fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_welcome(&self, _docs: &[Doc], _ctx: &Context) -> anyhow::Result<()> {
         println!("later..");
         Ok(())
     }

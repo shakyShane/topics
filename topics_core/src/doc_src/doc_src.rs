@@ -49,12 +49,13 @@ mod test {
     use crate::context::Context;
 
     use crate::doc_src::DocSource;
-    use std::env::current_dir;
+
+    use std::path::PathBuf;
 
     #[test]
     fn test_fixture_file() -> anyhow::Result<()> {
         let ctx = Context::from_vec(&[]);
-        let pb = current_dir()?.join("../fixtures2/topics.yaml");
+        let pb = PathBuf::from("../fixtures2/topics.yaml");
         let d = DocSource::from_path_buf(&pb, &ctx)?;
         insta::assert_debug_snapshot!(d);
         Ok(())

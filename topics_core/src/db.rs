@@ -11,35 +11,30 @@ pub struct Db {
 }
 
 impl Db {
-    pub fn try_from_docs<'a>(docs: &Vec<Doc>) -> anyhow::Result<Self> {
+    pub fn try_from_docs(docs: &[Doc]) -> anyhow::Result<Self> {
         let mut graph: ItemGraph = HashMap::new();
         let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
         for doc in docs {
             for item_tracked in &doc.items {
                 let this_item = &item_tracked.item;
-                let entry = graph.entry(this_item.name()).or_insert(HashSet::new());
+                let entry = graph.entry(this_item.name()).or_insert_with(HashSet::new);
                 item_map.insert(this_item.name(), (*item_tracked).clone());
-                match this_item {
-                    Item::Topic(topic) => {
-                        for dep in &topic.deps {
-                            match dep {
-                                ItemWrap::Named(item_name) => {
-                                    entry.insert(item_name.clone());
-                                }
-                                ItemWrap::Item(_) => todo!("Item::Item not ready yet"),
+                if let Item::Topic(topic) = this_item {
+                    for dep in &topic.deps {
+                        match dep {
+                            ItemWrap::Named(item_name) => {
+                                entry.insert(item_name.clone());
                             }
-                        }
-                        for dep in &topic.steps {
-                            match dep {
-                                ItemWrap::Named(item_name) => {
-                                    entry.insert(item_name.clone());
-                                }
-                                ItemWrap::Item(_) => todo!("Item::Item not ready yet"),
-                            }
+                            ItemWrap::Item(_) => todo!("Item::Item not ready yet"),
                         }
                     }
-                    _ => {
-                        // println!("nothing else to do")
+                    for dep in &topic.steps {
+                        match dep {
+                            ItemWrap::Named(item_name) => {
+                                entry.insert(item_name.clone());
+                            }
+                            ItemWrap::Item(_) => todo!("Item::Item not ready yet"),
+                        }
                     }
                 }
             }
@@ -47,20 +42,22 @@ impl Db {
         let _ = detect_cycle(&graph)?;
         Ok(Self { graph, item_map })
     }
+    #[cfg(test)]
     pub fn unknown(&self) -> Vec<String> {
         let mut output = vec![];
-        for (_, hash_set) in &self.graph {
+        for hash_set in self.graph.values() {
             for child_name in hash_set {
-                if let None = self.graph.get(child_name) {
+                if self.graph.get(child_name).is_none() {
                     output.push(child_name.clone())
                 }
             }
         }
         output
     }
+    #[cfg(test)]
     pub fn unused(&self) -> Vec<String> {
         let mut output = vec![];
-        for (parent_name, _) in &self.graph {
+        for parent_name in self.graph.keys() {
             let mut used = false;
             let item = self.item_map.get(parent_name);
             if let Some(ItemTracked {
@@ -70,7 +67,7 @@ impl Db {
             {
                 used = true
             }
-            for (_, child_hash_set) in &self.graph {
+            for child_hash_set in self.graph.values() {
                 if child_hash_set.contains(&parent_name.clone()) {
                     used = true
                 }

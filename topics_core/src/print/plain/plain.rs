@@ -19,7 +19,7 @@ use std::path::PathBuf;
 pub struct PlainPrinter;
 
 impl Print for PlainPrinter {
-    fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_welcome(&self, _docs: &[Doc], _ctx: &Context) -> anyhow::Result<()> {
         plain_print_heading("Topics", "What would you like to do today?");
         println!();
         Ok(())
@@ -46,7 +46,7 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
-    fn print_all(&self, docs: &Vec<Doc>, db: &Db, ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &[Doc], db: &Db, ctx: &Context) -> anyhow::Result<()> {
         for doc in docs {
             for topic in &doc.topics() {
                 let _ = self.print_topic(&topic, &db, &doc, &ctx);
@@ -55,7 +55,7 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
-    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_errors(&self, docs: &[DocResult<Doc>], _ctx: &Context) -> anyhow::Result<()> {
         let summary: Vec<(usize, PathBuf)> =
             docs.iter()
                 .fold(vec![], |mut acc, doc_result| match doc_result {
@@ -194,8 +194,8 @@ fn print_doc_error(doc_err: &DocError) {
 fn print_error_heading(kind: &str, message: &str) {
     use ansi_term::Colour::Red;
     use ansi_term::{ANSIString, ANSIStrings};
-    eprint!("\n");
-    let some_value = format!("{}", kind);
+    eprintln!();
+    let some_value = kind.to_string();
     let strings: &[ANSIString<'static>] =
         &[Red.paint("["), Red.bold().paint(some_value), Red.paint("]")];
     eprintln!("{} {}", ANSIStrings(strings), Red.bold().paint(message));
@@ -204,8 +204,8 @@ fn print_error_heading(kind: &str, message: &str) {
 fn plain_print_heading(kind: &str, message: &str) {
     use ansi_term::Colour::Green;
     use ansi_term::{ANSIString, ANSIStrings};
-    eprint!("\n");
-    let some_value = format!("{}", kind);
+    eprintln!();
+    let some_value = kind.to_string();
     let strings: &[ANSIString<'static>] = &[
         Green.paint("["),
         Green.bold().paint(some_value),

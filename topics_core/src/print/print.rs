@@ -7,7 +7,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
 pub trait Print: Debug {
-    fn print_welcome(&self, _docs: &Vec<Doc>, _ctx: &Context) -> anyhow::Result<()>;
+    fn print_welcome(&self, _docs: &[Doc], _ctx: &Context) -> anyhow::Result<()>;
     fn print_error(&self, msg: &str, _ctx: &Context) -> anyhow::Result<()>;
     fn print_heading(&self, kind: &str, message: &str) {
         println!("[default impl heading]");
@@ -24,11 +24,11 @@ pub trait Print: Debug {
         println!("{:?}", topic);
         Ok(())
     }
-    fn print_all(&self, docs: &Vec<Doc>, _b: &Db, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &[Doc], _b: &Db, _ctx: &Context) -> anyhow::Result<()> {
         println!("[default impl] printing {} doc(s)", docs.len());
         Ok(())
     }
-    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, _ctx: &Context) -> anyhow::Result<()> {
+    fn print_errors(&self, docs: &[DocResult<Doc>], _ctx: &Context) -> anyhow::Result<()> {
         println!("[default impl print::print_errors]");
         for doc in docs {
             match doc {
@@ -66,7 +66,7 @@ impl Default for PrintKind {
 }
 
 impl Print for PrintKind {
-    fn print_welcome(&self, docs: &Vec<Doc>, ctx: &Context) -> anyhow::Result<()> {
+    fn print_welcome(&self, docs: &[Doc], ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_welcome(docs, ctx),
             PrintKind::Plain => (plain::PlainPrinter).print_welcome(docs, ctx),
@@ -97,7 +97,7 @@ impl Print for PrintKind {
         }
     }
 
-    fn print_all(&self, docs: &Vec<Doc>, db: &Db, ctx: &Context) -> anyhow::Result<()> {
+    fn print_all(&self, docs: &[Doc], db: &Db, ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_all(docs, &db, ctx),
             PrintKind::Plain => (plain::PlainPrinter).print_all(docs, &db, ctx),
@@ -106,7 +106,7 @@ impl Print for PrintKind {
             }
         }
     }
-    fn print_errors(&self, docs: &Vec<DocResult<Doc>>, ctx: &Context) -> anyhow::Result<()> {
+    fn print_errors(&self, docs: &[DocResult<Doc>], ctx: &Context) -> anyhow::Result<()> {
         match self {
             PrintKind::Markdown => (md::MdPrinter).print_errors(docs, ctx),
             PrintKind::Plain => (plain::PlainPrinter).print_errors(docs, ctx),
@@ -125,9 +125,7 @@ impl FromStr for PrintKind {
             "md" | "Markdown" => Ok(PrintKind::Markdown),
             "json" | "Json" => Ok(PrintKind::Json),
             "plain" | "Plain" => Ok(PrintKind::Plain),
-            _a => {
-                return Err(PrintKindError::Unknown);
-            }
+            _a => Err(PrintKindError::Unknown),
         }
     }
 }

@@ -68,8 +68,10 @@ impl Doc {
         Self::from_doc_src(&pb, doc_src, &ctx)
     }
     pub fn from_doc_src(_pb: &PathBuf, doc_src: DocSource, _ctx: &Context) -> DocResult<Self> {
-        let mut doc = Doc::default();
-        doc.source = doc_src;
+        let mut doc = Doc {
+            source: doc_src,
+            ..Default::default()
+        };
         lazy_static::lazy_static! {
             static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
         }
@@ -171,7 +173,7 @@ pub enum Location {
 
 impl Display for LocationError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let _ = writeln!(f, "");
+        let _ = writeln!(f);
         if let Some(location) = &self.location {
             match location {
                 Location::LineAndCol { line, column, .. } => {
@@ -182,7 +184,7 @@ impl Display for LocationError {
                         self.input_file
                             .as_ref()
                             .map(|f| f.display().to_string())
-                            .unwrap_or("None".to_string())
+                            .unwrap_or_else(|| "None".to_string())
                     );
                     let _ = writeln!(f, "   line: {}", line);
                     let _ = writeln!(f, " column: {}", column);
@@ -198,7 +200,7 @@ impl Display for LocationError {
                         self.input_file
                             .as_ref()
                             .map(|f| f.display().to_string())
-                            .unwrap_or("None".to_string())
+                            .unwrap_or_else(|| "None".to_string())
                     );
                     let _ = writeln!(f, " between lines: {} & {}", line_start, line_end);
                 }
