@@ -270,7 +270,7 @@ steps:
 
 "#;
         let doc = Doc::from_str(input)?;
-        assert_eq!(doc.source.doc_src_items.items.len(), 1);
+        assert_eq!(doc.source.doc_src_items.items.len(), 0);
         Ok(())
     }
 

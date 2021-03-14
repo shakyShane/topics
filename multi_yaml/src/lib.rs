@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use yaml_rust::{yaml, Yaml};
 
 #[derive(Debug, Default)]
 pub struct MultiYaml {
@@ -53,11 +54,29 @@ impl MultiYaml {
 
         for (start, end) in docs {
             let content = split[start..end].join("\n");
-            items.push(YamlDoc {
-                line_start: start,
-                line_end: end,
-                content,
-            });
+            let docs = yaml::YamlLoader::load_from_str(&content);
+            // we want to skip blank documents only,
+            // so we allow syntax errors (which will be handled later by serde)
+            // but we skip docs with no useful content
+            match docs {
+                Ok(vec) => {
+                    if let Some(_) = vec.get(0) {
+                        items.push(YamlDoc {
+                            line_start: start,
+                            line_end: end,
+                            content,
+                        });
+                    }
+                }
+                Err(e) => {
+                    println!("scan error...");
+                    items.push(YamlDoc {
+                        line_start: start,
+                        line_end: end,
+                        content,
+                    });
+                }
+            }
         }
 
         Ok(Self { items })
@@ -83,6 +102,33 @@ steps:
 "#;
         let doc = MultiYaml::from_str(input)?;
         assert_eq!(doc.items.len(), 1);
+        Ok(())
+    }
+    #[test]
+    fn test_empty_doc() -> anyhow::Result<()> {
+        let input = r#"
+
+"#;
+        let doc = MultiYaml::from_str(input)?;
+        assert_eq!(doc.items.len(), 0);
+        Ok(())
+    }
+    #[test]
+    fn test_empty_doc_preserve_src() -> anyhow::Result<()> {
+        let input = r#"
+
+---
+
+---
+--- # a comment
+
+---
+
+name: "kittie"
+---
+"#;
+        let doc = MultiYaml::from_str(input)?;
+        insta::assert_debug_snapshot!(doc);
         Ok(())
     }
 

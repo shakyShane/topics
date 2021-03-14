@@ -18,12 +18,14 @@ pub struct VerifyCmd {
 impl SubCommand for VerifyCmd {
     fn exec(&self, ctx: &Context) -> SubCommandResult<()> {
         let (good, bad) = ctx.read_docs_split(&self.files);
-        println!("good={}", good.len());
-        println!("bad={}", bad.len());
         if !bad.is_empty() {
             let _ = self.print_kind.print_errors(&bad, &ctx);
             return Err(SubCommandError::Unknown);
         }
+        println!("good={}", good.len());
+        println!("bad={}", bad.len());
+        // dbg!(bad);
+        // dbg!(good);
         Ok(())
     }
 }
