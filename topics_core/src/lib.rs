@@ -39,6 +39,7 @@ pub fn from_opt(opts: &Opt) -> SubCommandResult<()> {
         Some(cmd) => match cmd {
             SubCommandItems::Print(print) => print.exec(&ctx),
             SubCommandItems::Generate(gen) => gen.exec(&ctx),
+            SubCommandItems::Verify(verify) => verify.exec(&ctx),
         },
         None => {
             println!("no command given");

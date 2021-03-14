@@ -43,12 +43,16 @@ impl Db {
         Ok(Self { graph, item_map })
     }
     #[cfg(test)]
-    pub fn unknown(&self) -> Vec<String> {
-        let mut output = vec![];
-        for hash_set in self.graph.values() {
+    pub fn unknown(&self) -> HashMap<String, HashSet<String>> {
+        let mut output: HashMap<String, HashSet<String>> = HashMap::new();
+        for (parent_name, hash_set) in &self.graph {
             for child_name in hash_set {
                 if self.graph.get(child_name).is_none() {
-                    output.push(child_name.clone())
+                    let matched_item = self.item_map.get(parent_name);
+                    let entry = output
+                        .entry(parent_name.clone())
+                        .or_insert_with(HashSet::new);
+                    entry.insert(child_name.clone());
                 }
             }
         }
@@ -132,7 +136,12 @@ mod test {
     fn test_detect_unknown() -> anyhow::Result<()> {
         let g = graph_db();
         let unknown = g.unknown();
-        assert_eq!(unknown, vec![String::from("install helm")]);
+        for (key, value) in unknown {
+            let parent = g.item_map.get(&key);
+            if let Some(ItemTracked { item, .. }) = parent {
+                println!("missing item in {}", item.name())
+            }
+        }
         Ok(())
     }
 

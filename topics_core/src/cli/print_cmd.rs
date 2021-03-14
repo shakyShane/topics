@@ -70,21 +70,6 @@ impl SubCommand for PrintCmd {
             .interact()
             .map_err(|_| SubCommandError::Unknown)?;
 
-        // let _titles = selections
-        //     .into_iter()
-        //     .map(|idx| titles[idx])
-        //     .map(|title| docs.iter().filter_map(|doc| doc.topics.clone().get(title)));
-
-        // dbg!(_titles);
-
-        // let matched = selections.iter().map(|selection| {
-        //     let name = titles[*selection];
-        //     let clone = name.clone();
-        //     let matched = docs.iter().filter_map(|doc| doc.topics.get(&clone));
-        //     matched
-        // });
-
-        // dbg!(selections);
         for title in selections.iter().map(|idx| titles[*idx]) {
             for doc in &docs {
                 if let Some(topic) = doc.topic_by_name(&title) {

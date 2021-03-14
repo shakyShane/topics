@@ -16,7 +16,6 @@ steps:
   - install docker
   - install skaffold
   - install helm
-
 ---
 
 kind: Topic
