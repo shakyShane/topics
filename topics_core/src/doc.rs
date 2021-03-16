@@ -1,11 +1,10 @@
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use crate::items::item::Item;
 
-use crate::doc_src::{from_serde_yaml_error, DocSource, DocSrcImpl};
-use crate::{context::Context, doc_src::YamlDocSource, items::Topic};
+use crate::doc_src::{from_serde_yaml_error, DocSource};
+use crate::{context::Context, items::Topic};
 use multi_yaml::YamlDoc;
 
 #[derive(Debug, Default)]
@@ -65,8 +64,16 @@ impl Doc {
         })
     }
     pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
-        let doc_src = YamlDocSource::from_path_buf(&pb, ctx)?;
-        Self::from_doc_src(&pb, DocSource::Yaml(doc_src), &ctx)
+        let doc_src = match pb.extension() {
+            None => todo!("what to handle here?"),
+            Some(os_str) => match os_str.to_str() {
+                None => todo!("what to handle here?"),
+                Some("yaml") | Some("yml") => DocSource::yaml(&pb, ctx)?,
+                Some("toml") => DocSource::toml(&pb, ctx)?,
+                Some(_other) => return Err(DocError::NotSupported(pb.clone())),
+            },
+        };
+        Self::from_doc_src(&pb, doc_src, &ctx)
     }
     pub fn from_doc_src(_pb: &PathBuf, doc_src: DocSource, _ctx: &Context) -> DocResult<Self> {
         let mut doc = Doc {
@@ -92,6 +99,9 @@ impl Doc {
                     };
                 }
             }
+            DocSource::Toml(_toml_doc) => {
+                println!("got toml!");
+            }
         }
         Ok(doc)
     }
@@ -116,6 +126,8 @@ pub enum DocError {
     SerdeYamlErr(LocationError),
     #[error("{}", .0)]
     Unknown(String),
+    #[error("File format not supported: {}", .0.display())]
+    NotSupported(PathBuf),
 }
 
 impl From<anyhow::Error> for DocError {

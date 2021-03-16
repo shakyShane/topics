@@ -72,6 +72,10 @@ impl Print for PlainPrinter {
                         DocError::Unknown(_e) => {
                             todo!("how to handle this...")
                         }
+                        DocError::NotSupported(pb) => {
+                            acc.push((1, pb.clone()));
+                            acc
+                        }
                     },
                 });
 
@@ -94,11 +98,11 @@ impl Print for PlainPrinter {
             match doc_result {
                 Ok(doc) => {
                     for error in &doc.errors {
-                        print_error(&doc, &error);
+                        print_error(&error);
                     }
                 }
                 Err(e) => {
-                    print_doc_error(&e);
+                    print_error(&e);
                 }
             }
         }
@@ -163,32 +167,6 @@ fn print_item_wrap(item_wrap: &ItemWrap, db: &Db, width: usize) {
     }
 }
 
-fn print_doc_error(doc_err: &DocError) {
-    match doc_err {
-        DocError::PathRead {
-            original,
-            abs: _,
-            pb,
-        } => {
-            print_error_heading("File error", &original.to_string());
-            match original.kind() {
-                ErrorKind::NotFound => {
-                    eprintln!();
-                    eprintln!("    A given path could not be found, please check your input");
-                }
-                ErrorKind::Other => {}
-                _ => {
-                    eprintln!("An unknown error occurred");
-                }
-            }
-            use ansi_term::Colour::Green;
-            eprintln!();
-            eprintln!("    input: {}", Green.paint(&pb.display().to_string()));
-        }
-        _ => unimplemented!("use print error for this"),
-    }
-}
-
 fn print_error_heading(kind: &str, message: &str) {
     use ansi_term::Colour::Red;
     use ansi_term::{ANSIString, ANSIStrings};
@@ -212,25 +190,37 @@ fn plain_print_heading(kind: &str, message: &str) {
     eprintln!("{} {}", ANSIStrings(strings), Green.bold().paint(message));
 }
 
-fn print_error(doc: &Doc, doc_err: &DocError) {
-    let name = doc
-        .source
-        .file()
-        .map(|f| f.display().to_string())
-        .unwrap_or_default();
+fn print_error(doc_err: &DocError) {
     match doc_err {
         DocError::PathRead {
-            pb: _,
+            pb,
             abs: _,
-            original: _,
+            original,
         } => {
-            // eprintln!("{}", doc_err);
-            // println!("{}", original.to_string());
+            print_error_heading("File error", &original.to_string());
+            match original.kind() {
+                ErrorKind::NotFound => {
+                    eprintln!();
+                    eprintln!("    A given path could not be found, please check your input");
+                }
+                ErrorKind::Other => {}
+                _ => {
+                    eprintln!("An unknown error occurred");
+                }
+            }
+            use ansi_term::Colour::Green;
+            eprintln!();
+            eprintln!("    input: {}", Green.paint(&pb.display().to_string()));
         }
-        DocError::Unknown(err_message) => {
-            print_error_heading("Error", &err_message);
+        DocError::Unknown(_) | DocError::NotSupported(_) => {
+            print_error_heading("Error", &doc_err.to_string());
         }
         DocError::SerdeYamlErr(loc_err) => {
+            let name = loc_err
+                .input_file
+                .as_ref()
+                .map(|f| f.display().to_string())
+                .unwrap_or_default();
             print_error_heading("YAML error", &loc_err.description);
             if let Some(error_loc) = &loc_err.location {
                 match error_loc {
@@ -249,7 +239,7 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                                 *line_start,
                                 *line_end,
                             )]))
-                            .inputs(vec![Input::from_bytes(doc.source.content().as_bytes())
+                            .inputs(vec![Input::from_bytes(loc_err.input_file_src.as_bytes())
                                 .name(&name) // Dummy name provided to detect the syntax.
                                 .kind("File")
                                 .title(format!(
@@ -276,7 +266,7 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                                 *line_start,
                                 *line_end,
                             )]))
-                            .inputs(vec![Input::from_bytes(doc.source.content().as_bytes())
+                            .inputs(vec![Input::from_bytes(loc_err.input_file_src.as_bytes())
                                 .name(&name) // Dummy name provided to detect the syntax.
                                 .kind("File")
                                 .title(format!(
