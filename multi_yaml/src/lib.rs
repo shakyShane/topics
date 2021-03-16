@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use yaml_rust::yaml;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct MultiYaml {
     pub items: Vec<YamlDoc>,
 }

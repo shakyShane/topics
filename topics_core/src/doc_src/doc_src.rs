@@ -7,7 +7,7 @@ pub trait DocSrcImpl: Sized {
     fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DocSource {
     Yaml(YamlDocSource),
     Toml(TomlDocSource),

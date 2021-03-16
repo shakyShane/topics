@@ -67,7 +67,12 @@ impl Print for PlainPrinter {
                             acc.push((1, pb.clone()));
                             acc
                         }
-                        DocError::SerdeYamlErr(_) => unreachable!("shouldn't get here"),
+                        DocError::SerdeLocationErr(loc_err) => {
+                            if let Some(pb) = &loc_err.input_file {
+                                acc.push((1, pb.clone()));
+                            }
+                            acc
+                        }
                         DocError::Unknown(_e) => {
                             todo!("how to handle this...")
                         }
@@ -214,74 +219,94 @@ fn print_error(doc_err: &DocError) {
         DocError::Unknown(_) | DocError::NotSupported(_) => {
             print_error_heading("Error", &doc_err.to_string());
         }
-        DocError::SerdeYamlErr(loc_err) => {
+        DocError::SerdeLocationErr(loc_err) => {
             let name = loc_err
                 .input_file
                 .as_ref()
                 .map(|f| f.display().to_string())
                 .unwrap_or_default();
-            print_error_heading("YAML error", &loc_err.description);
+            print_error_heading("error", &loc_err.description);
             if let Some(error_loc) = &loc_err.location {
                 match error_loc {
-                    Location::LineAndCol {
+                    Location::LineAndColRegion {
                         line,
                         line_end,
                         line_start,
                         ..
                     } => {
-                        PrettyPrinter::new()
-                            .header(true)
-                            .line_numbers(true)
-                            .grid(true)
-                            .highlight(*line)
-                            .line_ranges(LineRanges::from(vec![LineRange::new(
-                                *line_start,
-                                *line_end,
-                            )]))
-                            .inputs(vec![Input::from_bytes(loc_err.input_file_src.as_bytes())
-                                .name(&name) // Dummy name provided to detect the syntax.
-                                .kind("File")
-                                .title(format!(
-                                    "{}:{}",
-                                    &loc_err
-                                        .input_file
-                                        .as_ref()
-                                        .map(|f| f.display().to_string())
-                                        .unwrap_or_default(),
-                                    line
-                                ))])
-                            .print()
-                            .unwrap();
+                        let mut printer = setup();
+
+                        printer.highlight(*line);
+
+                        // regions
+                        ranges(&mut printer, *line_start, *line_end);
+                        inputs(
+                            &mut printer,
+                            &name,
+                            loc_err.input_file_src.as_bytes(),
+                            *line_start,
+                            &loc_err.input_file,
+                        );
+
+                        printer.print().unwrap();
                     }
                     Location::Region {
                         line_end,
                         line_start,
                     } => {
-                        PrettyPrinter::new()
-                            .header(true)
-                            .line_numbers(true)
-                            .grid(true)
-                            .line_ranges(LineRanges::from(vec![LineRange::new(
-                                *line_start,
-                                *line_end,
-                            )]))
-                            .inputs(vec![Input::from_bytes(loc_err.input_file_src.as_bytes())
-                                .name(&name) // Dummy name provided to detect the syntax.
-                                .kind("File")
-                                .title(format!(
-                                    "{}:{}",
-                                    &loc_err
-                                        .input_file
-                                        .as_ref()
-                                        .map(|f| f.display().to_string())
-                                        .unwrap_or_default(),
-                                    line_start
-                                ))])
-                            .print()
-                            .unwrap();
+                        let mut printer = setup();
+                        ranges(&mut printer, *line_start, *line_end);
+                        inputs(
+                            &mut printer,
+                            &name,
+                            loc_err.input_file_src.as_bytes(),
+                            *line_start,
+                            &loc_err.input_file,
+                        );
+                        printer.print().unwrap();
+                    }
+                    Location::LineAndCol { line, column: _ } => {
+                        let mut printer = setup();
+                        inputs(
+                            &mut printer,
+                            &name,
+                            loc_err.input_file_src.as_bytes(),
+                            *line,
+                            &loc_err.input_file,
+                        );
+                        printer.print().unwrap();
                     }
                 }
             }
         }
     }
+}
+
+fn setup() -> PrettyPrinter<'static> {
+    let mut printer = PrettyPrinter::new();
+    printer.header(true).line_numbers(true).grid(true);
+    printer
+}
+
+fn ranges(printer: &mut PrettyPrinter, start: usize, end: usize) {
+    printer.line_ranges(LineRanges::from(vec![LineRange::new(start, end)]));
+}
+
+fn inputs<'a>(
+    printer: &mut PrettyPrinter<'a>,
+    name: &'a str,
+    bytes: &'a [u8],
+    line: usize,
+    pb: &'a Option<PathBuf>,
+) {
+    printer.inputs(vec![Input::from_bytes(bytes)
+        .name(&name) // Dummy name provided to detect the syntax.
+        .kind("File")
+        .title(format!(
+            "{}:{}",
+            pb.as_ref()
+                .map(|f| f.display().to_string())
+                .unwrap_or_default(),
+            line
+        ))]);
 }

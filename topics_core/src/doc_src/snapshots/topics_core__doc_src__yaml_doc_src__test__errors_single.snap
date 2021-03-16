@@ -22,10 +22,10 @@ Ok(
         ),
         items: [],
         errors: [
-            SerdeYamlErr(
+            SerdeLocationErr(
                 LocationError {
                     location: Some(
-                        LineAndCol {
+                        LineAndColRegion {
                             line_start: 1,
                             line_end: 4,
                             line: 4,

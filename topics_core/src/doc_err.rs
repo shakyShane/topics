@@ -21,7 +21,7 @@ pub enum DocError {
         "{}",
         .0
     )]
-    SerdeYamlErr(LocationError),
+    SerdeLocationErr(LocationError),
     #[error("{}", .0)]
     Unknown(String),
     #[error("File format not supported: {}", .0.display())]
@@ -30,6 +30,12 @@ pub enum DocError {
 
 impl From<anyhow::Error> for DocError {
     fn from(e: anyhow::Error) -> Self {
+        DocError::Unknown(e.to_string())
+    }
+}
+
+impl From<toml::de::Error> for DocError {
+    fn from(e: toml::de::Error) -> Self {
         DocError::Unknown(e.to_string())
     }
 }
@@ -45,6 +51,10 @@ pub struct LocationError {
 #[derive(Debug)]
 pub enum Location {
     LineAndCol {
+        line: usize,
+        column: usize,
+    },
+    LineAndColRegion {
         line_start: usize,
         line_end: usize,
         line: usize,
@@ -62,7 +72,8 @@ impl Display for LocationError {
         let _ = writeln!(f);
         if let Some(location) = &self.location {
             match location {
-                Location::LineAndCol { line, column, .. } => {
+                Location::LineAndColRegion { line, column, .. }
+                | Location::LineAndCol { line, column } => {
                     let _ = writeln!(f, "    msg: {}", self.description);
                     let _ = writeln!(
                         f,
@@ -72,8 +83,10 @@ impl Display for LocationError {
                             .map(|f| f.display().to_string())
                             .unwrap_or_else(|| "None".to_string())
                     );
-                    let _ = writeln!(f, "   line: {}", line);
-                    let _ = writeln!(f, " column: {}", column);
+                    if *line != 0 {
+                        let _ = writeln!(f, "   line: {}", line);
+                        let _ = writeln!(f, " column: {}", column);
+                    }
                 }
                 Location::Region {
                     line_start,

@@ -10,7 +10,7 @@ lazy_static::lazy_static! {
     static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct YamlDocSource {
     pub input_file: Option<PathBuf>,
     pub file_content: String,
@@ -64,7 +64,7 @@ pub fn from_serde_yaml_error(
     };
     if let Some(location) = serde_error.location() {
         let real_line = location.line() + yaml_doc.line_start;
-        err.location = Some(Location::LineAndCol {
+        err.location = Some(Location::LineAndColRegion {
             line: real_line,
             column: location.column(),
             line_start: yaml_doc.line_start + 1,
@@ -77,7 +77,7 @@ pub fn from_serde_yaml_error(
             )
             .to_string()
     }
-    DocError::SerdeYamlErr(err)
+    DocError::SerdeLocationErr(err)
 }
 
 #[cfg(test)]

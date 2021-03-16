@@ -4,10 +4,10 @@ expression: doc?.errors
 
 ---
 [
-    SerdeYamlErr(
+    SerdeLocationErr(
         LocationError {
             location: Some(
-                LineAndCol {
+                LineAndColRegion {
                     line_start: 16,
                     line_end: 22,
                     line: 22,

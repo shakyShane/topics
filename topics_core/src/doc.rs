@@ -1,11 +1,8 @@
-use std::path::PathBuf;
-
-use multi_yaml::YamlDoc;
-
 use crate::doc_err::DocError;
-use crate::doc_src::{from_serde_yaml_error, DocSource};
+use crate::doc_src::{from_serde_yaml_error, DocSource, TomlError};
 use crate::items::item::Item;
 use crate::{context::Context, items::Topic};
+use std::path::PathBuf;
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -17,7 +14,7 @@ pub struct Doc {
 #[derive(Debug, Clone)]
 pub struct ItemTracked {
     pub item: Item,
-    pub src_doc: YamlDoc,
+    pub src_doc: DocSource,
     pub input_file: Option<PathBuf>,
 }
 
@@ -92,17 +89,78 @@ impl Doc {
                         Ok(item) => {
                             doc.items.push(ItemTracked {
                                 item,
-                                src_doc: src.clone(),
+                                src_doc: DocSource::Yaml((*yaml_doc).clone()),
                                 input_file: yaml_doc.input_file.clone(),
                             });
                         }
                     };
                 }
             }
-            DocSource::Toml(_toml_doc) => {
-                println!("got toml!");
+            DocSource::Toml(toml_doc) => {
+                #[derive(Debug, serde::Deserialize)]
+                struct TempItems {
+                    item: Vec<Item>,
+                }
+                let items: TempItems =
+                    toml::from_str(&toml_doc.file_content).map_err(|err| TomlError {
+                        doc: &doc,
+                        toml_err: err,
+                    })?;
+                for item in items.item {
+                    doc.items.push(ItemTracked {
+                        item,
+                        src_doc: DocSource::Toml((*toml_doc).clone()),
+                        input_file: toml_doc.input_file.clone(),
+                    });
+                }
             }
         }
         Ok(doc)
     }
+}
+
+#[test]
+fn test_toml() -> anyhow::Result<()> {
+    let input = r#"
+[[item]]
+kind = "Topic"
+name = "Run unit tests"
+steps = [
+    "Install root-level dependencies",
+    "Run unit tests command"
+]
+deps = [
+    "install nodejs"
+]
+
+[[item]]
+kind = "Command"
+name = "Run unit tests command"
+cwd = "."
+command = """
+echo hello world!
+"""
+
+[[item]]
+kind = "Command"
+name = "Install root-level dependencies"
+cwd = "."
+command = """
+echo hello world!
+"""
+
+[[item]]
+kind = "DependencyCheck"
+name = "install nodejs"
+verify = """
+node -v
+"""
+    "#;
+    #[derive(Debug, serde::Deserialize)]
+    struct Items {
+        item: Vec<Item>,
+    }
+    let items: Items = toml::from_str(input)?;
+    dbg!(items);
+    Ok(())
 }
