@@ -1,0 +1,5 @@
+[[commands]]
+name = "run unit tests"
+command = """
+echo hello world!
+"""
