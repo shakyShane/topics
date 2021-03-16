@@ -1,11 +1,10 @@
 use crate::db::Db;
+use crate::doc_err::{DocError, Location};
 use crate::items::Item;
 use crate::{
     context::Context,
     doc::Doc,
-    doc::DocError,
     doc::DocResult,
-    doc::Location,
     items::{ItemWrap, Topic},
     print::Print,
 };

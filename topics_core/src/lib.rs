@@ -15,6 +15,7 @@ mod host;
 mod items;
 mod print;
 
+pub mod doc_err;
 pub mod opt;
 
 /// Run a supported sub-command by using the

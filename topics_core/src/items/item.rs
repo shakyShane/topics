@@ -72,7 +72,7 @@ impl FromStr for Item {
 mod test {
     use super::*;
 
-    fn test_item() -> Item {
+    fn test_yaml_item() -> Item {
         let input = r#"
         kind: Topic
         name: run tests
@@ -86,7 +86,7 @@ mod test {
 
     #[test]
     fn test_deserialize() -> anyhow::Result<()> {
-        let _ = test_item();
+        let _ = test_yaml_item();
         Ok(())
     }
 

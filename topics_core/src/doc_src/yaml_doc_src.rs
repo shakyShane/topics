@@ -1,5 +1,6 @@
 use crate::context::Context;
-use crate::doc::{Doc, DocError, DocResult, Location, LocationError};
+use crate::doc::{Doc, DocResult};
+use crate::doc_err::{DocError, Location, LocationError};
 use crate::doc_src::DocSrcImpl;
 use multi_yaml::{MultiYaml, YamlDoc};
 use std::path::PathBuf;

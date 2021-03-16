@@ -1,7 +1,7 @@
 use crate::context::Context;
-use crate::doc::{Doc, DocError, DocResult, Location, LocationError};
+use crate::doc::DocResult;
+use crate::doc_err::DocError;
 use crate::doc_src::DocSrcImpl;
-
 use std::path::PathBuf;
 use std::str::FromStr;
 

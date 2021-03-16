@@ -1,5 +1,6 @@
-[[commands]]
-name = "run unit tests"
+[[item]]
+kind = "Command"
+name = "Run unit tests"
 command = """
 echo hello world!
 """
