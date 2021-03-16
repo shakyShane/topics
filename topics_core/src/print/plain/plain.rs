@@ -244,7 +244,7 @@ fn print_error(doc_err: &DocError) {
                             &mut printer,
                             &name,
                             loc_err.input_file_src.as_bytes(),
-                            *line_start,
+                            *line,
                             &loc_err.input_file,
                         );
 
@@ -267,6 +267,7 @@ fn print_error(doc_err: &DocError) {
                     }
                     Location::LineAndCol { line, column: _ } => {
                         let mut printer = setup();
+                        printer.highlight(*line);
                         inputs(
                             &mut printer,
                             &name,
@@ -299,14 +300,17 @@ fn inputs<'a>(
     line: usize,
     pb: &'a Option<PathBuf>,
 ) {
+    let filename = pb
+        .as_ref()
+        .map(|f| f.display().to_string())
+        .unwrap_or_default();
+    let file_name_heading = if line > 0 {
+        format!("{}:{}", filename, line)
+    } else {
+        filename
+    };
     printer.inputs(vec![Input::from_bytes(bytes)
         .name(&name) // Dummy name provided to detect the syntax.
         .kind("File")
-        .title(format!(
-            "{}:{}",
-            pb.as_ref()
-                .map(|f| f.display().to_string())
-                .unwrap_or_default(),
-            line
-        ))]);
+        .title(file_name_heading)]);
 }

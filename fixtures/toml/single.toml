@@ -1,0 +1,8 @@
+kind = "Command"
+cwd = "."
+name = "Run unit tests command"
+command = """
+echo "About to install ${MIN_VERSION}"
+"""
+
+env.HELLO = { from = "env vars", key = "minimum_skaffold_version" }

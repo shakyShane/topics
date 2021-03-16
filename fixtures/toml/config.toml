@@ -1,0 +1,7 @@
+[[item]]
+kind = "ConfigMap"
+name = "env vars"
+
+[data]
+minimum_skaffold_version = "1.7.2"
+

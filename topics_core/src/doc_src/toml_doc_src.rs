@@ -52,7 +52,10 @@ impl<'a> From<TomlError<'a>> for DocError {
             description: toml_err.to_string(),
         };
         if let Some((line, col)) = toml_err.line_col() {
-            err.location = Some(Location::LineAndCol { line, column: col });
+            err.location = Some(Location::LineAndCol {
+                line: line + 1,
+                column: col + 1,
+            });
             err.description = err.to_string()
         }
         DocError::SerdeLocationErr(err)

@@ -97,16 +97,11 @@ impl Doc {
                 }
             }
             DocSource::Toml(toml_doc) => {
-                #[derive(Debug, serde::Deserialize)]
-                struct TempItems {
-                    item: Vec<Item>,
-                }
-                let items: TempItems =
-                    toml::from_str(&toml_doc.file_content).map_err(|err| TomlError {
-                        doc: &doc,
-                        toml_err: err,
-                    })?;
-                for item in items.item {
+                let items = one_or_many_toml(&toml_doc.file_content).map_err(|err| TomlError {
+                    doc: &doc,
+                    toml_err: err,
+                })?;
+                for item in items {
                     doc.items.push(ItemTracked {
                         item,
                         src_doc: DocSource::Toml((*toml_doc).clone()),
@@ -117,6 +112,25 @@ impl Doc {
         }
         Ok(doc)
     }
+}
+
+fn one_or_many_toml(input: &str) -> Result<Vec<Item>, toml::de::Error> {
+    #[derive(Debug, serde::Deserialize)]
+    struct TempItems {
+        item: Vec<Item>,
+    }
+    toml::from_str::<TempItems>(input)
+        .or_else(|err| {
+            if err
+                .to_string()
+                .contains("missing field `item` at line 1 column 1")
+            {
+                toml::from_str::<Item>(input).map(|item| TempItems { item: vec![item] })
+            } else {
+                Err(err)
+            }
+        })
+        .map(|temp| temp.item)
 }
 
 #[test]
@@ -163,4 +177,21 @@ node -v
     let items: Items = toml::from_str(input)?;
     assert_eq!(items.item.len(), 4);
     Ok(())
+}
+
+#[test]
+fn test_toml_single() {
+    let input = r#"
+kind = "Command"
+cwd = "."
+name = "Run unit tests command"
+command = """
+echo "About to install ${MIN_VERSION}"
+"""
+
+env.HELLO = { from = "env vars", key = "minimum_skaffold_version" }
+
+    "#;
+    let items = one_or_many_toml(input);
+    println!("{:?}", items);
 }

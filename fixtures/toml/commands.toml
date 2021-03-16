@@ -1,6 +1,24 @@
 [[item]]
-kind = "Command"
+kind = "Topic"
 name = "Run unit tests"
+steps = ["Run unit tests command", "something else"]
+
+[[item]]
+kind = "Command"
+cwd = ""
+name = "Run unit tests command"
+
+[env]
+HELLO = { from = "env vars", key = "minimum_skaffold_version" }
+
 command = """
-echo hello world!
+echo "About to install ${MIN_VERSION}"
 """
+
+[[item]]
+kind = "ConfigMap"
+name = "env vars"
+
+[data]
+minimum_skaffold_version = "1.7.2"
+
