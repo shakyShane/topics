@@ -1,0 +1,109 @@
+use crate::context::Context;
+use crate::doc::{DocError, DocResult};
+use crate::doc_src::DocSrcImpl;
+use multi_yaml::MultiYaml;
+use std::path::PathBuf;
+use std::str::FromStr;
+
+#[derive(Debug, Default)]
+pub struct YamlDocSource {
+    pub input_file: Option<PathBuf>,
+    pub file_content: String,
+    pub doc_src_items: MultiYaml,
+}
+
+impl DocSrcImpl for YamlDocSource {
+    fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
+        let abs = ctx.join_path(pb);
+        let file_str = std::fs::read_to_string(&abs).map_err(|e| DocError::PathRead {
+            pb: pb.clone(),
+            abs: abs.clone(),
+            original: e,
+        })?;
+        let items = MultiYaml::from_str(&file_str)?;
+        let new_self = Self {
+            input_file: Some(pb.clone()),
+            file_content: file_str,
+            doc_src_items: items,
+        };
+        Ok(new_self)
+    }
+}
+
+impl FromStr for YamlDocSource {
+    type Err = DocError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let items = MultiYaml::from_str(&s)?;
+        Ok(Self {
+            input_file: None,
+            file_content: s.to_string(),
+            doc_src_items: items,
+        })
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::context::Context;
+    use crate::doc::Doc;
+    use crate::doc_src::{DocSrcImpl, YamlDocSource};
+    use std::path::PathBuf;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_fixture_file() -> anyhow::Result<()> {
+        let ctx = Context::from_vec(&[]);
+        let pb = PathBuf::from("../fixtures2/topics.yaml");
+        let d = YamlDocSource::from_path_buf(&pb, &ctx)?;
+        insta::assert_debug_snapshot!(d);
+        Ok(())
+    }
+
+    #[test]
+    fn test_errors_single() -> anyhow::Result<()> {
+        let pb = PathBuf::from("/input-yaml.yml");
+        let input = r#"
+kind: Topic
+name: Run screen shot tests
+deps
+"#;
+        let srcs = YamlDocSource::from_str(input)?;
+        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
+        insta::assert_debug_snapshot!(doc);
+        Ok(())
+    }
+
+    #[test]
+    fn test_errors_multi() -> anyhow::Result<()> {
+        let pb = PathBuf::from("/input-yaml.yml");
+        let input = r#"---
+
+kind: DependencyCheck
+name: global-node
+verify: node -v
+url: https://www.nodejs.org
+
+---
+
+kind: DependencyCheck
+name: global-yarn
+verify: yarn -v
+url: https://yarn.sh/legacy
+
+---
+
+kind: Topic
+name: Run screen shot tests
+deps:
+  - global-node
+  - global-yarn
+steps
+"#;
+        let srcs = YamlDocSource::from_str(input)?;
+        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
+        insta::assert_debug_snapshot!(doc?.errors);
+        Ok(())
+    }
+}

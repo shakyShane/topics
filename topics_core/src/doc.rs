@@ -4,13 +4,13 @@ use std::str::FromStr;
 
 use crate::items::item::Item;
 
-use crate::{context::Context, doc_src::DocSource, items::Topic};
+use crate::doc_src::DocSrcImpl;
+use crate::{context::Context, doc_src::YamlDocSource, items::Topic};
 use multi_yaml::YamlDoc;
-use serde_yaml::{Error, Value};
 
 #[derive(Debug, Default)]
 pub struct Doc {
-    pub source: DocSource,
+    pub source: YamlDocSource,
     pub items: Vec<ItemTracked>,
     pub errors: Vec<DocError>,
 }
@@ -69,10 +69,14 @@ impl Doc {
         })
     }
     pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
-        let doc_src = DocSource::from_path_buf(&pb, ctx)?;
+        let doc_src = YamlDocSource::from_path_buf(&pb, ctx)?;
         Self::from_doc_src(&pb, doc_src, &ctx)
     }
-    pub fn from_doc_src(_pb: &PathBuf, doc_src: DocSource, _ctx: &Context) -> DocResult<Self> {
+    pub fn from_yaml_str(str: &str) -> DocResult<Self> {
+        let doc_srcs = YamlDocSource::from_str(str)?;
+        Self::from_doc_src(&PathBuf::new(), doc_srcs, &Default::default())
+    }
+    pub fn from_doc_src(_pb: &PathBuf, doc_src: YamlDocSource, _ctx: &Context) -> DocResult<Self> {
         let mut doc = Doc {
             source: doc_src,
             ..Default::default()
@@ -218,15 +222,6 @@ impl Display for LocationError {
     }
 }
 
-impl FromStr for Doc {
-    type Err = DocError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let doc_srcs = DocSource::from_str(s)?;
-        Doc::from_doc_src(&PathBuf::new(), doc_srcs, &Default::default())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -242,7 +237,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let doc = Doc::from_str(input)?;
+        let doc = Doc::from_yaml_str(input)?;
         assert_eq!(doc.source.doc_src_items.items.len(), 1);
         Ok(())
     }
@@ -252,7 +247,7 @@ steps:
         let input = r#"
 
 "#;
-        let doc = Doc::from_str(input)?;
+        let doc = Doc::from_yaml_str(input)?;
         assert_eq!(doc.errors.len(), 0);
         Ok(())
     }
@@ -269,7 +264,7 @@ steps:
 ---
 
 "#;
-        let doc = Doc::from_str(input)?;
+        let doc = Doc::from_yaml_str(input)?;
         assert_eq!(doc.source.doc_src_items.items.len(), 0);
         Ok(())
     }
@@ -294,54 +289,8 @@ name: help-me-instruction
 ---
 ---
 "#;
-        let doc = Doc::from_str(input)?;
+        let doc = Doc::from_yaml_str(input)?;
         assert_eq!(doc.source.doc_src_items.items.len(), 2);
-        Ok(())
-    }
-
-    #[test]
-    fn test_errors_single() -> anyhow::Result<()> {
-        let pb = PathBuf::from("/input-yaml.yml");
-        let input = r#"
-kind: Topic
-name: Run screen shot tests
-deps
-"#;
-        let srcs = DocSource::from_str(input)?;
-        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
-        insta::assert_debug_snapshot!(doc);
-        Ok(())
-    }
-
-    #[test]
-    fn test_errors_multi() -> anyhow::Result<()> {
-        let pb = PathBuf::from("/input-yaml.yml");
-        let input = r#"---
-
-kind: DependencyCheck
-name: global-node
-verify: node -v
-url: https://www.nodejs.org
-
----
-
-kind: DependencyCheck
-name: global-yarn
-verify: yarn -v
-url: https://yarn.sh/legacy
-
----
-
-kind: Topic
-name: Run screen shot tests
-deps:
-  - global-node
-  - global-yarn
-steps
-"#;
-        let srcs = DocSource::from_str(input)?;
-        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
-        insta::assert_debug_snapshot!(doc?.errors);
         Ok(())
     }
 }

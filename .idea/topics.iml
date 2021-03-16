@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/multi_yaml/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/topics/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/topics/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/toml/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/topics_core/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />

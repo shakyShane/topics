@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use yaml_rust::{yaml, Yaml};
+use yaml_rust::{yaml};
 
 #[derive(Debug, Default)]
 pub struct MultiYaml {
@@ -68,7 +68,7 @@ impl MultiYaml {
                         });
                     }
                 }
-                Err(e) => {
+                Err(_e) => {
                     println!("scan error...");
                     items.push(YamlDoc {
                         line_start: start,
