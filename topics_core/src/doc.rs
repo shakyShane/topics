@@ -4,13 +4,13 @@ use std::str::FromStr;
 
 use crate::items::item::Item;
 
-use crate::doc_src::DocSrcImpl;
+use crate::doc_src::{from_serde_yaml_error, DocSource, DocSrcImpl};
 use crate::{context::Context, doc_src::YamlDocSource, items::Topic};
 use multi_yaml::YamlDoc;
 
 #[derive(Debug, Default)]
 pub struct Doc {
-    pub source: YamlDocSource,
+    pub source: DocSource,
     pub items: Vec<ItemTracked>,
     pub errors: Vec<DocError>,
 }
@@ -23,10 +23,6 @@ pub struct ItemTracked {
 }
 
 pub type DocResult<T, E = DocError> = core::result::Result<T, E>;
-
-lazy_static::lazy_static! {
-    static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
-}
 
 impl Doc {
     pub fn topics(&self) -> Vec<Topic> {
@@ -70,32 +66,32 @@ impl Doc {
     }
     pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
         let doc_src = YamlDocSource::from_path_buf(&pb, ctx)?;
-        Self::from_doc_src(&pb, doc_src, &ctx)
+        Self::from_doc_src(&pb, DocSource::Yaml(doc_src), &ctx)
     }
-    pub fn from_yaml_str(str: &str) -> DocResult<Self> {
-        let doc_srcs = YamlDocSource::from_str(str)?;
-        Self::from_doc_src(&PathBuf::new(), doc_srcs, &Default::default())
-    }
-    pub fn from_doc_src(_pb: &PathBuf, doc_src: YamlDocSource, _ctx: &Context) -> DocResult<Self> {
+    pub fn from_doc_src(_pb: &PathBuf, doc_src: DocSource, _ctx: &Context) -> DocResult<Self> {
         let mut doc = Doc {
             source: doc_src,
             ..Default::default()
         };
-        for src in &doc.source.doc_src_items.items {
-            let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
-                .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
-            match item {
-                Err(doc_err) => {
-                    doc.errors.push(doc_err);
+        match &doc.source {
+            DocSource::Yaml(yaml_doc) => {
+                for src in &yaml_doc.doc_src_items.items {
+                    let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
+                        .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
+                    match item {
+                        Err(doc_err) => {
+                            doc.errors.push(doc_err);
+                        }
+                        Ok(item) => {
+                            doc.items.push(ItemTracked {
+                                item,
+                                src_doc: src.clone(),
+                                input_file: yaml_doc.input_file.clone(),
+                            });
+                        }
+                    };
                 }
-                Ok(item) => {
-                    doc.items.push(ItemTracked {
-                        item,
-                        src_doc: src.clone(),
-                        input_file: doc.source.input_file.clone(),
-                    });
-                }
-            };
+            }
         }
         Ok(doc)
     }
@@ -126,38 +122,6 @@ impl From<anyhow::Error> for DocError {
     fn from(e: anyhow::Error) -> Self {
         DocError::Unknown(e.to_string())
     }
-}
-
-fn from_serde_yaml_error(
-    doc: &Doc,
-    yaml_doc: &YamlDoc,
-    serde_error: &serde_yaml::Error,
-) -> DocError {
-    let mut err = LocationError {
-        input_file_src: doc.source.file_content.clone(),
-        location: Some(Location::Region {
-            line_start: yaml_doc.line_start + 1,
-            line_end: yaml_doc.line_end,
-        }),
-        input_file: doc.source.input_file.clone(),
-        description: serde_error.to_string(),
-    };
-    if let Some(location) = serde_error.location() {
-        let real_line = location.line() + yaml_doc.line_start;
-        err.location = Some(Location::LineAndCol {
-            line: real_line,
-            column: location.column(),
-            line_start: yaml_doc.line_start + 1,
-            line_end: yaml_doc.line_end,
-        });
-        err.description = RE
-            .replace_all(
-                err.description.as_str(),
-                format!("at line {}", real_line).as_str(),
-            )
-            .to_string()
-    }
-    DocError::SerdeYamlErr(err)
 }
 
 #[derive(Debug)]
@@ -218,79 +182,6 @@ impl Display for LocationError {
                 }
             }
         }
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_single_doc() -> anyhow::Result<()> {
-        let input = r#"
-kind: Topic
-name: Run screen shot tests
-deps:
-  - global-node
-  - global-yarn
-steps:
-  - github-checkin
-"#;
-        let doc = Doc::from_yaml_str(input)?;
-        assert_eq!(doc.source.doc_src_items.items.len(), 1);
-        Ok(())
-    }
-
-    #[test]
-    fn test_empty_doc() -> anyhow::Result<()> {
-        let input = r#"
-
-"#;
-        let doc = Doc::from_yaml_str(input)?;
-        assert_eq!(doc.errors.len(), 0);
-        Ok(())
-    }
-
-    #[test]
-    fn test_multi_empty_doc() -> anyhow::Result<()> {
-        let input = r#"
-
----
-
-
-
-
----
-
-"#;
-        let doc = Doc::from_yaml_str(input)?;
-        assert_eq!(doc.source.doc_src_items.items.len(), 0);
-        Ok(())
-    }
-
-    #[test]
-    fn test_multi_doc() -> anyhow::Result<()> {
-        let input = r#"
----
-kind: Topic
-name: Run screen shot tests
-deps:
-  - global-node
-  - global-yarn
-steps:
-  - github-checkin
----
----
----
-kind: Instruction
-instruction: help me!
-name: help-me-instruction
----
----
-"#;
-        let doc = Doc::from_yaml_str(input)?;
-        assert_eq!(doc.source.doc_src_items.items.len(), 2);
         Ok(())
     }
 }

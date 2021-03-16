@@ -1,23 +1,25 @@
 ---
-source: topics_core/src/doc.rs
+source: topics_core/src/doc_src/yaml_doc_src.rs
 expression: doc
 
 ---
 Ok(
     Doc {
-        source: DocSource {
-            input_file: None,
-            file_content: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
-            doc_src_items: MultiYaml {
-                items: [
-                    YamlDoc {
-                        line_start: 0,
-                        line_end: 4,
-                        content: "\nkind: Topic\nname: Run screen shot tests\ndeps",
-                    },
-                ],
+        source: Yaml(
+            YamlDocSource {
+                input_file: None,
+                file_content: "\nkind: Topic\nname: Run screen shot tests\ndeps\n",
+                doc_src_items: MultiYaml {
+                    items: [
+                        YamlDoc {
+                            line_start: 0,
+                            line_end: 4,
+                            content: "\nkind: Topic\nname: Run screen shot tests\ndeps",
+                        },
+                    ],
+                },
             },
-        },
+        ),
         items: [],
         errors: [
             SerdeYamlErr(

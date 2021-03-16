@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use yaml_rust::{yaml};
+use yaml_rust::yaml;
 
 #[derive(Debug, Default)]
 pub struct MultiYaml {
@@ -60,7 +60,7 @@ impl MultiYaml {
             // but we skip docs with no useful content
             match docs {
                 Ok(vec) => {
-                    if let Some(_) = vec.get(0) {
+                    if vec.get(0).is_some() {
                         items.push(YamlDoc {
                             line_start: start,
                             line_end: end,

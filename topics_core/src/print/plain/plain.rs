@@ -60,10 +60,7 @@ impl Print for PlainPrinter {
             docs.iter()
                 .fold(vec![], |mut acc, doc_result| match doc_result {
                     Ok(doc) => {
-                        acc.push((
-                            doc.errors.len(),
-                            doc.source.input_file.clone().unwrap_or_default(),
-                        ));
+                        acc.push((doc.errors.len(), doc.source.file().unwrap_or_default()));
                         acc
                     }
                     Err(e) => match e {
@@ -218,8 +215,7 @@ fn plain_print_heading(kind: &str, message: &str) {
 fn print_error(doc: &Doc, doc_err: &DocError) {
     let name = doc
         .source
-        .input_file
-        .as_ref()
+        .file()
         .map(|f| f.display().to_string())
         .unwrap_or_default();
     match doc_err {
@@ -253,7 +249,7 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                                 *line_start,
                                 *line_end,
                             )]))
-                            .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
+                            .inputs(vec![Input::from_bytes(doc.source.content().as_bytes())
                                 .name(&name) // Dummy name provided to detect the syntax.
                                 .kind("File")
                                 .title(format!(
@@ -280,7 +276,7 @@ fn print_error(doc: &Doc, doc_err: &DocError) {
                                 *line_start,
                                 *line_end,
                             )]))
-                            .inputs(vec![Input::from_bytes(doc.source.file_content.as_bytes())
+                            .inputs(vec![Input::from_bytes(doc.source.content().as_bytes())
                                 .name(&name) // Dummy name provided to detect the syntax.
                                 .kind("File")
                                 .title(format!(

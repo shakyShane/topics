@@ -1,7 +1,6 @@
 use crate::cli::{SubCommand, SubCommandError, SubCommandResult};
 use crate::context::Context;
 
-
 use crate::print::{Print, PrintKind};
 use std::path::PathBuf;
 

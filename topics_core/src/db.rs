@@ -48,7 +48,7 @@ impl Db {
         for (parent_name, hash_set) in &self.graph {
             for child_name in hash_set {
                 if self.graph.get(child_name).is_none() {
-                    let matched_item = self.item_map.get(parent_name);
+                    let _matched_item = self.item_map.get(parent_name);
                     let entry = output
                         .entry(parent_name.clone())
                         .or_insert_with(HashSet::new);
@@ -136,7 +136,7 @@ mod test {
     fn test_detect_unknown() -> anyhow::Result<()> {
         let g = graph_db();
         let unknown = g.unknown();
-        for (key, value) in unknown {
+        for (key, _value) in unknown {
             let parent = g.item_map.get(&key);
             if let Some(ItemTracked { item, .. }) = parent {
                 println!("missing item in {}", item.name())

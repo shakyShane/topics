@@ -1,9 +1,9 @@
 ---
-source: topics_core/src/doc_src/doc_src.rs
+source: topics_core/src/doc_src/yaml_doc_src.rs
 expression: d
 
 ---
-DocSource {
+YamlDocSource {
     input_file: Some(
         "../fixtures2/topics.yaml",
     ),

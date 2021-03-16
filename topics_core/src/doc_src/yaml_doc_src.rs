@@ -1,9 +1,13 @@
 use crate::context::Context;
-use crate::doc::{DocError, DocResult};
+use crate::doc::{Doc, DocError, DocResult, Location, LocationError};
 use crate::doc_src::DocSrcImpl;
-use multi_yaml::MultiYaml;
+use multi_yaml::{MultiYaml, YamlDoc};
 use std::path::PathBuf;
 use std::str::FromStr;
+
+lazy_static::lazy_static! {
+    static ref RE: regex::Regex = regex::Regex::new("at line (\\d+)").unwrap();
+}
 
 #[derive(Debug, Default)]
 pub struct YamlDocSource {
@@ -43,12 +47,44 @@ impl FromStr for YamlDocSource {
     }
 }
 
+pub fn from_serde_yaml_error(
+    doc: &Doc,
+    yaml_doc: &YamlDoc,
+    serde_error: &serde_yaml::Error,
+) -> DocError {
+    let mut err = LocationError {
+        input_file_src: doc.source.content().to_string(),
+        location: Some(Location::Region {
+            line_start: yaml_doc.line_start + 1,
+            line_end: yaml_doc.line_end,
+        }),
+        input_file: doc.source.file(),
+        description: serde_error.to_string(),
+    };
+    if let Some(location) = serde_error.location() {
+        let real_line = location.line() + yaml_doc.line_start;
+        err.location = Some(Location::LineAndCol {
+            line: real_line,
+            column: location.column(),
+            line_start: yaml_doc.line_start + 1,
+            line_end: yaml_doc.line_end,
+        });
+        err.description = RE
+            .replace_all(
+                err.description.as_str(),
+                format!("at line {}", real_line).as_str(),
+            )
+            .to_string()
+    }
+    DocError::SerdeYamlErr(err)
+}
+
 #[cfg(test)]
 mod test {
 
     use crate::context::Context;
     use crate::doc::Doc;
-    use crate::doc_src::{DocSrcImpl, YamlDocSource};
+    use crate::doc_src::{DocSource, DocSrcImpl, YamlDocSource};
     use std::path::PathBuf;
     use std::str::FromStr;
 
@@ -70,7 +106,7 @@ name: Run screen shot tests
 deps
 "#;
         let srcs = YamlDocSource::from_str(input)?;
-        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
+        let doc = Doc::from_doc_src(&pb, DocSource::Yaml(srcs), &Default::default());
         insta::assert_debug_snapshot!(doc);
         Ok(())
     }
@@ -102,7 +138,7 @@ deps:
 steps
 "#;
         let srcs = YamlDocSource::from_str(input)?;
-        let doc = Doc::from_doc_src(&pb, srcs, &Default::default());
+        let doc = Doc::from_doc_src(&pb, DocSource::Yaml(srcs), &Default::default());
         insta::assert_debug_snapshot!(doc?.errors);
         Ok(())
     }
