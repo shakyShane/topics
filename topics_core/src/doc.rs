@@ -161,6 +161,6 @@ node -v
         item: Vec<Item>,
     }
     let items: Items = toml::from_str(input)?;
-    dbg!(items);
+    assert_eq!(items.item.len(), 4);
     Ok(())
 }
