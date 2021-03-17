@@ -2,12 +2,13 @@ use crate::context::Context;
 use crate::doc::DocResult;
 use crate::doc_err::DocError;
 use crate::doc_src::DocSrcImpl;
-use crate::items::Item;
+use crate::items::{CommandInlineArgs, Item};
 use multi_doc::{MultiDoc, SingleDoc};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
-use std::collections::HashMap;
+
 use std::path::PathBuf;
 use std::str::FromStr;
+use structopt::StructOpt;
 
 #[derive(Debug, Clone, Default)]
 pub struct MdDocSource {
@@ -38,7 +39,7 @@ impl FromStr for MdDocSource {
     type Err = DocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items = MultiDoc::from_str(&s)?;
+        let items = MultiDoc::from_md_str(&s)?;
         Ok(Self {
             input_file: None,
             file_content: s.to_string(),
@@ -47,15 +48,15 @@ impl FromStr for MdDocSource {
     }
 }
 
-impl MdDocSource {
-    pub fn to_items(&self) -> DocResult<Vec<Item>> {
-        self.doc_src_items
-            .items
-            .iter()
-            .map(|item_src| parse_one(&self, item_src))
-            .collect()
-    }
-}
+// impl MdDocSource {
+//     pub fn to_items(&self) -> DocResult<Vec<Item>> {
+//         self.doc_src_items
+//             .items
+//             .iter()
+//             .map(|item_src| parse_one(&self, item_src))
+//             .collect()
+//     }
+// }
 
 #[derive(Debug)]
 enum Collecting {
@@ -71,15 +72,17 @@ enum Element {
         content: String,
     },
     CodeBlock {
-        params: HashMap<String, Option<String>>,
+        params: Option<String>,
         content: String,
     },
 }
 
-fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
+fn lex_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Vec<Element>> {
     let mut items: Vec<Element> = vec![];
     let mut collecting = Collecting::None;
     let mut buffer = String::new();
+    // let mut options = Options::empty();
+    // options.insert(Options::ENABLE_SMART_PUNCTUATION);
 
     for evt in Parser::new_ext(&item_src.content, Options::empty()) {
         match evt {
@@ -105,7 +108,11 @@ fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
                         CodeBlockKind::Fenced(fence_args) => match collecting {
                             Collecting::CodeBlock => {
                                 items.push(Element::CodeBlock {
-                                    params: Default::default(),
+                                    params: if !fence_args.is_empty() {
+                                        Some(fence_args.to_string())
+                                    } else {
+                                        None
+                                    },
                                     content: buffer.to_string(),
                                 });
                                 buffer.clear();
@@ -178,39 +185,76 @@ fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
             }
         }
     }
-    dbg!(items);
-    Ok(Item::Topic(Default::default()))
+    Ok(items)
 }
 
-fn arg_hash_map(args: &str) -> HashMap<String, Option<String>> {
-    args.split_whitespace()
-        .filter_map(|chunk| {
-            let mut left = None;
-            let mut right = None;
-            for (index, c) in chunk.split("=").enumerate() {
-                if index == 0 {
-                    if !c.is_empty() {
-                        left = Some(c);
+pub fn parse_md(input: &str) -> DocResult<Vec<Item>> {
+    #[derive(Debug, structopt::StructOpt)]
+    enum Cmd {
+        Command(CommandInlineArgs),
+        Verify,
+    }
+    #[derive(Debug, structopt::StructOpt)]
+    struct CodeBlock {
+        #[structopt(subcommand)]
+        cmd: Cmd,
+    }
+    let src = MdDocSource::from_str(input)?;
+    let mut items: Vec<Item> = vec![];
+    for item in &src.doc_src_items.items {
+        let elements = lex_one(&src, &item)?;
+        let mut kind: Option<Item> = None;
+        for elem in elements {
+            match elem {
+                Element::Heading { level: 1, content } => {
+                    let split = content.splitn(2, ":").collect::<Vec<&str>>();
+                    match (split.get(0), split.get(1)) {
+                        (Some(kind_str), Some(rest)) => {
+                            if let Ok(mut item) = Item::from_str(kind_str) {
+                                item.set_name(rest.trim());
+                                kind = Some(item);
+                            }
+                        }
+                        _ => todo!("invalid title {:?}", split),
                     }
-                } else {
-                    right = Some(c);
                 }
-            }
-            match (left, right) {
-                (Some(left), Some(right)) => Some((left.to_string(), Some(right.to_string()))),
-                (Some(left), None) => Some((left.to_string(), None)),
-                (_, _) => {
-                    println!("invalid");
-                    None
+                Element::CodeBlock {
+                    params: Some(p), ..
+                } => {
+                    let words = shellwords::split(&p);
+                    match kind.as_mut() {
+                        Some(Item::Command(cmd)) => {
+                            if let Ok(words) = words {
+                                if words.len() > 1 {
+                                    let cb = CodeBlock::from_iter_safe(words);
+                                    if let Ok(cb) = cb {
+                                        match cb.cmd {
+                                            Cmd::Command(inline) => {
+                                                cmd.cwd = inline.cwd;
+                                            }
+                                            Cmd::Verify => {}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
                 }
+                _ => {}
             }
-        })
-        .collect()
+        }
+        if let Some(item) = kind {
+            items.push(item)
+        }
+    }
+    Ok(items)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+
     #[test]
     fn test_from_str() -> anyhow::Result<()> {
         let input = r#"
@@ -225,23 +269,29 @@ yarn export
 ---
     "#;
         let src = MdDocSource::from_str(input)?;
-        let items = src.to_items()?;
-        // dbg!(items);
+        let items = parse_md(&src.file_content)?;
+        assert_eq!(items.len(), 1);
         Ok(())
     }
 
     #[test]
-    fn test_args() {
-        // enum Cmd {
-        //     Command
-        // }
-        #[derive(Structopt)]
-        struct CodeBlock {
-            #[structopt(subcommand)]
-            cmd()
-        }
-        let input = "shell command ";
-        let as_hash = arg_hash_map(input);
-        dbg!(as_hash);
+    fn test_args() -> anyhow::Result<()> {
+        let input = r#"
+# Command: Run unit tests <br>command</br>
+## This is a description
+
+```shell command --cwd=/containers/www/client
+echo "About to install ${MIN_VERSION}"
+yarn build:static && yarn export
+```
+
+```shell
+echo just another code block
+```
+    "#;
+        let src = MdDocSource::from_str(input)?;
+        let items = parse_md(&src.file_content)?;
+        assert_eq!(items.len(), 1);
+        Ok(())
     }
 }

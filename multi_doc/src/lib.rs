@@ -13,17 +13,33 @@ pub struct SingleDoc {
     pub content: String,
 }
 
+#[derive(Debug)]
+enum DocKind {
+    Yaml,
+    Md,
+    Unknown,
+}
+
 /// Create from a str
 impl std::str::FromStr for MultiDoc {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::parse(s)
+        Self::parse(s, DocKind::Unknown)
     }
 }
 
 impl MultiDoc {
+    pub fn from_yaml_str(input: &str) -> Result<Self, anyhow::Error> {
+        Self::parse(input, DocKind::Yaml)
+    }
+    pub fn from_md_str(input: &str) -> Result<Self, anyhow::Error> {
+        Self::parse(input, DocKind::Md)
+    }
+    pub fn from_any_str(input: &str) -> Result<Self, anyhow::Error> {
+        Self::parse(input, DocKind::Unknown)
+    }
     #[allow(clippy::unnecessary_wraps)]
-    fn parse(str: &str) -> Result<Self, anyhow::Error> {
+    fn parse(str: &str, kind: DocKind) -> Result<Self, anyhow::Error> {
         let mut items: Vec<SingleDoc> = vec![];
         let split = str.lines().collect::<Vec<&str>>();
         let mut peek = split.iter().enumerate().peekable();
@@ -54,22 +70,33 @@ impl MultiDoc {
 
         for (start, end) in docs {
             let content = split[start..end].join("\n");
-            let docs = yaml::YamlLoader::load_from_str(&content);
-            // we want to skip blank documents only,
-            // so we allow syntax errors (which will be handled later by serde)
-            // but we skip docs with no useful content
-            match docs {
-                Ok(vec) => {
-                    if vec.get(0).is_some() {
-                        items.push(SingleDoc {
-                            line_start: start,
-                            line_end: end,
-                            content,
-                        });
+            match kind {
+                DocKind::Yaml => {
+                    let docs = yaml::YamlLoader::load_from_str(&content);
+                    // we want to skip blank documents only,
+                    // so we allow syntax errors (which will be handled later by serde)
+                    // but we skip docs with no useful content
+                    match docs {
+                        Ok(vec) => {
+                            if vec.get(0).is_some() {
+                                items.push(SingleDoc {
+                                    line_start: start,
+                                    line_end: end,
+                                    content,
+                                });
+                            }
+                        }
+                        Err(_e) => {
+                            println!("scan error...");
+                            items.push(SingleDoc {
+                                line_start: start,
+                                line_end: end,
+                                content,
+                            });
+                        }
                     }
                 }
-                Err(_e) => {
-                    println!("scan error...");
+                DocKind::Md | DocKind::Unknown => {
                     items.push(SingleDoc {
                         line_start: start,
                         line_end: end,
@@ -87,7 +114,6 @@ impl MultiDoc {
 mod test {
 
     use super::*;
-    use std::str::FromStr;
 
     #[test]
     fn test_single_doc() -> anyhow::Result<()> {
@@ -100,7 +126,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let doc = MultiDoc::from_str(input)?;
+        let doc = MultiDoc::from_yaml_str(input)?;
         assert_eq!(doc.items.len(), 1);
         Ok(())
     }
@@ -109,7 +135,7 @@ steps:
         let input = r#"
 
 "#;
-        let doc = MultiDoc::from_str(input)?;
+        let doc = MultiDoc::from_yaml_str(input)?;
         assert_eq!(doc.items.len(), 0);
         Ok(())
     }
@@ -127,7 +153,7 @@ steps:
 name: "kittie"
 ---
 "#;
-        let doc = MultiDoc::from_str(input)?;
+        let doc = MultiDoc::from_yaml_str(input)?;
         insta::assert_debug_snapshot!(doc);
         Ok(())
     }
@@ -145,7 +171,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let srcs = MultiDoc::from_str(input)?;
+        let srcs = MultiDoc::from_yaml_str(input)?;
         insta::assert_debug_snapshot!(srcs);
         Ok(())
     }
@@ -165,8 +191,16 @@ steps:
 ---
 ---
 "#;
-        let srcs = MultiDoc::from_str(input)?;
+        let srcs = MultiDoc::from_yaml_str(input)?;
         insta::assert_debug_snapshot!(srcs);
+        Ok(())
+    }
+    #[test]
+    fn test_single_doc_md() -> anyhow::Result<()> {
+        let input = r#"# Topic: Testing Rust code
+"#;
+        let srcs = MultiDoc::from_md_str(input)?;
+        assert_eq!(srcs.items.len(), 1);
         Ok(())
     }
 }

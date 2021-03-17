@@ -1,5 +1,5 @@
 use crate::doc_err::DocError;
-use crate::doc_src::{from_serde_yaml_error, DocSource, TomlError};
+use crate::doc_src::{from_serde_yaml_error, parse_md, DocSource, TomlError};
 use crate::items::item::Item;
 use crate::{context::Context, items::Topic};
 use std::path::PathBuf;
@@ -67,6 +67,7 @@ impl Doc {
                 None => todo!("what to handle here?"),
                 Some("yaml") | Some("yml") => DocSource::yaml(&pb, ctx)?,
                 Some("toml") => DocSource::toml(&pb, ctx)?,
+                Some("md") | Some("markdown") => DocSource::md(&pb, ctx)?,
                 Some(_other) => return Err(DocError::NotSupported(pb.clone())),
             },
         };
@@ -107,6 +108,18 @@ impl Doc {
                         src_doc: DocSource::Toml((*toml_doc).clone()),
                         input_file: toml_doc.input_file.clone(),
                     });
+                }
+            }
+            DocSource::Md(md_doc) => {
+                for src in &md_doc.doc_src_items.items {
+                    let items = parse_md(&src.content)?;
+                    for item in items {
+                        doc.items.push(ItemTracked {
+                            item,
+                            src_doc: DocSource::Md((*md_doc).clone()),
+                            input_file: md_doc.input_file.clone(),
+                        });
+                    }
                 }
             }
         }

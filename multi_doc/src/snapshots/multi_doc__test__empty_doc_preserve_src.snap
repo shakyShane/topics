@@ -1,0 +1,14 @@
+---
+source: multi_doc/src/lib.rs
+expression: doc
+
+---
+MultiDoc {
+    items: [
+        SingleDoc {
+            line_start: 8,
+            line_end: 10,
+            content: "\nname: \"kittie\"",
+        },
+    ],
+}

@@ -25,6 +25,17 @@ pub enum ItemWrap {
 }
 
 impl Item {
+    pub fn set_name(&mut self, name: &str) {
+        match self {
+            Item::Command(cmd) => cmd.name = name.to_string(),
+            Item::FileExistsCheck(fec) => fec.name = name.to_string(),
+            Item::DependencyCheck(dc) => dc.name = name.to_string(),
+            Item::Instruction(inst) => inst.name = name.to_string(),
+            Item::HostEntriesCheck(hec) => hec.name = name.to_string(),
+            Item::Topic(top) => top.name = name.to_string(),
+            Item::TaskGroup(tg) => tg.name = name.to_string(),
+        };
+    }
     pub fn name(&self) -> String {
         match self {
             Item::Command(cmd) => cmd.name.clone(),

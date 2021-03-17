@@ -1,6 +1,7 @@
 use crate::context::Context;
 use crate::doc::DocResult;
-use crate::doc_src::{TomlDocSource, YamlDocSource};
+use crate::doc_src::{MdDocSource, TomlDocSource, YamlDocSource};
+
 use std::path::PathBuf;
 
 pub trait DocSrcImpl: Sized {
@@ -11,6 +12,7 @@ pub trait DocSrcImpl: Sized {
 pub enum DocSource {
     Yaml(YamlDocSource),
     Toml(TomlDocSource),
+    Md(MdDocSource),
 }
 
 impl DocSource {
@@ -18,12 +20,14 @@ impl DocSource {
         match self {
             DocSource::Yaml(yaml_doc) => yaml_doc.input_file.clone(),
             DocSource::Toml(toml_doc) => toml_doc.input_file.clone(),
+            DocSource::Md(md_doc) => md_doc.input_file.clone(),
         }
     }
     pub fn content(&self) -> &str {
         match self {
             DocSource::Yaml(yaml_doc) => yaml_doc.file_content.as_str(),
             DocSource::Toml(toml_doc) => toml_doc.file_content.as_str(),
+            DocSource::Md(md_doc) => md_doc.file_content.as_str(),
         }
     }
     pub fn yaml(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
@@ -31,6 +35,9 @@ impl DocSource {
     }
     pub fn toml(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
         Ok(DocSource::Toml(TomlDocSource::from_path_buf(&pb, ctx)?))
+    }
+    pub fn md(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
+        Ok(DocSource::Md(MdDocSource::from_path_buf(&pb, ctx)?))
     }
 }
 

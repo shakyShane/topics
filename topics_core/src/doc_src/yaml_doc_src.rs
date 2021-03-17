@@ -25,7 +25,7 @@ impl DocSrcImpl for YamlDocSource {
             abs: abs.clone(),
             original: e,
         })?;
-        let items = MultiDoc::from_str(&file_str)?;
+        let items = MultiDoc::from_yaml_str(&file_str)?;
         let new_self = Self {
             input_file: Some(pb.clone()),
             file_content: file_str,
@@ -39,7 +39,7 @@ impl FromStr for YamlDocSource {
     type Err = DocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items = MultiDoc::from_str(&s)?;
+        let items = MultiDoc::from_yaml_str(&s)?;
         Ok(Self {
             input_file: None,
             file_content: s.to_string(),
