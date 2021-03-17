@@ -2,7 +2,7 @@ use crate::context::Context;
 use crate::doc::{Doc, DocResult};
 use crate::doc_err::{DocError, Location, LocationError};
 use crate::doc_src::DocSrcImpl;
-use multi_yaml::{MultiYaml, YamlDoc};
+use multi_doc::{MultiDoc, SingleDoc};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -14,7 +14,7 @@ lazy_static::lazy_static! {
 pub struct YamlDocSource {
     pub input_file: Option<PathBuf>,
     pub file_content: String,
-    pub doc_src_items: MultiYaml,
+    pub doc_src_items: MultiDoc,
 }
 
 impl DocSrcImpl for YamlDocSource {
@@ -25,7 +25,7 @@ impl DocSrcImpl for YamlDocSource {
             abs: abs.clone(),
             original: e,
         })?;
-        let items = MultiYaml::from_str(&file_str)?;
+        let items = MultiDoc::from_str(&file_str)?;
         let new_self = Self {
             input_file: Some(pb.clone()),
             file_content: file_str,
@@ -39,7 +39,7 @@ impl FromStr for YamlDocSource {
     type Err = DocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items = MultiYaml::from_str(&s)?;
+        let items = MultiDoc::from_str(&s)?;
         Ok(Self {
             input_file: None,
             file_content: s.to_string(),
@@ -50,25 +50,25 @@ impl FromStr for YamlDocSource {
 
 pub fn from_serde_yaml_error(
     doc: &Doc,
-    yaml_doc: &YamlDoc,
+    single_doc: &SingleDoc,
     serde_error: &serde_yaml::Error,
 ) -> DocError {
     let mut err = LocationError {
         input_file_src: doc.source.content().to_string(),
         location: Some(Location::Region {
-            line_start: yaml_doc.line_start + 1,
-            line_end: yaml_doc.line_end,
+            line_start: single_doc.line_start + 1,
+            line_end: single_doc.line_end,
         }),
         input_file: doc.source.file(),
         description: serde_error.to_string(),
     };
     if let Some(location) = serde_error.location() {
-        let real_line = location.line() + yaml_doc.line_start;
+        let real_line = location.line() + single_doc.line_start;
         err.location = Some(Location::LineAndColRegion {
             line: real_line,
             column: location.column(),
-            line_start: yaml_doc.line_start + 1,
-            line_end: yaml_doc.line_end,
+            line_start: single_doc.line_start + 1,
+            line_end: single_doc.line_end,
         });
         err.description = RE
             .replace_all(

@@ -649,7 +649,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "multi_yaml"
+name = "multi_doc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1195,7 +1195,7 @@ dependencies = [
  "insta",
  "lazy_static",
  "log",
- "multi_yaml",
+ "multi_doc",
  "pulldown-cmark",
  "regex",
  "serde",

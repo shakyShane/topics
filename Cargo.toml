@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "multi_yaml",
+    "multi_doc",
     "topics",
     "topics_core",
     "toml",

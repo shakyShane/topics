@@ -2,7 +2,7 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/multi_yaml/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/multi_doc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/topics/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/topics/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/toml/src" isTestSource="false" />

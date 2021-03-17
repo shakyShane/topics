@@ -2,29 +2,29 @@ use std::cmp::Ordering;
 use yaml_rust::yaml;
 
 #[derive(Debug, Clone, Default)]
-pub struct MultiYaml {
-    pub items: Vec<YamlDoc>,
+pub struct MultiDoc {
+    pub items: Vec<SingleDoc>,
 }
 
 #[derive(Debug, Clone)]
-pub struct YamlDoc {
+pub struct SingleDoc {
     pub line_start: usize,
     pub line_end: usize,
     pub content: String,
 }
 
 /// Create from a str
-impl std::str::FromStr for MultiYaml {
+impl std::str::FromStr for MultiDoc {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Self::parse(s)
     }
 }
 
-impl MultiYaml {
+impl MultiDoc {
     #[allow(clippy::unnecessary_wraps)]
     fn parse(str: &str) -> Result<Self, anyhow::Error> {
-        let mut items: Vec<YamlDoc> = vec![];
+        let mut items: Vec<SingleDoc> = vec![];
         let split = str.lines().collect::<Vec<&str>>();
         let mut peek = split.iter().enumerate().peekable();
         let mut start = 0;
@@ -61,7 +61,7 @@ impl MultiYaml {
             match docs {
                 Ok(vec) => {
                     if vec.get(0).is_some() {
-                        items.push(YamlDoc {
+                        items.push(SingleDoc {
                             line_start: start,
                             line_end: end,
                             content,
@@ -70,7 +70,7 @@ impl MultiYaml {
                 }
                 Err(_e) => {
                     println!("scan error...");
-                    items.push(YamlDoc {
+                    items.push(SingleDoc {
                         line_start: start,
                         line_end: end,
                         content,
@@ -100,7 +100,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let doc = MultiYaml::from_str(input)?;
+        let doc = MultiDoc::from_str(input)?;
         assert_eq!(doc.items.len(), 1);
         Ok(())
     }
@@ -109,7 +109,7 @@ steps:
         let input = r#"
 
 "#;
-        let doc = MultiYaml::from_str(input)?;
+        let doc = MultiDoc::from_str(input)?;
         assert_eq!(doc.items.len(), 0);
         Ok(())
     }
@@ -127,7 +127,7 @@ steps:
 name: "kittie"
 ---
 "#;
-        let doc = MultiYaml::from_str(input)?;
+        let doc = MultiDoc::from_str(input)?;
         insta::assert_debug_snapshot!(doc);
         Ok(())
     }
@@ -145,7 +145,7 @@ deps:
 steps:
   - github-checkin
 "#;
-        let srcs = MultiYaml::from_str(input)?;
+        let srcs = MultiDoc::from_str(input)?;
         insta::assert_debug_snapshot!(srcs);
         Ok(())
     }
@@ -165,7 +165,7 @@ steps:
 ---
 ---
 "#;
-        let srcs = MultiYaml::from_str(input)?;
+        let srcs = MultiDoc::from_str(input)?;
         insta::assert_debug_snapshot!(srcs);
         Ok(())
     }
