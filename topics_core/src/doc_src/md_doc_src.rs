@@ -5,6 +5,7 @@ use crate::doc_src::DocSrcImpl;
 use crate::items::Item;
 use multi_doc::{MultiDoc, SingleDoc};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -56,32 +57,62 @@ impl MdDocSource {
     }
 }
 
-fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
-    let _kind = "";
-    let mut name = "".to_string();
-    let mut collecting_name = false;
+#[derive(Debug)]
+enum Collecting {
+    Heading,
+    CodeBlock,
+    None,
+}
 
-    let mut command = "".to_string();
-    let mut capturing_command = false;
-    let mut cwd: Option<String> = None;
+#[derive(Debug)]
+enum Element {
+    Heading {
+        level: usize,
+        content: String,
+    },
+    CodeBlock {
+        params: HashMap<String, Option<String>>,
+        content: String,
+    },
+}
+
+fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
+    let mut items: Vec<Element> = vec![];
+    let mut collecting = Collecting::None;
+    let mut buffer = String::new();
 
     for evt in Parser::new_ext(&item_src.content, Options::empty()) {
         match evt {
-            Event::Text(t) => {
-                if collecting_name {
-                    name.push_str(&t)
-                }
-                if capturing_command {
-                    command.push_str(&t)
-                }
-                // println!("t=>{}", t);
-            }
+            Event::Text(t) => match collecting {
+                Collecting::Heading | Collecting::CodeBlock => buffer.push_str(&t),
+                Collecting::None => {}
+            },
             Event::End(a) => {
                 match a {
-                    Tag::Heading(1) => collecting_name = false,
+                    Tag::Heading(level) => match collecting {
+                        Collecting::Heading => {
+                            items.push(Element::Heading {
+                                level: level as usize,
+                                content: buffer.to_string(),
+                            });
+                            buffer.clear();
+                            collecting = Collecting::None;
+                        }
+                        _ => unreachable!(),
+                    },
                     Tag::CodeBlock(code) => match code {
                         CodeBlockKind::Indented => {}
-                        CodeBlockKind::Fenced(_fence_args) => capturing_command = false,
+                        CodeBlockKind::Fenced(fence_args) => match collecting {
+                            Collecting::CodeBlock => {
+                                items.push(Element::CodeBlock {
+                                    params: Default::default(),
+                                    content: buffer.to_string(),
+                                });
+                                buffer.clear();
+                                collecting = Collecting::None;
+                            }
+                            _ => unreachable!(),
+                        },
                     },
                     _ => {
                         // noop
@@ -90,50 +121,43 @@ fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
             }
             Event::Start(a) => match a {
                 Tag::Paragraph => {}
-                Tag::Heading(1) => {
-                    if !collecting_name && name.is_empty() {
-                        collecting_name = true
-                    }
-                }
-                Tag::Heading(_other) => {}
+                Tag::Heading(_num) => collecting = Collecting::Heading,
                 Tag::BlockQuote => {}
                 Tag::CodeBlock(code) => match code {
                     CodeBlockKind::Indented => {
-                        println!("code indented");
+                        // println!("code indented");
                     }
-                    CodeBlockKind::Fenced(fence_args) => {
-                        if !capturing_command && command.is_empty() {
-                            if fence_args.contains("@command") {
-                                fence_args
-                                    .split_whitespace()
-                                    .filter(|c| !c.starts_with("@command"))
-                                    .for_each(|chunk| {
-                                        let mut left = None;
-                                        let mut right = None;
-                                        for c in chunk.split("=") {
-                                            if left.is_none() {
-                                                left = Some(c)
-                                            } else {
-                                                right = Some(c)
-                                            }
-                                        }
-                                        match (left, right) {
-                                            (Some(left), None) => {
-                                                println!("left ONLY={}", left);
-                                            }
-                                            (Some("@cwd"), Some(v)) => {
-                                                println!("cwd={}", v);
-                                                cwd = Some(v.to_string());
-                                            }
-                                            (Some("@cwd"), None) => {
-                                                println!("MISSING CWD VALUE");
-                                            }
-                                            _ => println!("other"),
-                                        }
-                                    });
-                                capturing_command = true
-                            }
-                        }
+                    CodeBlockKind::Fenced(_) => {
+                        // if fence_args.contains("@command") {
+                        //     fence_args
+                        //         .split_whitespace()
+                        //         .filter(|c| !c.starts_with("@command"))
+                        //         .for_each(|chunk| {
+                        //             let mut left = None;
+                        //             let mut right = None;
+                        //             for c in chunk.split("=") {
+                        //                 if left.is_none() {
+                        //                     left = Some(c)
+                        //                 } else {
+                        //                     right = Some(c)
+                        //                 }
+                        //             }
+                        //             match (left, right) {
+                        //                 (Some(left), None) => {
+                        //                     println!("left ONLY={}", left);
+                        //                 }
+                        //                 (Some("@cwd"), Some(v)) => {
+                        //                     println!("cwd={}", v);
+                        //                     cwd = Some(v.to_string());
+                        //                 }
+                        //                 (Some("@cwd"), None) => {
+                        //                     println!("MISSING CWD VALUE");
+                        //                 }
+                        //                 _ => println!("other"),
+                        //             }
+                        //         });
+                        // }
+                        collecting = Collecting::CodeBlock
                     }
                 },
                 Tag::List(_) => {}
@@ -154,9 +178,34 @@ fn parse_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Item> {
             }
         }
     }
-    println!("name={}", name);
-    println!("command={}", command);
+    dbg!(items);
     Ok(Item::Topic(Default::default()))
+}
+
+fn arg_hash_map(args: &str) -> HashMap<String, Option<String>> {
+    args.split_whitespace()
+        .filter_map(|chunk| {
+            let mut left = None;
+            let mut right = None;
+            for (index, c) in chunk.split("=").enumerate() {
+                if index == 0 {
+                    if !c.is_empty() {
+                        left = Some(c);
+                    }
+                } else {
+                    right = Some(c);
+                }
+            }
+            match (left, right) {
+                (Some(left), Some(right)) => Some((left.to_string(), Some(right.to_string()))),
+                (Some(left), None) => Some((left.to_string(), None)),
+                (_, _) => {
+                    println!("invalid");
+                    None
+                }
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -165,15 +214,34 @@ mod test {
     #[test]
     fn test_from_str() -> anyhow::Result<()> {
         let input = r#"
-#       Command: Run unit tests <br>command</br>
+# Command: Run unit tests <br>command</br>
+## This is a description
 
-```shell @command @cwd=./
+```shell --kind=command
 echo "About to install ${MIN_VERSION}"
+yarn build:static && \
+yarn export
 ```
+---
     "#;
         let src = MdDocSource::from_str(input)?;
         let items = src.to_items()?;
-        dbg!(items);
+        // dbg!(items);
         Ok(())
+    }
+
+    #[test]
+    fn test_args() {
+        // enum Cmd {
+        //     Command
+        // }
+        #[derive(Structopt)]
+        struct CodeBlock {
+            #[structopt(subcommand)]
+            cmd()
+        }
+        let input = "shell command ";
+        let as_hash = arg_hash_map(input);
+        dbg!(as_hash);
     }
 }
