@@ -60,6 +60,7 @@ impl FromStr for MdDocSource {
 
 #[derive(Debug)]
 enum Collecting {
+    Paragraph,
     Heading,
     CodeBlock,
     None,
@@ -69,6 +70,9 @@ enum Collecting {
 enum Element {
     Heading {
         level: usize,
+        content: String,
+    },
+    Paragraph {
         content: String,
     },
     CodeBlock {
@@ -87,11 +91,25 @@ fn lex_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Vec<Element>> 
     for evt in Parser::new_ext(&item_src.content, Options::empty()) {
         match evt {
             Event::Text(t) => match collecting {
-                Collecting::Heading | Collecting::CodeBlock => buffer.push_str(&t),
+                Collecting::Heading | Collecting::CodeBlock | Collecting::Paragraph => {
+                    buffer.push_str(&t)
+                }
                 Collecting::None => {}
             },
             Event::End(a) => {
                 match a {
+                    Tag::Paragraph => match collecting {
+                        Collecting::Paragraph => {
+                            items.push(Element::Paragraph {
+                                content: buffer.to_string(),
+                            });
+                            buffer.clear();
+                        }
+                        _ => {}
+                    },
+                    Tag::Item => {
+                        // buffer.clear();
+                    }
                     Tag::Heading(level) => match collecting {
                         Collecting::Heading => {
                             items.push(Element::Heading {
@@ -127,45 +145,12 @@ fn lex_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Vec<Element>> 
                 }
             }
             Event::Start(a) => match a {
-                Tag::Paragraph => {}
+                Tag::Paragraph => collecting = Collecting::Paragraph,
                 Tag::Heading(_num) => collecting = Collecting::Heading,
                 Tag::BlockQuote => {}
                 Tag::CodeBlock(code) => match code {
-                    CodeBlockKind::Indented => {
-                        // println!("code indented");
-                    }
-                    CodeBlockKind::Fenced(_) => {
-                        // if fence_args.contains("@command") {
-                        //     fence_args
-                        //         .split_whitespace()
-                        //         .filter(|c| !c.starts_with("@command"))
-                        //         .for_each(|chunk| {
-                        //             let mut left = None;
-                        //             let mut right = None;
-                        //             for c in chunk.split("=") {
-                        //                 if left.is_none() {
-                        //                     left = Some(c)
-                        //                 } else {
-                        //                     right = Some(c)
-                        //                 }
-                        //             }
-                        //             match (left, right) {
-                        //                 (Some(left), None) => {
-                        //                     println!("left ONLY={}", left);
-                        //                 }
-                        //                 (Some("@cwd"), Some(v)) => {
-                        //                     println!("cwd={}", v);
-                        //                     cwd = Some(v.to_string());
-                        //                 }
-                        //                 (Some("@cwd"), None) => {
-                        //                     println!("MISSING CWD VALUE");
-                        //                 }
-                        //                 _ => println!("other"),
-                        //             }
-                        //         });
-                        // }
-                        collecting = Collecting::CodeBlock
-                    }
+                    CodeBlockKind::Indented => {}
+                    CodeBlockKind::Fenced(_) => collecting = Collecting::CodeBlock,
                 },
                 Tag::List(_) => {}
                 Tag::Item => {}
@@ -278,6 +263,7 @@ yarn export
     fn test_args() -> anyhow::Result<()> {
         let input = r#"
 # Command: Run unit tests <br>command</br>
+
 ## This is a description
 
 ```shell command --cwd=/containers/www/client
@@ -291,7 +277,17 @@ echo just another code block
     "#;
         let src = MdDocSource::from_str(input)?;
         let items = parse_md(&src.file_content)?;
+        dbg!(&items);
         assert_eq!(items.len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_list() -> anyhow::Result<()> {
+        let src = MdDocSource::from_str(include_str!("../../../fixtures/md/topics.md"))?;
+        let items = lex_one(&src, &src.doc_src_items.items.get(0).unwrap())?;
+        dbg!(&items);
+        // assert_eq!(items.len(), 1);
         Ok(())
     }
 }
