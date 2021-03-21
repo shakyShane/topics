@@ -66,13 +66,19 @@ enum Collecting {
     None,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum Element {
     Heading {
         level: usize,
         content: String,
     },
+    List {
+        items: Vec<ListItem>,
+    },
     Paragraph {
+        content: String,
+    },
+    Text {
         content: String,
     },
     CodeBlock {
@@ -81,95 +87,95 @@ enum Element {
     },
 }
 
+#[derive(Clone, Debug)]
+struct ListItem(Vec<Element>);
+
+///
+/// Lex 1 source file
+///
+/// The purpose of this pass is to collect only relevant
+/// information for the following 'parse' phase.
+///
+/// That means we can skip things like deeply nested lists
+/// etc and opt for a simpler non-recursive algorithm
+///
 fn lex_one(_doc: &MdDocSource, item_src: &SingleDoc) -> DocResult<Vec<Element>> {
     let mut items: Vec<Element> = vec![];
-    let mut collecting = Collecting::None;
+    let mut temp_items: Vec<Element> = vec![];
+    let mut temp_list_items: Vec<ListItem> = vec![];
     let mut buffer = String::new();
-    // let mut options = Options::empty();
-    // options.insert(Options::ENABLE_SMART_PUNCTUATION);
 
-    for evt in Parser::new_ext(&item_src.content, Options::empty()) {
-        match evt {
-            Event::Text(t) => match collecting {
-                Collecting::Heading | Collecting::CodeBlock | Collecting::Paragraph => {
-                    buffer.push_str(&t)
+    for item in Parser::new_ext(&item_src.content, Options::empty()) {
+        match item {
+            Event::Start(Tag::List(_)) => {
+                items.extend(temp_items.clone());
+                temp_items.clear();
+                temp_list_items.clear();
+            }
+            Event::End(Tag::List(l)) => {
+                items.push(Element::List {
+                    items: temp_list_items.clone(),
+                });
+                temp_list_items.clear();
+            }
+            Event::End(Tag::Item) => {
+                if !buffer.is_empty() {
+                    temp_items.push(Element::Text {
+                        content: buffer.to_string(),
+                    });
                 }
-                Collecting::None => {}
-            },
-            Event::End(a) => {
-                match a {
-                    Tag::Paragraph => match collecting {
-                        Collecting::Paragraph => {
-                            items.push(Element::Paragraph {
-                                content: buffer.to_string(),
-                            });
-                            buffer.clear();
-                        }
-                        _ => {}
-                    },
-                    Tag::Item => {
-                        // buffer.clear();
-                    }
-                    Tag::Heading(level) => match collecting {
-                        Collecting::Heading => {
-                            items.push(Element::Heading {
-                                level: level as usize,
-                                content: buffer.to_string(),
-                            });
-                            buffer.clear();
-                            collecting = Collecting::None;
-                        }
-                        _ => unreachable!(),
-                    },
-                    Tag::CodeBlock(code) => match code {
-                        CodeBlockKind::Indented => {}
-                        CodeBlockKind::Fenced(fence_args) => match collecting {
-                            Collecting::CodeBlock => {
-                                items.push(Element::CodeBlock {
-                                    params: if !fence_args.is_empty() {
-                                        Some(fence_args.to_string())
-                                    } else {
-                                        None
-                                    },
-                                    content: buffer.to_string(),
-                                });
-                                buffer.clear();
-                                collecting = Collecting::None;
-                            }
-                            _ => unreachable!(),
-                        },
-                    },
-                    _ => {
-                        // noop
-                    }
+                temp_list_items.push(ListItem(temp_items.clone()));
+                temp_items.clear();
+                buffer.clear();
+            }
+            Event::End(Tag::Heading(h)) => {
+                temp_items.push(Element::Heading {
+                    level: h as usize,
+                    content: buffer.to_string(),
+                });
+                buffer.clear();
+            }
+            Event::Start(Tag::Paragraph) => {
+                buffer.clear();
+            }
+            Event::End(Tag::Paragraph) => {
+                temp_items.push(Element::Paragraph {
+                    content: buffer.to_string(),
+                });
+                buffer.clear();
+            }
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(_))) => {
+                if !buffer.is_empty() {
+                    println!("BUFFER WAS NOT EMPTY before code block started={}", buffer);
+                    temp_items.push(Element::Text {
+                        content: buffer.to_string(),
+                    });
+                    buffer.clear()
                 }
             }
-            Event::Start(a) => match a {
-                Tag::Paragraph => collecting = Collecting::Paragraph,
-                Tag::Heading(_num) => collecting = Collecting::Heading,
-                Tag::BlockQuote => {}
-                Tag::CodeBlock(code) => match code {
-                    CodeBlockKind::Indented => {}
-                    CodeBlockKind::Fenced(_) => collecting = Collecting::CodeBlock,
-                },
-                Tag::List(_) => {}
-                Tag::Item => {}
-                Tag::FootnoteDefinition(_) => {}
-                Tag::Table(_) => {}
-                Tag::TableHead => {}
-                Tag::TableRow => {}
-                Tag::TableCell => {}
-                Tag::Emphasis => {}
-                Tag::Strong => {}
-                Tag::Strikethrough => {}
-                Tag::Link(_, _, _) => {}
-                Tag::Image(_, _, _) => {}
-            },
-            _ => {
-                // println!("other")
+            Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(args))) => {
+                temp_items.push(Element::CodeBlock {
+                    content: buffer.to_string(),
+                    params: Some(args.to_string()),
+                });
+                buffer.clear();
             }
+            Event::Text(t) => {
+                buffer.push_str(&t);
+            }
+            Event::Code(_) => {}
+            Event::Html(_) => {}
+            Event::FootnoteReference(_) => {}
+            Event::SoftBreak => {
+                buffer.push_str("\n");
+            }
+            Event::HardBreak => {}
+            Event::Rule => {}
+            Event::TaskListMarker(_) => {}
+            _t @ _ => {}
         }
     }
+    items.extend(temp_items); // may be empty at this point
     Ok(items)
 }
 
@@ -286,8 +292,6 @@ echo just another code block
     fn test_list() -> anyhow::Result<()> {
         let src = MdDocSource::from_str(include_str!("../../../fixtures/md/topics.md"))?;
         let items = lex_one(&src, &src.doc_src_items.items.get(0).unwrap())?;
-        dbg!(&items);
-        // assert_eq!(items.len(), 1);
         Ok(())
     }
 }

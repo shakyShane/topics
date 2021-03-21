@@ -1,9 +1,26 @@
-# Topic: Testing Rust code: from here
+# Topic: Run all unit tests
 
-And here's a paragraph
+## use this to verify your work
 
-```shell command 
-yarn
-```
+## Dependencies
 
-**And** here's another paragraph
+- Command: Run unit tests
+
+    Some text here
+
+    ```shell command ishere
+    yo!
+    ```
+- item 2
+- echo "hello world"
+- echo "hello world"
+
+## Steps
+
+- something here
+
+    ```angular2html
+    hello
+    ```
+
+- another thing
