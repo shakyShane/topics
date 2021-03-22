@@ -1,6 +1,6 @@
 use crate::items::ItemWrap;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Topic {
     pub name: String,
     pub steps: Vec<ItemWrap>,
@@ -13,10 +13,12 @@ impl Default for Topic {
         Self {
             name: "[sample] Run unit tests".to_string(),
             deps: vec![
-                ItemWrap::Named("install node".to_string()),
-                ItemWrap::Named("install yarn".to_string()),
+                // ItemWrap::Named("install node".to_string()),
+                // ItemWrap::Named("install yarn".to_string()),
             ],
-            steps: vec![ItemWrap::Named("run unit tests command".into())],
+            steps: vec![
+                // ItemWrap::Named("run unit tests command".into())
+            ],
         }
     }
 }

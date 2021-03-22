@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Instruction {
     pub instruction: String,
     pub name: String,
@@ -7,8 +7,8 @@ pub struct Instruction {
 impl Default for Instruction {
     fn default() -> Self {
         Self {
-            instruction: "Log into Github & create your PR in github".to_string(),
-            name: "create a new PR".to_string(),
+            instruction: "".to_string(),
+            name: "".to_string(),
         }
     }
 }

@@ -12,7 +12,10 @@
     yo!
     ```
 - item 2
-- echo "hello world"
+- Instruction: Log into your account
+- Instruction: Find the PR with the corresponding issue number
+  
+  There are things you need to consider
 - echo "hello world"
 
 ## Steps

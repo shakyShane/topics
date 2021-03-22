@@ -5,7 +5,7 @@ use crate::items::{Command, Instruction};
 use crate::items::{DependencyCheck, TaskGroup};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 #[serde(tag = "kind")]
 pub enum Item {
     Command(Command),
@@ -17,7 +17,7 @@ pub enum Item {
     TaskGroup(TaskGroup),
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 #[serde(untagged)]
 pub enum ItemWrap {
     Named(String),

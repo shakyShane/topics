@@ -2,7 +2,7 @@ use crate::cwd::Cwd;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Command {
     pub cwd: Cwd,
     pub command: String,
@@ -16,7 +16,7 @@ pub struct CommandInlineArgs {
     pub cwd: Cwd,
 }
 
-#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Deserialize, serde::Serialize)]
 pub struct Env {
     pub values: Option<HashMap<String, String>>,
 }

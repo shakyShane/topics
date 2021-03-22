@@ -1,5 +1,5 @@
 use crate::doc_err::DocError;
-use crate::doc_src::{from_serde_yaml_error, parse_md, DocSource, TomlError};
+use crate::doc_src::{from_serde_yaml_error, parse_md_str, DocSource, TomlError};
 use crate::items::item::Item;
 use crate::{context::Context, items::Topic};
 use std::path::PathBuf;
@@ -112,7 +112,7 @@ impl Doc {
             }
             DocSource::Md(md_doc) => {
                 for src in &md_doc.doc_src_items.items {
-                    let items = parse_md(&src.content)?;
+                    let items = parse_md_str(&src.content)?;
                     for item in items {
                         doc.items.push(ItemTracked {
                             item,
