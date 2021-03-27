@@ -25,7 +25,9 @@ impl Db {
                             ItemWrap::Named(item_name) => {
                                 entry.insert(item_name.clone());
                             }
-                            ItemWrap::Item(_) => todo!("Item::Item not ready yet"),
+                            ItemWrap::Item(item) => {
+                                entry.insert(item.name());
+                            }
                         }
                     }
                     for dep in &topic.steps {
@@ -33,7 +35,9 @@ impl Db {
                             ItemWrap::Named(item_name) => {
                                 entry.insert(item_name.clone());
                             }
-                            ItemWrap::Item(_) => todo!("Item::Item not ready yet"),
+                            ItemWrap::Item(item) => {
+                                entry.insert(item.name());
+                            }
                         }
                     }
                 }

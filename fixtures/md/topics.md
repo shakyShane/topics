@@ -4,26 +4,31 @@
 
 ## Dependencies
 
-- Command: Run unit tests
+- Instruction: Run unit tests
 
-    Some text here
-
-    ```shell command ishere
-    yo!
-    ```
+  Here is the actual instruction
 - item 2
 - Instruction: Log into your account
 - Instruction: Find the PR with the corresponding issue number
-  
-  There are things you need to consider
+- Cargo Test
 - echo "hello world"
 
 ## Steps
 
 - something here
-
-    ```angular2html
-    hello
-    ```
-
 - another thing
+
+
+---
+
+# Instruction: echo "hello world"
+
+This is another instruction
+
+---
+
+# Command: item 2
+
+```shell command --cwd="."
+echo hello world
+```

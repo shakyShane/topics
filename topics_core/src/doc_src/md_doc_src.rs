@@ -47,24 +47,6 @@ impl FromStr for MdDocSource {
     }
 }
 
-// impl MdDocSource {
-//     pub fn to_items(&self) -> DocResult<Vec<Item>> {
-//         self.doc_src_items
-//             .items
-//             .iter()
-//             .map(|item_src| parse_one(&self, item_src))
-//             .collect()
-//     }
-// }
-
-#[derive(Debug)]
-enum Collecting {
-    Paragraph,
-    Heading,
-    CodeBlock,
-    None,
-}
-
 #[derive(Clone, Debug)]
 enum Element {
     Heading {
@@ -166,12 +148,12 @@ fn lex_one(item_src: &str) -> DocResult<Vec<Element>> {
             Event::Html(_) => {}
             Event::FootnoteReference(_) => {}
             Event::SoftBreak => {
-                buffer.push_str("\n");
+                buffer.push('\n');
             }
             Event::HardBreak => {}
             Event::Rule => {}
             Event::TaskListMarker(_) => {}
-            _t @ _ => {}
+            _t => {}
         }
     }
     items.extend(temp_items); // may be empty at this point
@@ -189,14 +171,14 @@ pub fn parse_md_str(input: &str) -> DocResult<Vec<Item>> {
     Ok(items)
 }
 
-fn parse_elements(elements: &Vec<Element>) -> DocResult<Vec<Item>> {
+fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
     let mut items: Vec<Item> = vec![];
     let mut kind: Option<Item> = None;
     let mut prev_heading2: Option<Element> = None;
     for elem in elements {
         match elem {
             Element::Heading { level: 1, content } => {
-                let split = content.splitn(2, ":").collect::<Vec<&str>>();
+                let split = content.splitn(2, ':').collect::<Vec<&str>>();
                 match (split.get(0), split.get(1)) {
                     (Some(kind_str), Some(rest)) => {
                         if let Ok(mut item) = Item::from_str(kind_str) {
@@ -213,24 +195,25 @@ fn parse_elements(elements: &Vec<Element>) -> DocResult<Vec<Item>> {
             Element::CodeBlock {
                 params: Some(p),
                 content,
-            } => match kind.as_mut() {
-                Some(Item::Command(cmd)) => match code_fence::parse_code_fence_args(&p) {
-                    Ok(Some(code_fence::Cmd::Command(inner))) => {
-                        // we only assign this code block if it has ```shell command ...
-                        cmd.command = content.to_string();
-                        cmd.cwd = inner.cwd;
+            } => {
+                if let Some(Item::Command(cmd)) = kind.as_mut() {
+                    match code_fence::parse_code_fence_args(&p) {
+                        Ok(Some(code_fence::Cmd::Command(inner))) => {
+                            // we only assign this code block if it has ```shell command ...
+                            cmd.command = content.to_string();
+                            cmd.cwd = inner.cwd;
+                        }
+                        _a => {
+                            todo!("handle parsing code-block inline args")
+                        }
                     }
-                    _a => {
-                        println!("todo!{:?}", _a)
-                    }
-                },
-                _ => {}
-            },
+                }
+            }
             Element::List { items } => {
                 if let Some(Element::Heading { content, level: 2 }) = &prev_heading2 {
-                    match kind.as_mut() {
-                        Some(Item::Topic(top)) => match content.as_str() {
-                            "Dependencies" => {
+                    if let Some(Item::Topic(top)) = kind.as_mut() {
+                        match content.as_str() {
+                            "Dependencies" | "Dependencies:" => {
                                 for item in items {
                                     let parsed = parse_item_from_list_items(&item.0);
                                     if let Some(item_wrap) = parsed {
@@ -238,7 +221,7 @@ fn parse_elements(elements: &Vec<Element>) -> DocResult<Vec<Item>> {
                                     }
                                 }
                             }
-                            "Steps" => {
+                            "Steps" | "Steps:" => {
                                 for item in items {
                                     let parsed = parse_item_from_list_items(&item.0);
                                     if let Some(item_wrap) = parsed {
@@ -247,8 +230,7 @@ fn parse_elements(elements: &Vec<Element>) -> DocResult<Vec<Item>> {
                                 }
                             }
                             _ => {}
-                        },
-                        _ => {}
+                        }
                     }
                 }
                 // println!("prev heading {:?}", prev_heading2);
@@ -267,33 +249,30 @@ fn parse_elements(elements: &Vec<Element>) -> DocResult<Vec<Item>> {
 ///
 /// Things we care about
 ///
-fn parse_item_from_list_items(items: &Vec<Element>) -> Option<ItemWrap> {
+fn parse_item_from_list_items(items: &[Element]) -> Option<ItemWrap> {
     // 1. if there's a single text node, this is a named reference
     if let (1, Some(Element::Text { content })) = (items.len(), items.get(0)) {
         return parse_inline_kind(content)
-            .map(|inl| ItemWrap::Item(inl))
+            .map(ItemWrap::Item)
             .or_else(|| Some(ItemWrap::Named(content.to_string())));
     }
     if let (1, Some(Element::Paragraph { content })) = (items.len(), items.get(0)) {
         return parse_inline_kind(content)
-            .map(|inl| ItemWrap::Item(inl))
+            .map(ItemWrap::Item)
             .or_else(|| Some(ItemWrap::Named(content.to_string())));
     }
 
     // 2. Instruction: name pattern. This should be 1 kind_line + n trailing lines.
     if let (_len, Some(Element::Paragraph { content })) = (items.len(), items.get(0)) {
-        match parse_inline_kind(content) {
-            Some(Item::Instruction(mut ins)) => {
-                let mut instruction_lines = vec![];
-                items.iter().skip(1).for_each(|rem| match rem {
-                    Element::Paragraph { content } => instruction_lines.push(content.to_string()),
-                    Element::Text { content } => instruction_lines.push(content.to_string()),
-                    _ => {}
-                });
-                ins.instruction = instruction_lines.join("\n");
-                return Some(ItemWrap::Item(Item::Instruction(ins)));
-            }
-            _ => {}
+        if let Some(Item::Instruction(mut ins)) = parse_inline_kind(content) {
+            let mut instruction_lines = vec![];
+            items.iter().skip(1).for_each(|rem| match rem {
+                Element::Paragraph { content } => instruction_lines.push(content.to_string()),
+                Element::Text { content } => instruction_lines.push(content.to_string()),
+                _ => {}
+            });
+            ins.instruction = instruction_lines.join("\n");
+            return Some(ItemWrap::Item(Item::Instruction(ins)));
         }
     }
 
@@ -302,20 +281,15 @@ fn parse_item_from_list_items(items: &Vec<Element>) -> Option<ItemWrap> {
 
 fn parse_inline_kind(input: &str) -> Option<Item> {
     // split by lines first - inline kind names must be a single line
-    let lines = input.splitn(2, "\n").collect::<Vec<&str>>();
+    let lines = input.splitn(2, '\n').collect::<Vec<&str>>();
 
     // kind + name + other
     if let (Some(first), maybe_rest) = (lines.get(0), lines.get(1)) {
-        if let Some(item) = split_first_line(first).as_mut() {
-            match item {
-                Item::Instruction(inst) => {
-                    if let Some(rest) = maybe_rest {
-                        inst.instruction = rest.to_string();
-                    }
-                    return Some(Item::Instruction(inst.clone()));
-                }
-                _ => {}
+        if let Some(Item::Instruction(inst)) = split_first_line(first).as_mut() {
+            if let Some(rest) = maybe_rest {
+                inst.instruction = rest.to_string();
             }
+            return Some(Item::Instruction(inst.clone()));
         }
     }
 
@@ -326,7 +300,7 @@ fn parse_inline_kind(input: &str) -> Option<Item> {
 }
 
 fn split_first_line(first_line_input: &str) -> Option<Item> {
-    let split = first_line_input.splitn(2, ":").collect::<Vec<&str>>();
+    let split = first_line_input.splitn(2, ':').collect::<Vec<&str>>();
     match (split.get(0), split.get(1)) {
         (Some(kind_str), Some(rest)) => {
             if let Ok(mut item) = Item::from_str(kind_str) {
@@ -417,7 +391,7 @@ mod test {
 # Command: Run unit tests <br>command</br>
 ## This is a description
 
-```shell --kind=command
+```shell command
 echo "About to install ${MIN_VERSION}"
 yarn build:static && \
 yarn export
@@ -447,7 +421,8 @@ echo just another code block that should not be counted
 ```
     "#;
         let src = MdDocSource::from_str(input)?;
-        let _items = parse_md_str(&src.file_content)?;
+        let items = parse_md_str(&src.file_content)?;
+        assert_eq!(items.len(), 1);
         Ok(())
     }
 

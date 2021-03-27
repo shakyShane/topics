@@ -147,26 +147,25 @@ fn print_item_line(item: &Item, db: &Db, width: usize) {
 }
 
 fn print_item_wrap(item_wrap: &ItemWrap, db: &Db, width: usize) {
-    match item_wrap {
-        ItemWrap::Named(name) => {
-            let matched = db.item_map.get(name);
-            match matched {
-                Some(matched_item) => {
-                    print_item_line(&matched_item.item, &db, width);
-                }
-                None => {
-                    println!(
-                        "{:width$}- NOT_FOUND: {name}",
-                        " ",
-                        width = width,
-                        name = name
-                    );
-                }
-            }
+    // dbg!(&db);
+    let maybe_item = match item_wrap {
+        ItemWrap::Named(name) => (name.clone(), db.item_map.get(name)),
+        ItemWrap::Item(item) => {
+            let name = item.name();
+            (name.clone(), db.item_map.get(&name))
         }
-        ItemWrap::Item(_item) => {
-            // println!("     - {}", item.name());
-            todo!("topic.deps ItemWrap::Item")
+    };
+    match maybe_item {
+        (_name, Some(matched_item)) => {
+            print_item_line(&matched_item.item, &db, width);
+        }
+        (name, None) => {
+            println!(
+                "{:width$}- NOT_FOUND: {name}",
+                " ",
+                width = width,
+                name = name
+            );
         }
     }
 }

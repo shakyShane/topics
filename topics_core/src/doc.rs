@@ -1,6 +1,7 @@
 use crate::doc_err::DocError;
 use crate::doc_src::{from_serde_yaml_error, parse_md_str, DocSource, TomlError};
 use crate::items::item::Item;
+use crate::items::ItemWrap;
 use crate::{context::Context, items::Topic};
 use std::path::PathBuf;
 
@@ -114,6 +115,17 @@ impl Doc {
                 for src in &md_doc.doc_src_items.items {
                     let items = parse_md_str(&src.content)?;
                     for item in items {
+                        if let Item::Topic(topic) = &item {
+                            for item_wrap in topic.deps.iter().chain(topic.steps.iter()) {
+                                if let ItemWrap::Item(item) = item_wrap {
+                                    doc.items.push(ItemTracked {
+                                        item: item.clone(),
+                                        src_doc: DocSource::Md((*md_doc).clone()),
+                                        input_file: md_doc.input_file.clone(),
+                                    });
+                                }
+                            }
+                        }
                         doc.items.push(ItemTracked {
                             item,
                             src_doc: DocSource::Md((*md_doc).clone()),
