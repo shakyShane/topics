@@ -12,12 +12,22 @@
 - Instruction: Find the PR with the corresponding issue number
 - Cargo Test
 - echo "hello world"
+- Node JS installed globally
+- Command: Will Work
+  
+  ```shell command 
+  echo oops!
+  ```
+- Dependency Check: k8s
+
+  ```shell verify
+  kubctl version --short
+  ```
 
 ## Steps
 
 - something here
 - another thing
-
 
 ---
 
@@ -31,4 +41,14 @@ This is another instruction
 
 ```shell command --cwd="."
 echo hello world
+```
+
+---
+
+# Dependency Check: Node JS installed globally
+
+Node JS is required and should be on version 12.0
+
+```shell verify
+node -v
 ```

@@ -71,7 +71,7 @@ impl FromStr for Item {
             "TaskGroup" | "tg" | "task-group" => Ok(Item::TaskGroup(Default::default())),
             "Command" | "command" | "cmd" => Ok(Item::Command(Default::default())),
             "Instruction" | "inst" | "instruction" => Ok(Item::Instruction(Default::default())),
-            "DependencyCheck" | "dep" | "dep-check" => {
+            "DependencyCheck" | "Dependency Check" | "dep" | "dep-check" => {
                 Ok(Item::DependencyCheck(Default::default()))
             }
             _s => Err(anyhow::anyhow!("Not supported yet: {}", _s)),

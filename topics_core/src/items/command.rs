@@ -1,4 +1,5 @@
 use crate::cwd::Cwd;
+use crate::doc_src::code_fence;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -36,6 +37,23 @@ impl Default for Command {
             command: "echo 'hello world'".to_string(),
             name: "run unit tests command".to_string(),
             env: Default::default(),
+        }
+    }
+}
+
+impl Command {
+    pub fn with_content(&mut self, content: &str) {
+        self.command = content.to_string();
+    }
+    pub fn with_cli_params(&mut self, params: &str) {
+        match code_fence::parse_code_fence_args(params) {
+            Ok(Some(code_fence::Cmd::Command(inner))) => {
+                // we only assign this code block if it has ```shell command ...
+                self.cwd = inner.cwd;
+            }
+            _a => {
+                // todo!("handle parsing code-block inline args")
+            }
         }
     }
 }

@@ -197,11 +197,19 @@ fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
                 content,
             } => {
                 if let Some(Item::Command(cmd)) = kind.as_mut() {
+                    cmd.with_content(content);
+                    cmd.with_cli_params(&p);
+                }
+                if let Some(Item::DependencyCheck(dep_check)) = kind.as_mut() {
+                    use code_fence::Cmd::*;
                     match code_fence::parse_code_fence_args(&p) {
-                        Ok(Some(code_fence::Cmd::Command(inner))) => {
-                            // we only assign this code block if it has ```shell command ...
-                            cmd.command = content.to_string();
-                            cmd.cwd = inner.cwd;
+                        Ok(Some(Verify(_))) => {
+                            // we only assign this code block if it has ```shell verify ...
+                            dep_check.verify = content.to_string();
+                        }
+                        Ok(Some(AutoFix(_))) => {
+                            // we only assign this code block if it has ```shell autofix ...
+                            dep_check.autofix = Some(content.to_string());
                         }
                         _a => {
                             todo!("handle parsing code-block inline args")
@@ -211,13 +219,13 @@ fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
             }
             Element::List { items } => {
                 if let Some(Element::Heading { content, level: 2 }) = &prev_heading2 {
-                    if let Some(Item::Topic(top)) = kind.as_mut() {
+                    if let Some(Item::Topic(topic)) = kind.as_mut() {
                         match content.as_str() {
                             "Dependencies" | "Dependencies:" => {
                                 for item in items {
                                     let parsed = parse_item_from_list_items(&item.0);
                                     if let Some(item_wrap) = parsed {
-                                        top.deps.push(item_wrap);
+                                        topic.deps.push(item_wrap);
                                     }
                                 }
                             }
@@ -225,7 +233,7 @@ fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
                                 for item in items {
                                     let parsed = parse_item_from_list_items(&item.0);
                                     if let Some(item_wrap) = parsed {
-                                        top.steps.push(item_wrap);
+                                        topic.steps.push(item_wrap);
                                     }
                                 }
                             }
@@ -262,17 +270,59 @@ fn parse_item_from_list_items(items: &[Element]) -> Option<ItemWrap> {
             .or_else(|| Some(ItemWrap::Named(content.to_string())));
     }
 
-    // 2. Instruction: name pattern. This should be 1 kind_line + n trailing lines.
+    // 2. <kind>: <name> pattern. This should be 1 line of kind + name and then `n` trailing lines.
     if let (_len, Some(Element::Paragraph { content })) = (items.len(), items.get(0)) {
-        if let Some(Item::Instruction(mut ins)) = parse_inline_kind(content) {
-            let mut instruction_lines = vec![];
-            items.iter().skip(1).for_each(|rem| match rem {
-                Element::Paragraph { content } => instruction_lines.push(content.to_string()),
-                Element::Text { content } => instruction_lines.push(content.to_string()),
-                _ => {}
-            });
-            ins.instruction = instruction_lines.join("\n");
-            return Some(ItemWrap::Item(Item::Instruction(ins)));
+        match parse_inline_kind(content) {
+            Some(Item::Instruction(mut ins)) => {
+                let mut instruction_lines = vec![];
+                items.iter().skip(1).for_each(|rem| match rem {
+                    Element::Paragraph { content } => instruction_lines.push(content.to_string()),
+                    Element::Text { content } => instruction_lines.push(content.to_string()),
+                    _ => {}
+                });
+                ins.instruction = instruction_lines.join("\n");
+                return Some(ItemWrap::Item(Item::Instruction(ins)));
+            }
+            Some(Item::Command(mut cmd)) => {
+                items.iter().skip(1).for_each(|rem| match rem {
+                    Element::CodeBlock {
+                        content,
+                        params: Some(p),
+                    } => {
+                        cmd.with_content(content);
+                        cmd.with_cli_params(p);
+                    }
+                    Element::CodeBlock { content: _, params } => {
+                        if params.is_none() {
+                            eprintln!(
+                                "TODO - missing inline params on codefence from inline COMMAND item. "
+                            )
+                        }
+                    }
+                    _ => {}
+                });
+                return Some(ItemWrap::Item(Item::Command(cmd)));
+            }
+            Some(Item::DependencyCheck(mut dep_check)) => {
+                items.iter().skip(1).for_each(|rem| match rem {
+                    Element::CodeBlock {
+                        content,
+                        params: Some(p),
+                    } => {
+                        dep_check.with_content(content, p);
+                    }
+                    Element::CodeBlock { content: _, params } => {
+                        if params.is_none() {
+                            eprintln!(
+                                "TODO - missing inline params on codefence from inline DependencyCheck item. "
+                            )
+                        }
+                    }
+                    _ => {}
+                });
+                return Some(ItemWrap::Item(Item::DependencyCheck(dep_check)));
+            }
+            _ => { /* noop */ }
         }
     }
 
@@ -285,16 +335,30 @@ fn parse_inline_kind(input: &str) -> Option<Item> {
 
     // kind + name + other
     if let (Some(first), maybe_rest) = (lines.get(0), lines.get(1)) {
-        if let Some(Item::Instruction(inst)) = split_first_line(first).as_mut() {
-            if let Some(rest) = maybe_rest {
-                inst.instruction = rest.to_string();
+        match split_first_line(first).as_mut() {
+            Some(Item::Instruction(inst)) => {
+                if let Some(rest) = maybe_rest {
+                    inst.instruction = rest.to_string();
+                }
+                return Some(Item::Instruction(inst.clone()));
             }
-            return Some(Item::Instruction(inst.clone()));
+            Some(Item::Command(cmd)) => {
+                return Some(Item::Command(cmd.clone()));
+            }
+            Some(Item::DependencyCheck(dep_check)) => {
+                return Some(Item::DependencyCheck(dep_check.clone()));
+            }
+            Some(_v) => {
+                todo!("todo inline list item");
+            }
+            None => {}
         }
     }
 
     // kind + name only
-    if let (Some(_first), None) = (lines.get(0), lines.get(1)) {}
+    if let (Some(_first), None) = (lines.get(0), lines.get(1)) {
+        // todo!("kind + name only in a list, needs to be solved")
+    }
 
     None
 }
@@ -351,13 +415,15 @@ fn test_inline_instruction() {
 }
 
 pub mod code_fence {
-    use crate::items::CommandInlineArgs;
+    use crate::items::{AutoFixInlineArgs, CommandInlineArgs, VerifyInlineArgs};
     use structopt::StructOpt;
 
     #[derive(Debug, structopt::StructOpt)]
     pub enum Cmd {
         Command(CommandInlineArgs),
-        Verify,
+        Verify(VerifyInlineArgs),
+        #[structopt(alias = "autofix")]
+        AutoFix(AutoFixInlineArgs),
     }
     #[derive(Debug, structopt::StructOpt)]
     pub struct CodeBlock {
@@ -384,6 +450,7 @@ pub mod code_fence {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::items::{Command, DependencyCheck};
 
     #[test]
     fn test_from_str() -> anyhow::Result<()> {
@@ -427,6 +494,29 @@ echo just another code block that should not be counted
     }
 
     #[test]
+    fn test_dep_check_item() -> anyhow::Result<()> {
+        let input = r#"
+# Dependency Check: Node JS installed globally
+
+Node JS is required and should be on version 12.0
+
+```command verify
+node -v
+```
+
+This can be auto fixed with the following command
+
+```command autofix
+nvm use 12
+```
+    "#;
+        let src = MdDocSource::from_str(input)?;
+        let items = parse_md_str(&src.file_content)?;
+        assert_eq!(items.len(), 1);
+        Ok(())
+    }
+
+    #[test]
     fn test_topic_item_with_inline_command() -> anyhow::Result<()> {
         let input = r#"
 # Topic: Run unit tests
@@ -447,6 +537,15 @@ echo just another code block that should not be counted
   rm -rf test/out
   ```
 - Check output
+- Dependency Check: Global Node
+
+    ```shell verify
+    node -v
+    ```
+    
+    ```shell autofix
+    nvm i 12
+    ```
   
     "#;
         let src = MdDocSource::from_str(input)?;
@@ -454,6 +553,29 @@ echo just another code block that should not be counted
         match items.get(0).unwrap() {
             Item::Topic(topic) => {
                 assert_eq!(topic.deps.len(), 2);
+            }
+            _ => unreachable!(),
+        };
+        match items.get(0).unwrap() {
+            Item::Topic(topic) => {
+                assert_eq!(topic.steps.len(), 3);
+                let first_item = topic.steps.get(0).unwrap();
+                match first_item {
+                    ItemWrap::Item(Item::Command(Command { cwd, name, .. })) => {
+                        assert_eq!(cwd.0, PathBuf::from("containers/www/client"));
+                        assert_eq!(name, &String::from("Unit tests jest command"));
+                    }
+                    _ => unreachable!(),
+                }
+                let last_item = topic.steps.get(2).unwrap();
+                match last_item {
+                    ItemWrap::Item(Item::DependencyCheck(DependencyCheck {
+                        verify, name, ..
+                    })) => {
+                        assert_eq!(name, &String::from("Global Node"));
+                    }
+                    _ => unreachable!(),
+                }
             }
             _ => unreachable!(),
         };
