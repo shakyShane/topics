@@ -81,35 +81,37 @@ impl Doc {
         };
         match &doc.source {
             DocSource::Yaml(yaml_doc) => {
-                for src in &yaml_doc.doc_src_items.items {
-                    let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
-                        .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
-                    match item {
-                        Err(doc_err) => {
-                            doc.errors.push(doc_err);
-                        }
-                        Ok(item) => {
-                            doc.items.push(ItemTracked {
-                                item,
-                                src_doc: DocSource::Yaml((*yaml_doc).clone()),
-                                input_file: yaml_doc.input_file.clone(),
-                            });
-                        }
-                    };
-                }
+                // for src in &yaml_doc.doc_src_items.items {
+                //     let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
+                //         .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
+                //     match item {
+                //         Err(doc_err) => {
+                //             doc.errors.push(doc_err);
+                //         }
+                //         Ok(item) => {
+                //             doc.items.push(ItemTracked {
+                //                 item,
+                //                 src_doc: DocSource::Yaml((*yaml_doc).clone()),
+                //                 input_file: yaml_doc.input_file.clone(),
+                //             });
+                //         }
+                //     };
+                // }
+                todo!("yaml input?")
             }
             DocSource::Toml(toml_doc) => {
-                let items = one_or_many_toml(&toml_doc.file_content).map_err(|err| TomlError {
-                    doc: &doc,
-                    toml_err: err,
-                })?;
-                for item in items {
-                    doc.items.push(ItemTracked {
-                        item,
-                        src_doc: DocSource::Toml((*toml_doc).clone()),
-                        input_file: toml_doc.input_file.clone(),
-                    });
-                }
+                // let items = one_or_many_toml(&toml_doc.file_content).map_err(|err| TomlError {
+                //     doc: &doc,
+                //     toml_err: err,
+                // })?;
+                // for item in items {
+                //     doc.items.push(ItemTracked {
+                //         item,
+                //         src_doc: DocSource::Toml((*toml_doc).clone()),
+                //         input_file: toml_doc.input_file.clone(),
+                //     });
+                // }
+                todo!("toml input...?");
             }
             DocSource::Md(md_doc) => {
                 for src in &md_doc.doc_src_items.items {
@@ -139,84 +141,21 @@ impl Doc {
     }
 }
 
-fn one_or_many_toml(input: &str) -> Result<Vec<Item>, toml::de::Error> {
-    #[derive(Debug, serde::Deserialize)]
-    struct TempItems {
-        item: Vec<Item>,
-    }
-    toml::from_str::<TempItems>(input)
-        .or_else(|err| {
-            if err
-                .to_string()
-                .contains("missing field `item` at line 1 column 1")
-            {
-                toml::from_str::<Item>(input).map(|item| TempItems { item: vec![item] })
-            } else {
-                Err(err)
-            }
-        })
-        .map(|temp| temp.item)
-}
-
-#[test]
-fn test_toml() -> anyhow::Result<()> {
-    let input = r#"
-[[item]]
-kind = "Topic"
-name = "Run unit tests"
-steps = [
-    "Install root-level dependencies",
-    "Run unit tests command"
-]
-deps = [
-    "install nodejs"
-]
-
-[[item]]
-kind = "Command"
-name = "Run unit tests command"
-cwd = "."
-command = """
-echo hello world!
-"""
-
-[[item]]
-kind = "Command"
-name = "Install root-level dependencies"
-cwd = "."
-command = """
-echo hello world!
-"""
-
-[[item]]
-kind = "DependencyCheck"
-name = "install nodejs"
-verify = """
-node -v
-"""
-    "#;
-    #[derive(Debug, serde::Deserialize)]
-    struct Items {
-        item: Vec<Item>,
-    }
-    let items: Items = toml::from_str(input)?;
-    assert_eq!(items.item.len(), 4);
-    Ok(())
-}
-
-#[test]
-fn test_toml_single() {
-    let input = r#"
-kind = "Command"
-cwd = "."
-name = "Run unit tests command"
-command = """
-echo "About to install ${MIN_VERSION}"
-"""
-
-env.HELLO = { from = "env vars", key = "minimum_skaffold_version" }
-
-    "#;
-    let items = one_or_many_toml(input);
-    println!("{:?}", items);
-}
+// fn one_or_many_toml(input: &str) -> Result<Vec<Item>, toml::de::Error> {
+//     #[derive(Debug, serde::Deserialize)]
+//     struct TempItems {
+//         item: Vec<Item>,
+//     }
+//     toml::from_str::<TempItems>(input)
+//         .or_else(|err| {
+//             if err
+//                 .to_string()
+//                 .contains("missing field `item` at line 1 column 1")
+//             {
+//                 toml::from_str::<Item>(input).map(|item| TempItems { item: vec![item] })
+//             } else {
+//                 Err(err)
+//             }
+//         })
+//         .map(|temp| temp.item)
+// }

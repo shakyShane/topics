@@ -30,8 +30,9 @@ impl SubCommand for GenerateCmd {
 }
 
 fn print_items(items: &[Item]) {
-    for item in items {
-        let yaml = serde_yaml::to_string(&item);
-        println!("{}", yaml.unwrap());
-    }
+    // for item in items {
+    //     let yaml = serde_yaml::to_string(&item);
+    //     println!("{}", yaml.unwrap());
+    // }
+    todo!("print items when generating");
 }

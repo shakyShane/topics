@@ -1,12 +1,11 @@
 use crate::host::HostEntriesCheck;
-use crate::items::FileExistsCheck;
 use crate::items::Topic;
 use crate::items::{Command, Instruction};
 use crate::items::{DependencyCheck, TaskGroup};
+use crate::items::{FileExistsCheck, LineMarker};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
-#[serde(tag = "kind")]
+#[derive(Debug, Clone)]
 pub enum Item {
     Command(Command),
     FileExistsCheck(FileExistsCheck),
@@ -17,8 +16,7 @@ pub enum Item {
     TaskGroup(TaskGroup),
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
-#[serde(untagged)]
+#[derive(Debug, Clone)]
 pub enum ItemWrap {
     Named(String),
     Item(Item),
@@ -30,7 +28,7 @@ impl Item {
             Item::Command(cmd) => cmd.name = name.to_string(),
             Item::FileExistsCheck(fec) => fec.name = name.to_string(),
             Item::DependencyCheck(dc) => dc.name = name.to_string(),
-            Item::Instruction(inst) => inst.name = name.to_string(),
+            Item::Instruction(inst) => inst.name = LineMarker::new(name.to_string(), None),
             Item::HostEntriesCheck(hec) => hec.name = name.to_string(),
             Item::Topic(top) => top.name = name.to_string(),
             Item::TaskGroup(tg) => tg.name = name.to_string(),
@@ -41,7 +39,7 @@ impl Item {
             Item::Command(cmd) => cmd.name.clone(),
             Item::FileExistsCheck(fec) => fec.name.clone(),
             Item::DependencyCheck(dc) => dc.name.clone(),
-            Item::Instruction(inst) => inst.name.clone(),
+            Item::Instruction(inst) => inst.name.to_string(),
             Item::HostEntriesCheck(hec) => hec.name.clone(),
             Item::Topic(top) => top.name.clone(),
             Item::TaskGroup(tg) => tg.name.clone(),
@@ -58,6 +56,12 @@ impl Item {
             Item::TaskGroup(_) => "Task Group",
         }
         .to_string()
+    }
+    pub fn set_line_start(&mut self, line_start: usize) {
+        match self {
+            Item::Instruction(inst) => inst.set_line_start(line_start),
+            _ => todo!("set line start"),
+        }
     }
 }
 
@@ -76,38 +80,5 @@ impl FromStr for Item {
             }
             _s => Err(anyhow::anyhow!("Not supported yet: {}", _s)),
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    fn test_yaml_item() -> Item {
-        let input = r#"
-        kind: Topic
-        name: run tests
-        steps:
-            - kind: Instruction
-              name: call
-              instruction: Call your manager
-        "#;
-        serde_yaml::from_str(input).expect("test doesn't fail")
-    }
-
-    #[test]
-    fn test_deserialize() -> anyhow::Result<()> {
-        let _ = test_yaml_item();
-        Ok(())
-    }
-
-    #[test]
-    fn test_serialize() -> anyhow::Result<()> {
-        // let t = test_item();
-        let item = Item::Topic(Topic::default());
-        let as_str = serde_yaml::to_string(&item)?;
-        println!("|{}|", as_str);
-
-        Ok(())
     }
 }

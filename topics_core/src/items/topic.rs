@@ -1,10 +1,9 @@
 use crate::items::ItemWrap;
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone)]
 pub struct Topic {
     pub name: String,
     pub steps: Vec<ItemWrap>,
-    #[serde(default)]
     pub deps: Vec<ItemWrap>,
 }
 
@@ -20,17 +19,5 @@ impl Default for Topic {
                 // ItemWrap::Named("run unit tests command".into())
             ],
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test() -> anyhow::Result<()> {
-        let t = Topic::default();
-        let yaml = serde_yaml::to_string(&t)?;
-        println!("|{}|", yaml);
-        Ok(())
     }
 }

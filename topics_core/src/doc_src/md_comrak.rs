@@ -1,6 +1,7 @@
 use crate::doc::DocResult;
-use crate::doc_src::{Element, MdElements};
-use comrak::nodes::{AstNode, NodeCodeBlock, NodeHeading, NodeValue};
+use crate::doc_src::{parse_inline_kind, MdElements};
+use crate::items::{Instruction, Item};
+use comrak::nodes::{Ast, AstNode, NodeCodeBlock, NodeHeading, NodeValue};
 use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use std::ops::Deref;
 use std::str::FromStr;
@@ -14,66 +15,106 @@ impl FromStr for MdElements {
     }
 }
 
-impl Deref for MdElements {
-    type Target = Vec<Element>;
+fn process_node<'a>(node: &'a AstNode<'a>) -> Vec<Item> {
+    let mut kind: Option<Item> = None;
+    let mut items: Vec<Item> = vec![];
+    let first = node.children().take(1).nth(0);
+    let other = node.children().skip(1);
 
-    fn deref(&self) -> &Self::Target {
-        &self.elements
-    }
-}
-
-fn str_to_elements(s: &str) -> Vec<Element> {
-    let arena = Arena::new();
-    let root = parse_document(&arena, s, &ComrakOptions::default());
-    let mut elements: Vec<Element> = vec![];
-
-    fn iter_nodes<'a>(node: &'a AstNode<'a>, elements: &mut Vec<Element>) {
+    // process the very first item, expected to be a heading, but maybe not?
+    if let Some(node) = first {
         let ast = node.data.borrow();
         match &ast.value {
             NodeValue::Heading(NodeHeading { level: 1, .. }) => {
+                let start_line = ast.start_line;
                 let t = collect_single_line_text(node);
-                elements.push(Element::h1(t));
-            }
-            NodeValue::Heading(NodeHeading { level: 2, .. }) => {}
-            NodeValue::Heading(NodeHeading { level: 3, .. }) => {}
-            NodeValue::Paragraph => {
-                println!("++p");
-                let p = collect_paragraph(node);
-                println!("\t\t|{}|", p);
-                println!("--p");
-            }
-            NodeValue::HtmlBlock(html_block) => {
-                let html = std::str::from_utf8(&html_block.literal).unwrap();
-                println!("++html",);
-                println!("\t\t|{}|", html);
-                println!("--html",);
-            }
-            NodeValue::CodeBlock(cb @ NodeCodeBlock { fenced: true, .. }) => {
-                let NodeCodeBlock { literal, info, .. } = cb;
-
-                // `trim_end` is here because the comrak parser adds a new-line to the
-                // end of code blocks, which may be spec-compliant, but it's possibly
-                // something we'd rather not forget about later
-                let literal = std::str::from_utf8(&literal).unwrap().trim_end();
-                let info = std::str::from_utf8(&info).unwrap();
-
-                if info.is_empty() {
-                    elements.push(Element::code_block_without_params(literal));
-                } else {
-                    elements.push(Element::code_block(literal, Some(info)));
+                let item = parse_inline_kind(&t);
+                kind = item;
+                if let Some(item) = kind.as_mut() {
+                    item.set_line_start(start_line as usize)
                 }
             }
             _ => {
-                for c in node.children() {
-                    iter_nodes(c, elements);
-                }
+                todo!("handle other 'first' elements?")
             }
         }
     }
 
-    iter_nodes(root, &mut elements);
+    if let Some(Item::Instruction(Instruction { ast, .. })) = kind.as_mut() {
+        let cloned = node.to_owned();
+        let mut items: Vec<Ast> = vec![];
+        for n in cloned.children() {
+            let ast = n.data.clone().into_inner();
+            items.push(ast);
+        }
+        *ast = items;
+    }
 
-    elements
+    if let Some(kind) = kind {
+        items.push(kind)
+    }
+
+    items
+}
+
+fn str_to_elements(s: &str) -> Vec<Item> {
+    let arena = Arena::new();
+    let root = parse_document(&arena, s, &ComrakOptions::default());
+    let items = process_node(root);
+
+    // for node in root.children() {
+    //     let ast = node.data.borrow();
+    //
+    //     if let Some(Item::Instruction(Instruction { ast, .. })) = kind.as_mut() {
+    //         println!("skipping before it's an instruction");
+    //         continue;
+    //     }
+    //
+    //     match &ast.value {
+    //         NodeValue::Heading(NodeHeading { level: 1, .. }) => {
+    //             let t = collect_single_line_text(node);
+    //             let item = parse_inline_kind(&t);
+    //             kind = item;
+    //             // println!("got header.. = {} ", t);
+    //             // println!("got item.. = {:?} ", item);
+    //         }
+    //         NodeValue::Heading(NodeHeading { level: 2, .. }) => {}
+    //         NodeValue::Heading(NodeHeading { level: 3, .. }) => {}
+    //         NodeValue::Paragraph => {
+    //             // println!("++p");
+    //             // let ast = node.data.clone().into_inner();
+    //             // println!("--p");
+    //         }
+    //         NodeValue::HtmlBlock(html_block) => {
+    //             let html = std::str::from_utf8(&html_block.literal).unwrap();
+    //             // println!("++html",);
+    //             // println!("\t\t|{}|", html);
+    //             // println!("--html",);
+    //         }
+    //         NodeValue::CodeBlock(cb @ NodeCodeBlock { fenced: true, .. }) => {
+    //             let NodeCodeBlock { literal, info, .. } = cb;
+    //
+    //             // `trim_end` is here because the comrak parser adds a new-line to the
+    //             // end of code blocks, which may be spec-compliant, but it's possibly
+    //             // something we'd rather not forget about later
+    //             let literal = std::str::from_utf8(&literal).unwrap().trim_end();
+    //             let info = std::str::from_utf8(&info).unwrap();
+    //
+    //             // if info.is_empty() {
+    //             //     items.push(Element::code_block_without_params(literal));
+    //             // } else {
+    //             //     items.push(Element::code_block(literal, Some(info)));
+    //             // }
+    //         }
+    //         _ => {}
+    //     }
+    // }
+    //
+    // if let Some(item) = kind {
+    //     items.push(item);
+    // }
+
+    items
 }
 
 ///
@@ -89,14 +130,4 @@ fn collect_single_line_text<'a>(node: &'a AstNode<'a>) -> String {
         })
         .collect::<Vec<String>>()
         .join("")
-}
-
-///
-/// Collect paragraph as-is
-///
-fn collect_paragraph<'a>(node: &'a AstNode<'a>) -> String {
-    use std::io::{self, Write};
-    let mut output: Vec<u8> = Vec::new();
-    let html = format_html(&node, &ComrakOptions::default(), &mut output);
-    std::str::from_utf8(&output).unwrap().to_string()
 }

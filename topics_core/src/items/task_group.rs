@@ -1,6 +1,6 @@
 use crate::items::item::ItemWrap;
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone)]
 pub struct TaskGroup {
     pub name: String,
     pub steps: Vec<ItemWrap>,
@@ -15,17 +15,5 @@ impl Default for TaskGroup {
                 ItemWrap::Named("Frontend setup".to_string()),
             ],
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test() -> anyhow::Result<()> {
-        let t = TaskGroup::default();
-        let yaml = serde_yaml::to_string(&t)?;
-        println!("|{}|", yaml);
-        Ok(())
     }
 }
