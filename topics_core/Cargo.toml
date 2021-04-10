@@ -23,6 +23,7 @@ multi_doc = { path = "../multi_doc", version = "0.1.0" }
 toml = "0.5.8"
 pulldown-cmark = "0.8.0"
 shellwords = "1.1.0"
+comrak = "0.10.0"
 
 [dev-dependencies]
 insta = "1.7.0"

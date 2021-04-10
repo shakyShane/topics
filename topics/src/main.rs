@@ -1,3 +1,4 @@
+use comrak::arena_tree::Node;
 use comrak::nodes::{Ast, ListType};
 use topics_core::from_cli;
 
@@ -17,17 +18,12 @@ fn test_parse() {
 
 ## Dependencies
 
-1. step 1
-1. step 2
-1. step 3
+- step 3
+    hello there
     ```shell command
     oops!
     ```
-    
-## Steps
-
-- hello
-- there
+- step 4
 "#;
     use comrak::nodes::{AstNode, NodeValue};
     use comrak::{format_html, parse_document, Arena, ComrakOptions};
@@ -68,6 +64,23 @@ fn test_parse() {
             }
             if heading.level == 3 {
                 println!("heading 3");
+            }
+        } else if let NodeValue::List(node_list) = n.value {
+            println!("list start -> {}", n.start_line);
+            for item_child in node.children() {
+                let list_item = item_child.data.borrow();
+                println!("\tlist item start line -> {}", list_item.start_line);
+                if let NodeValue::Item(node_list) = &list_item.value {
+                    for c in item_child.children() {
+                        if let Some(first) = c.first_child() {
+                            let node = first.data.borrow();
+                            if let NodeValue::Paragraph = &node.value {
+                                let text = collect_single_line_text(first);
+                                println!("text=||--{}--||", text);
+                            }
+                        }
+                    }
+                }
             }
         } else {
             for c in node.children() {

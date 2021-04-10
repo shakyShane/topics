@@ -1,8 +1,10 @@
 use crate::context::Context;
 use crate::doc::DocResult;
 use crate::doc_err::DocError;
-use crate::doc_src::DocSrcImpl;
+use crate::doc_src::{DocSrcImpl, Element, ListItem};
 use crate::items::{Item, ItemWrap};
+use comrak::arena_tree::Node;
+use comrak::nodes::{Ast, ListType};
 use multi_doc::MultiDoc;
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 
@@ -47,30 +49,6 @@ impl FromStr for MdDocSource {
     }
 }
 
-#[derive(Clone, Debug)]
-enum Element {
-    Heading {
-        level: usize,
-        content: String,
-    },
-    List {
-        items: Vec<ListItem>,
-    },
-    Paragraph {
-        content: String,
-    },
-    Text {
-        content: String,
-    },
-    CodeBlock {
-        params: Option<String>,
-        content: String,
-    },
-}
-
-#[derive(Clone, Debug)]
-struct ListItem(Vec<Element>);
-
 ///
 /// Lex 1 source file
 ///
@@ -86,77 +64,6 @@ fn lex_one(item_src: &str) -> DocResult<Vec<Element>> {
     let mut temp_list_items: Vec<ListItem> = vec![];
     let mut buffer = String::new();
 
-    for item in Parser::new_ext(item_src, Options::empty()) {
-        match item {
-            Event::Start(Tag::List(_)) => {
-                items.extend(temp_items.clone());
-                temp_items.clear();
-                temp_list_items.clear();
-            }
-            Event::End(Tag::List(_l)) => {
-                items.push(Element::List {
-                    items: temp_list_items.clone(),
-                });
-                temp_list_items.clear();
-            }
-            Event::End(Tag::Item) => {
-                if !buffer.is_empty() {
-                    temp_items.push(Element::Text {
-                        content: buffer.to_string(),
-                    });
-                }
-                temp_list_items.push(ListItem(temp_items.clone()));
-                temp_items.clear();
-                buffer.clear();
-            }
-            Event::End(Tag::Heading(h)) => {
-                temp_items.push(Element::Heading {
-                    level: h as usize,
-                    content: buffer.to_string(),
-                });
-                buffer.clear();
-            }
-            Event::Start(Tag::Paragraph) => {
-                buffer.clear();
-            }
-            Event::End(Tag::Paragraph) => {
-                temp_items.push(Element::Paragraph {
-                    content: buffer.to_string(),
-                });
-                buffer.clear();
-            }
-            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(_))) => {
-                if !buffer.is_empty() {
-                    println!("BUFFER WAS NOT EMPTY before code block started={}", buffer);
-                    temp_items.push(Element::Text {
-                        content: buffer.to_string(),
-                    });
-                    buffer.clear()
-                }
-            }
-            Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(args))) => {
-                temp_items.push(Element::CodeBlock {
-                    content: buffer.to_string(),
-                    params: Some(args.to_string()),
-                });
-                buffer.clear();
-            }
-            Event::Text(t) => {
-                buffer.push_str(&t);
-            }
-            Event::Code(_) => {}
-            Event::Html(_) => {}
-            Event::FootnoteReference(_) => {}
-            Event::SoftBreak => {
-                buffer.push('\n');
-            }
-            Event::HardBreak => {}
-            Event::Rule => {}
-            Event::TaskListMarker(_) => {}
-            _t => {}
-        }
-    }
-    items.extend(temp_items); // may be empty at this point
     Ok(items)
 }
 
