@@ -78,7 +78,7 @@ pub fn parse_md_str(input: &str) -> DocResult<Vec<Item>> {
     Ok(items)
 }
 
-fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
+pub fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
     let mut items: Vec<Item> = vec![];
     let mut kind: Option<Item> = None;
     let mut prev_heading2: Option<Element> = None;

@@ -1,6 +1,8 @@
 use crate::cwd::Cwd;
-use crate::doc_src::code_fence;
+use crate::doc_src::{code_fence, MdElements};
+use crate::items::Item;
 use std::collections::HashMap;
+use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -57,3 +59,11 @@ impl Command {
         }
     }
 }
+
+// impl TryFrom<&MdElements> for Command {
+//     type Error = anyhow::Error;
+//
+//     fn try_from(value: MdElements) -> Result<Self, Self::Error> {
+//         todo!()
+//     }
+// }
