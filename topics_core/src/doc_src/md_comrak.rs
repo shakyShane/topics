@@ -1,6 +1,6 @@
 use crate::doc::DocResult;
 use crate::doc_src::{parse_inline_kind, MdElements};
-use crate::items::{Instruction, Item};
+use crate::items::{Command, Instruction, Item};
 use comrak::nodes::{Ast, AstNode, NodeCodeBlock, NodeHeading, NodeValue};
 use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use std::fmt;
@@ -8,16 +8,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::str::FromStr;
 
-impl FromStr for MdElements {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let elements = str_to_elements(s);
-        Ok(Self { items: elements })
-    }
-}
-
-fn process_node<'a>(node: &'a AstNode<'a>) -> Vec<Item> {
+fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     let mut kind: Option<Item> = None;
     let mut items: Vec<Item> = vec![];
     let first = node.children().take(1).nth(0);
@@ -42,15 +33,20 @@ fn process_node<'a>(node: &'a AstNode<'a>) -> Vec<Item> {
         }
     }
 
-    if let Some(Item::Instruction(Instruction { ast, .. })) = kind.as_mut() {
-        let cloned = node.to_owned();
-        let mut items: Vec<Ast> = vec![];
-        for n in cloned.children() {
-            let ast = n.data.clone().into_inner();
-            items.push(ast);
-        }
-        *ast = items;
+    if let Some(Item::Instruction(inst)) = kind.as_mut() {
+        let Instruction {
+            name,
+            ast_len,
+            ast_start,
+        } = inst;
+        println!("{}", **name);
+        *ast_start = path.to_vec();
+        *ast_len = node.children().count();
     }
+
+    // if let Some(Item::Command(c @ Command { .. })) = kind.as_mut() {
+    //     dbg!(c);
+    // }
 
     if let Some(kind) = kind {
         items.push(kind)
@@ -59,10 +55,9 @@ fn process_node<'a>(node: &'a AstNode<'a>) -> Vec<Item> {
     items
 }
 
-fn str_to_elements(s: &str) -> Vec<Item> {
-    let arena = Arena::new();
-    let root = parse_document(&arena, s, &ComrakOptions::default());
-    let items = process_node(root);
+pub(crate) fn to_elements(md: &'_ MdElements<'_>) -> Vec<Item> {
+    let mut path = vec![0];
+    let items = process_node(&md.root, &mut path);
 
     // for node in root.children() {
     //     let ast = node.data.borrow();
@@ -174,7 +169,7 @@ pub fn debug_ast(asts: &[Ast]) -> impl Debug {
 ///
 /// Single-line text items are identifiers and follow special rules.
 ///
-fn collect_single_line_text<'a>(node: &'a AstNode<'a>) -> String {
+pub(crate) fn collect_single_line_text<'a>(node: &'a AstNode<'a>) -> String {
     node.children()
         .filter_map(|n| match &n.data.borrow().value {
             NodeValue::Text(t) => Some(std::str::from_utf8(t).unwrap().to_string()),

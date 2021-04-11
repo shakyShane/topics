@@ -1,5 +1,7 @@
-use crate::doc_src::MdElements;
+use crate::doc_src::{collect_single_line_text, to_elements, MdElements};
 use crate::items::{Command, Instruction, Item};
+use comrak::nodes::{Ast, NodeValue};
+use comrak::{format_html, Arena, ComrakOptions};
 use std::str::FromStr;
 
 #[test]
@@ -13,9 +15,11 @@ A block of text following the title!
 echo hello world!
 ```
         "#;
-    let md_elements = MdElements::from_str(input)?;
+    let arena = Arena::new();
+    let md_elements = MdElements::new(input, &arena);
     let first = md_elements.items.get(0);
     if let Some(Item::Command(Command { name, .. })) = first {
+        assert_eq!(name, &String::from("Run unit tests"));
     } else {
         unreachable!();
     }
@@ -37,11 +41,31 @@ More stuff here
 oh feck
 ```
         "#;
-    let md_elements = MdElements::from_str(input)?;
-    let first = md_elements.items.get(0);
-    if let Some(Item::Instruction(Instruction { name, ast })) = first {
-        assert_eq!(name, &String::from("Call IT help desk"));
-        assert_eq!(ast.len(), 5);
+    let arena = Arena::new();
+    let md_elements = MdElements::new(input, &arena);
+    let items = to_elements(&md_elements);
+    let first = items.get(0);
+    if let Some(Item::Instruction(inst)) = first {
+        assert_eq!(inst.name, String::from("Call IT help desk"));
+        println!("{:?}", inst);
+        let ast_elems = md_elements.select(&inst.ast_start, inst.ast_len);
+        for node in ast_elems {
+            let d = node.data.borrow();
+            let mut output = vec![];
+            let html = format_html(node, &ComrakOptions::default(), &mut output);
+            println!("HTML={}", std::str::from_utf8(&output).unwrap());
+        }
+        // assert_eq!(ast.len(), 5);
+        // for item in ast {
+        //     match item.value {
+        //         NodeValue::Paragraph => {
+        //             println!("{:#?}", std::str::from_utf8(&item.content));
+        //         }
+        //         _ => {
+        //
+        //         }
+        //     }
+        // }
     } else {
         unreachable!();
     }
