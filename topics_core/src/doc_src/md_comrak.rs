@@ -11,7 +11,7 @@ impl FromStr for MdElements {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let elements = str_to_elements(s);
-        Ok(Self { elements })
+        Ok(Self { items: elements })
     }
 }
 

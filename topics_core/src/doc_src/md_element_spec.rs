@@ -38,7 +38,7 @@ oh feck
 ```
         "#;
     let md_elements = MdElements::from_str(input)?;
-    dbg!(md_elements.elements.get(0).unwrap());
+    println!("{:#?}", md_elements.items.get(0).unwrap());
     // assert_eq!(
     //     md_elements.elements.get(0).unwrap(),
     //     &Element::h1("Command: Run unit tests")

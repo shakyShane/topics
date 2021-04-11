@@ -6,13 +6,13 @@ use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct MdElements {
-    pub elements: Vec<Item>,
+    pub items: Vec<Item>,
 }
 
 impl Deref for MdElements {
     type Target = Vec<Item>;
 
     fn deref(&self) -> &Self::Target {
-        &self.elements
+        &self.items
     }
 }
