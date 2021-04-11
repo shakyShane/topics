@@ -15,7 +15,7 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     let mut kind: Option<Item> = None;
     let mut items: Vec<Item> = vec![];
     let first = node.children().take(1).nth(0);
-    let other = node.children().skip(1);
+    // let mut other = node.children().skip(1);
 
     // process the very first item, expected to be a heading, but maybe not?
     if let Some(node) = first {
@@ -38,13 +38,34 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
 
     if let Some(Item::Instruction(inst)) = kind.as_mut() {
         let Instruction { name, ast_range } = inst;
-        println!("{}", **name);
         *ast_range = AstRange::range(&path, node.children().count());
     }
 
-    // if let Some(Item::Command(c @ Command { .. })) = kind.as_mut() {
-    //     dbg!(c);
-    // }
+    // todo: probably select many command, for MVP just select the first one seen
+    if let Some(Item::Command(cmd)) = kind.as_mut() {
+        // find a sibling `code block` that we can use as the 'command'
+        let node = node.children().enumerate().find_map(|(index, node)| {
+            let d = node.data.borrow();
+            match d.value {
+                NodeValue::CodeBlock(NodeCodeBlock { fenced: true, .. }) => Some((index, d)),
+                _ => None,
+            }
+        });
+
+        if let Some((index, node)) = node {
+            if let NodeValue::CodeBlock(code_block) = &node.value {
+                let content = std::str::from_utf8(&code_block.literal).unwrap().trim();
+                cmd.with_content(content);
+                if !code_block.info.is_empty() {
+                    let info = std::str::from_utf8(&code_block.info).unwrap().trim();
+                    cmd.with_cli_params(info);
+                }
+                let mut next_range = path.to_vec();
+                next_range.push(index);
+                cmd.ast_range = AstRange::range(&next_range, 1)
+            }
+        }
+    }
 
     if let Some(kind) = kind {
         items.push(kind)

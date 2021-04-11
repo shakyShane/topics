@@ -115,6 +115,15 @@ impl<'a> MdElements<'a> {
                     .collect::<Vec<&'_ Node<'_, RefCell<Ast>>>>();
             }
         }
+        if ast_path.len() == 2 {
+            let second = ast_path.get(1).unwrap();
+            return self
+                .root
+                .children()
+                .skip((*second))
+                .take(ast_len)
+                .collect::<Vec<&'_ Node<'_, RefCell<Ast>>>>();
+        }
         self.root
             .children()
             .take(1)

@@ -40,6 +40,12 @@ impl AstRangeImpl for AstRange {
     }
 }
 
+impl AstRangeImpl for &'_ AstRange {
+    fn ast_range(&self) -> AstRange {
+        (*self).clone()
+    }
+}
+
 impl AstRangeImpl for (Vec<usize>, usize) {
     fn ast_range(&self) -> AstRange {
         AstRange {

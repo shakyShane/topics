@@ -19,8 +19,22 @@ echo hello world!
     let elems = md_src.parse().as_ref().expect("parse md");
     let items = elems.as_items()?;
     let first = items.get(0).expect("at least 1 item");
-    if let Item::Command(Command { name, .. }) = first {
+    if let Item::Command(Command {
+        name,
+        command,
+        ast_range,
+        ..
+    }) = first
+    {
         assert_eq!(name, &String::from("Run unit tests"));
+        assert_eq!(command, &String::from("echo hello world!"));
+        let html = elems.as_html(ast_range);
+        assert_eq!(
+            r#"<pre><code class="language-shell">echo hello world!
+</code></pre>
+"#,
+            html
+        )
     } else {
         unreachable!();
     }
