@@ -48,25 +48,6 @@ oh feck
     let first = items.get(0);
     if let Some(Item::Instruction(inst)) = first {
         assert_eq!(inst.name, String::from("Call IT help desk"));
-        println!("{:?}", inst);
-        let ast_elems = md.select(&inst.ast_start, inst.ast_len);
-        for node in ast_elems {
-            let d = node.data.borrow();
-            let mut output = vec![];
-            let html = format_html(node, &ComrakOptions::default(), &mut output);
-            println!("HTML={}", std::str::from_utf8(&output).unwrap());
-        }
-        // assert_eq!(ast.len(), 5);
-        // for item in ast {
-        //     match item.value {
-        //         NodeValue::Paragraph => {
-        //             println!("{:#?}", std::str::from_utf8(&item.content));
-        //         }
-        //         _ => {
-        //
-        //         }
-        //     }
-        // }
     } else {
         unreachable!();
     }

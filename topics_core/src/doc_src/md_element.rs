@@ -3,7 +3,7 @@ use crate::doc_src::{process_node, to_items};
 use crate::items::Item;
 use comrak::arena_tree::Node;
 use comrak::nodes::{Ast, AstNode};
-use comrak::{parse_document, Arena, ComrakOptions};
+use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
@@ -70,7 +70,7 @@ impl<'a> MdElements<'a> {
         let items = process_node(&self.root, &mut path);
         Ok(items)
     }
-    pub fn select(&self, path: &[usize], len: usize) -> Vec<&'a Node<'_, RefCell<Ast>>> {
+    pub fn select_ast(&self, path: &'a [usize], len: usize) -> Vec<&'a Node<'a, RefCell<Ast>>> {
         if path.len() == 1 {
             if *path.get(0).unwrap() == 0 as usize {
                 return self
@@ -85,6 +85,21 @@ impl<'a> MdElements<'a> {
             .take(1)
             .collect::<Vec<&'_ Node<'_, RefCell<Ast>>>>()
     }
+    pub fn as_html(&self, path: &'a [usize], len: usize) -> String {
+        let nodes = self.select_ast(&path, len);
+        let mut output = vec![];
+        for node in nodes {
+            let mut options = ComrakOptions::default();
+            options.render.unsafe_ = true;
+            let res = format_html(node, &options, &mut output);
+            if let Err(e) = res {
+                eprintln!("{:?}", e)
+            }
+        }
+        std::str::from_utf8(&*output)
+            .expect("Valid UTF8 expected")
+            .to_string()
+    }
 }
 
 impl<'a> TryFrom<&'a MdElements<'a>> for Vec<Item> {
@@ -96,10 +111,11 @@ impl<'a> TryFrom<&'a MdElements<'a>> for Vec<Item> {
 }
 
 #[test]
-fn md_elements_lifetimes() {
+fn md_elements() {
     // let md = MdElements::new("# hi!", arena);
     let input = "# heading";
     let arena = Arena::new();
     let md_elements = MdElements::new(input, &arena);
-    let md_elements_2 = MdElements::new(input, &arena);
+    let html = md_elements.as_html(&vec![0], 1);
+    assert_eq!(html, String::from("<h1>heading</h1>\n"));
 }
