@@ -10,7 +10,7 @@ mod context;
 pub mod cwd;
 mod db;
 mod doc;
-mod doc_src;
+pub mod doc_src;
 mod host;
 mod items;
 mod print;

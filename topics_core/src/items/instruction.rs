@@ -1,22 +1,23 @@
-use crate::doc_src::debug_ast;
-use crate::items::LineMarker;
-use comrak::nodes::{Ast, AstNode, NodeValue};
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 
+use comrak::nodes::{Ast, AstNode, NodeValue};
+
+use crate::doc_src::ast_range::AstRange;
+use crate::doc_src::debug_ast;
+use crate::items::LineMarker;
+
 #[derive(Debug, Clone)]
 pub struct Instruction {
     pub name: LineMarker<String>,
-    pub ast_start: Vec<usize>,
-    pub ast_len: usize,
+    pub ast_range: AstRange,
 }
 
 impl Default for Instruction {
     fn default() -> Self {
         Self {
-            ast_start: vec![],
-            ast_len: 0,
+            ast_range: AstRange::default(),
             name: LineMarker::new(String::new(), None),
         }
     }

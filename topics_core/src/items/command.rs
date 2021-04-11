@@ -1,9 +1,11 @@
-use crate::cwd::Cwd;
-use crate::doc_src::{code_fence, MdElements};
-use crate::items::{Item, LineMarker};
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
+
+use crate::cwd::Cwd;
+use crate::doc_src::ast_range::AstRange;
+use crate::doc_src::{code_fence, MdElements};
+use crate::items::{Item, LineMarker};
 
 #[derive(Debug, Clone)]
 pub struct Command {
@@ -11,6 +13,7 @@ pub struct Command {
     pub cwd: Cwd,
     pub command: String,
     pub env: Option<Env>,
+    pub ast_range: AstRange,
 }
 
 #[derive(Debug, structopt::StructOpt)]
@@ -36,9 +39,10 @@ impl Default for Command {
     fn default() -> Self {
         Self {
             cwd: Default::default(),
-            command: "echo 'hello world'".to_string(),
+            command: "echo 'no command'; exit 1; ".to_string(),
             name: LineMarker::new(String::new(), None),
             env: Default::default(),
+            ast_range: Default::default(),
         }
     }
 }

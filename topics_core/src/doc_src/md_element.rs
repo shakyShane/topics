@@ -1,14 +1,48 @@
-use crate::doc::DocResult;
-use crate::doc_src::{process_node, to_items};
-use crate::items::Item;
-use comrak::arena_tree::Node;
-use comrak::nodes::{Ast, AstNode};
-use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
+
+use comrak::arena_tree::Node;
+use comrak::nodes::{Ast, AstNode};
+use comrak::{format_html, parse_document, Arena, ComrakOptions};
+
+use crate::doc::DocResult;
+use crate::doc_src::ast_range::{AstRange, AstRangeImpl};
+use crate::doc_src::{process_node, to_items, MdDocSource};
+use crate::items::Item;
+
+pub struct MdSrc<'a> {
+    arena: Arena<AstNode<'a>>,
+
+    pub doc_src: MdDocSource,
+    pub md_elements: Option<MdElements<'a>>,
+}
+
+impl<'a> MdSrc<'a> {
+    pub fn new(doc_src: MdDocSource) -> Self {
+        let a = Arena::new();
+        Self {
+            arena: a,
+            md_elements: None,
+            doc_src,
+        }
+    }
+    pub fn parse(&'a mut self) -> &'a Option<MdElements<'a>> {
+        self.md_elements = Some(MdElements::new(&self.doc_src.file_content, &self.arena));
+        &self.md_elements
+    }
+}
+
+impl FromStr for MdSrc<'_> {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let src = MdDocSource::from_str(s)?;
+        Ok(MdSrc::new(src))
+    }
+}
 
 ///
 /// The purpose of this is to maintain FULL AST information
@@ -31,8 +65,8 @@ use std::str::FromStr;
 ///
 pub struct MdElements<'a> {
     arena: &'a Arena<AstNode<'a>>,
+    items: Vec<Item>,
     pub root: &'a AstNode<'a>,
-    pub items: Vec<Item>,
 }
 
 impl fmt::Debug for MdElements<'_> {
@@ -70,13 +104,14 @@ impl<'a> MdElements<'a> {
         let items = process_node(&self.root, &mut path);
         Ok(items)
     }
-    pub fn select_ast(&self, path: &'a [usize], len: usize) -> Vec<&'a Node<'a, RefCell<Ast>>> {
-        if path.len() == 1 {
-            if *path.get(0).unwrap() == 0 as usize {
+    pub fn select_ast(&self, range: impl AstRangeImpl) -> Vec<&'a Node<'a, RefCell<Ast>>> {
+        let AstRange { ast_len, ast_path } = range.ast_range();
+        if ast_path.len() == 1 {
+            if *ast_path.get(0).unwrap() == 0 as usize {
                 return self
                     .root
                     .children()
-                    .take(len)
+                    .take(ast_len)
                     .collect::<Vec<&'_ Node<'_, RefCell<Ast>>>>();
             }
         }
@@ -85,8 +120,23 @@ impl<'a> MdElements<'a> {
             .take(1)
             .collect::<Vec<&'_ Node<'_, RefCell<Ast>>>>()
     }
-    pub fn as_html(&self, path: &'a [usize], len: usize) -> String {
-        let nodes = self.select_ast(&path, len);
+    ///
+    ///
+    /// Convert an ast range into HTML
+    ///
+    /// ```rust
+    /// use comrak::Arena;
+    /// use topics_core::doc_src::MdElements;
+    ///
+    /// let input = "# heading";
+    /// let arena = Arena::new();
+    /// let md_elements = MdElements::new(input, &arena);
+    /// let html = md_elements.as_html((vec![0], 1));
+    ///
+    /// assert_eq!(html, String::from("<h1>heading</h1>\n"));
+    /// ```
+    pub fn as_html(&self, range: impl AstRangeImpl) -> String {
+        let nodes = self.select_ast(range);
         let mut output = vec![];
         for node in nodes {
             let mut options = ComrakOptions::default();
@@ -108,14 +158,4 @@ impl<'a> TryFrom<&'a MdElements<'a>> for Vec<Item> {
     fn try_from(md: &'a MdElements<'a>) -> Result<Self, Self::Error> {
         md.as_items()
     }
-}
-
-#[test]
-fn md_elements() {
-    // let md = MdElements::new("# hi!", arena);
-    let input = "# heading";
-    let arena = Arena::new();
-    let md_elements = MdElements::new(input, &arena);
-    let html = md_elements.as_html(&vec![0], 1);
-    assert_eq!(html, String::from("<h1>heading</h1>\n"));
 }

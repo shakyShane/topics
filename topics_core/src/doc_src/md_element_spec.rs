@@ -1,4 +1,4 @@
-use crate::doc_src::{collect_single_line_text, to_items, MdElements};
+use crate::doc_src::{collect_single_line_text, to_items, MdDocSource, MdElements, MdSrc};
 use crate::items::{Command, Instruction, Item};
 use comrak::nodes::{Ast, NodeValue};
 use comrak::{format_html, Arena, ComrakOptions};
@@ -7,8 +7,7 @@ use std::str::FromStr;
 
 #[test]
 fn test_command() -> anyhow::Result<()> {
-    let input = r#"
-# Command: Run unit tests
+    let input = r#"# Command: Run unit tests
 
 A block of text following the title!
 
@@ -16,10 +15,11 @@ A block of text following the title!
 echo hello world!
 ```
         "#;
-    let arena = Arena::new();
-    let md_elements = MdElements::new(input, &arena);
-    let first = md_elements.items.get(0);
-    if let Some(Item::Command(Command { name, .. })) = first {
+    let mut md_src = MdSrc::new(MdDocSource::from_str(input)?);
+    let elems = md_src.parse().as_ref().expect("parse md");
+    let items = elems.as_items()?;
+    let first = items.get(0).expect("at least 1 item");
+    if let Item::Command(Command { name, .. }) = first {
         assert_eq!(name, &String::from("Run unit tests"));
     } else {
         unreachable!();

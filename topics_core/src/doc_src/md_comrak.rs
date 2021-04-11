@@ -1,12 +1,15 @@
-use crate::doc::DocResult;
-use crate::doc_src::{parse_inline_kind, MdElements};
-use crate::items::{Command, Instruction, Item};
-use comrak::nodes::{Ast, AstNode, NodeCodeBlock, NodeHeading, NodeValue};
-use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::str::FromStr;
+
+use comrak::nodes::{Ast, AstNode, NodeCodeBlock, NodeHeading, NodeValue};
+use comrak::{format_html, parse_document, Arena, ComrakOptions};
+
+use crate::doc::DocResult;
+use crate::doc_src::ast_range::AstRange;
+use crate::doc_src::{parse_inline_kind, MdElements};
+use crate::items::{Command, Instruction, Item};
 
 pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     let mut kind: Option<Item> = None;
@@ -34,14 +37,9 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     }
 
     if let Some(Item::Instruction(inst)) = kind.as_mut() {
-        let Instruction {
-            name,
-            ast_len,
-            ast_start,
-        } = inst;
+        let Instruction { name, ast_range } = inst;
         println!("{}", **name);
-        *ast_start = path.to_vec();
-        *ast_len = node.children().count();
+        *ast_range = AstRange::range(&path, node.children().count());
     }
 
     // if let Some(Item::Command(c @ Command { .. })) = kind.as_mut() {
