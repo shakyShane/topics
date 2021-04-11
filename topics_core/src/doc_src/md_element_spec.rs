@@ -1,4 +1,5 @@
 use crate::doc_src::MdElements;
+use crate::items::{Command, Instruction, Item};
 use std::str::FromStr;
 
 #[test]
@@ -6,19 +7,18 @@ fn test_command() -> anyhow::Result<()> {
     let input = r#"
 # Command: Run unit tests
 
+A block of text following the title!
+
 ```shell command --cwd="./"
 echo hello world!
 ```
         "#;
     let md_elements = MdElements::from_str(input)?;
-    // assert_eq!(
-    //     md_elements.elements.get(0).unwrap(),
-    //     &Element::h1("Command: Run unit tests")
-    // );
-    // assert_eq!(
-    //     md_elements.elements.get(1).unwrap(),
-    //     &Element::code_block("echo hello world!", Some(r#"shell command --cwd="./""#))
-    // );
+    let first = md_elements.items.get(0);
+    if let Some(Item::Command(Command { name, .. })) = first {
+    } else {
+        unreachable!();
+    }
     Ok(())
 }
 
@@ -38,14 +38,12 @@ oh feck
 ```
         "#;
     let md_elements = MdElements::from_str(input)?;
-    println!("{:#?}", md_elements.items.get(0).unwrap());
-    // assert_eq!(
-    //     md_elements.elements.get(0).unwrap(),
-    //     &Element::h1("Command: Run unit tests")
-    // );
-    // assert_eq!(
-    //     md_elements.elements.get(1).unwrap(),
-    //     &Element::code_block("echo hello world!", Some(r#"shell command --cwd="./""#))
-    // );
+    let first = md_elements.items.get(0);
+    if let Some(Item::Instruction(Instruction { name, ast })) = first {
+        assert_eq!(name, &String::from("Call IT help desk"));
+        assert_eq!(ast.len(), 5);
+    } else {
+        unreachable!();
+    }
     Ok(())
 }

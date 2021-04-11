@@ -25,10 +25,10 @@ pub enum ItemWrap {
 impl Item {
     pub fn set_name(&mut self, name: &str) {
         match self {
-            Item::Command(cmd) => cmd.name = name.to_string(),
+            Item::Command(cmd) => cmd.name = name.into(),
             Item::FileExistsCheck(fec) => fec.name = name.to_string(),
             Item::DependencyCheck(dc) => dc.name = name.to_string(),
-            Item::Instruction(inst) => inst.name = LineMarker::new(name.to_string(), None),
+            Item::Instruction(inst) => inst.name = name.into(),
             Item::HostEntriesCheck(hec) => hec.name = name.to_string(),
             Item::Topic(top) => top.name = name.to_string(),
             Item::TaskGroup(tg) => tg.name = name.to_string(),
@@ -36,7 +36,7 @@ impl Item {
     }
     pub fn name(&self) -> String {
         match self {
-            Item::Command(cmd) => cmd.name.clone(),
+            Item::Command(cmd) => cmd.name.to_string(),
             Item::FileExistsCheck(fec) => fec.name.clone(),
             Item::DependencyCheck(dc) => dc.name.clone(),
             Item::Instruction(inst) => inst.name.to_string(),
@@ -59,7 +59,8 @@ impl Item {
     }
     pub fn set_line_start(&mut self, line_start: usize) {
         match self {
-            Item::Instruction(inst) => inst.set_line_start(line_start),
+            Item::Instruction(inst) => inst.name.set_line_start(line_start),
+            Item::Command(cmd) => cmd.name.set_line_start(line_start),
             _ => todo!("set line start"),
         }
     }

@@ -1,15 +1,15 @@
 use crate::cwd::Cwd;
 use crate::doc_src::{code_fence, MdElements};
-use crate::items::Item;
+use crate::items::{Item, LineMarker};
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone)]
 pub struct Command {
+    pub name: LineMarker<String>,
     pub cwd: Cwd,
     pub command: String,
-    pub name: String,
     pub env: Option<Env>,
 }
 
@@ -19,7 +19,7 @@ pub struct CommandInlineArgs {
     pub cwd: Cwd,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Env {
     pub values: Option<HashMap<String, String>>,
 }
@@ -37,7 +37,7 @@ impl Default for Command {
         Self {
             cwd: Default::default(),
             command: "echo 'hello world'".to_string(),
-            name: "run unit tests command".to_string(),
+            name: LineMarker::new(String::new(), None),
             env: Default::default(),
         }
     }
@@ -59,11 +59,3 @@ impl Command {
         }
     }
 }
-
-// impl TryFrom<&MdElements> for Command {
-//     type Error = anyhow::Error;
-//
-//     fn try_from(value: MdElements) -> Result<Self, Self::Error> {
-//         todo!()
-//     }
-// }
