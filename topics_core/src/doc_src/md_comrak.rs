@@ -8,7 +8,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::str::FromStr;
 
-fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
+pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     let mut kind: Option<Item> = None;
     let mut items: Vec<Item> = vec![];
     let first = node.children().take(1).nth(0);
@@ -55,7 +55,7 @@ fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     items
 }
 
-pub(crate) fn to_elements(md: &'_ MdElements<'_>) -> Vec<Item> {
+pub(crate) fn to_items(md: &'_ MdElements<'_>) -> Vec<Item> {
     let mut path = vec![0];
     let items = process_node(&md.root, &mut path);
 

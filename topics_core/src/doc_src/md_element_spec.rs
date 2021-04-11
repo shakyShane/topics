@@ -1,7 +1,8 @@
-use crate::doc_src::{collect_single_line_text, to_elements, MdElements};
+use crate::doc_src::{collect_single_line_text, to_items, MdElements};
 use crate::items::{Command, Instruction, Item};
 use comrak::nodes::{Ast, NodeValue};
 use comrak::{format_html, Arena, ComrakOptions};
+use std::convert::TryInto;
 use std::str::FromStr;
 
 #[test]
@@ -42,13 +43,13 @@ oh feck
 ```
         "#;
     let arena = Arena::new();
-    let md_elements = MdElements::new(input, &arena);
-    let items = to_elements(&md_elements);
+    let md = MdElements::new(input, &arena);
+    let items: Vec<Item> = md.as_items()?;
     let first = items.get(0);
     if let Some(Item::Instruction(inst)) = first {
         assert_eq!(inst.name, String::from("Call IT help desk"));
         println!("{:?}", inst);
-        let ast_elems = md_elements.select(&inst.ast_start, inst.ast_len);
+        let ast_elems = md.select(&inst.ast_start, inst.ast_len);
         for node in ast_elems {
             let d = node.data.borrow();
             let mut output = vec![];
