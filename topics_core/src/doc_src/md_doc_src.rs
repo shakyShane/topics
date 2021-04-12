@@ -229,6 +229,9 @@ pub fn parse_inline_kind(input: &str) -> Option<Item> {
             Some(Item::DependencyCheck(dep_check)) => {
                 return Some(Item::DependencyCheck(dep_check.clone()));
             }
+            Some(Item::Topic(topic)) => {
+                return Some(Item::Topic(topic.clone()));
+            }
             Some(_v) => {
                 todo!("todo inline list item");
             }

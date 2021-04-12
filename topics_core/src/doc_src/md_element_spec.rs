@@ -3,6 +3,7 @@ use crate::items::{Command, Instruction, Item};
 use comrak::nodes::{Ast, NodeValue};
 use comrak::{format_html, Arena, ComrakOptions};
 use std::convert::TryInto;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 #[test]
@@ -66,4 +67,32 @@ oh feck
         unreachable!();
     }
     Ok(())
+}
+
+#[test]
+fn test_steps() -> anyhow::Result<()> {
+    let command_input = r#"# Command: Run unit tests
+
+A block of text following the title!
+
+```shell command --cwd="./"
+echo hello world!
+```
+        "#;
+    let mut md_src = MdSrc::from_str(command_input)?;
+    md_src.doc_src.input_file = Some(PathBuf::from("./command.md"));
+
+    let topic_input = r#"# Topic: Run all tests
+
+# Steps
+
+- Run unit tests
+        "#;
+    let mut md_src_topic = MdSrc::from_str(topic_input)?;
+    let elems = md_src_topic.parse().as_ref().expect("parse md");
+    let items = elems.as_items()?;
+    dbg!(items);
+    Ok(())
+    // let elems = md_src.parse().as_ref().expect("parse md");
+    // let items = elems.as_items()?;
 }

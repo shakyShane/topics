@@ -3,4 +3,3 @@
 ```shell command --cwd="."
 cargo test
 ```
-

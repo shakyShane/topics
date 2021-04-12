@@ -12,12 +12,23 @@ use crate::doc::DocResult;
 use crate::doc_src::ast_range::{AstRange, AstRangeImpl};
 use crate::doc_src::{process_node, to_items, MdDocSource};
 use crate::items::Item;
+use std::fmt::{Debug, Formatter};
 
 pub struct MdSrc<'a> {
     arena: Arena<AstNode<'a>>,
 
     pub doc_src: MdDocSource,
     pub md_elements: Option<MdElements<'a>>,
+}
+
+impl Debug for MdSrc<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MdSrc")
+            .field("arena", &"Arena<AstNode>")
+            .field("doc_src", &self.doc_src)
+            .field("md_elements", &self.md_elements)
+            .finish()
+    }
 }
 
 impl<'a> MdSrc<'a> {

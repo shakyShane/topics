@@ -52,7 +52,7 @@ impl Doc {
                 item: Item::Topic(topic),
                 ..
             } => {
-                if topic.name == name {
+                if *topic.name == name {
                     Some(topic)
                 } else {
                     None

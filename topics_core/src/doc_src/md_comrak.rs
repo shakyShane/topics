@@ -67,6 +67,10 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
         }
     }
 
+    if let Some(Item::Topic(topic)) = kind.as_mut() {
+        dbg!(topic);
+    }
+
     if let Some(kind) = kind {
         items.push(kind)
     }
