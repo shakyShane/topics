@@ -84,7 +84,9 @@ echo hello world!
 
     let topic_input = r#"# Topic: Run all tests
 
-# Steps
+## Dependencies
+
+## Steps
 
 - Run unit tests
         "#;

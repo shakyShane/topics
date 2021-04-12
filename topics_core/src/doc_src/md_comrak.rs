@@ -10,6 +10,7 @@ use crate::doc::DocResult;
 use crate::doc_src::ast_range::AstRange;
 use crate::doc_src::{parse_inline_kind, MdElements};
 use crate::items::{Command, Instruction, Item};
+use std::cell::Ref;
 
 pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     let mut kind: Option<Item> = None;
@@ -68,7 +69,33 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     }
 
     if let Some(Item::Topic(topic)) = kind.as_mut() {
-        dbg!(topic);
+        let found_heading = false;
+        let list: Option<Ref<Ast>> = None;
+        let mut list: Vec<(Ref<Ast>, Option<Ref<Ast>>)> = vec![];
+        node.children().enumerate().for_each(|(index, node)| {
+            let d = node.data.borrow();
+            match &d.value {
+                NodeValue::Heading(NodeHeading { level: 2, .. }) => {
+                    let non: Option<Ref<Ast>> = None;
+                    list.push((d, non));
+                }
+                NodeValue::List(node_list) => {
+                    let mut last = list.last_mut();
+                    if let Some(last) = last {
+                        if last.1.is_none() {
+                            last.1 = Some(d)
+                        }
+                    }
+                }
+                _ => {}
+            }
+        });
+        // for h in headings {
+        //     if let Some((index, node)) = h {
+        //         println!("index")
+        //     }
+        // }
+        dbg!(list);
     }
 
     if let Some(kind) = kind {
