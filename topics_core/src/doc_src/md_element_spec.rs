@@ -89,6 +89,7 @@ echo hello world!
 ## Steps
 
 - Run unit tests
+- So something else
         "#;
     let mut md_src_topic = MdSrc::from_str(topic_input)?;
     let elems = md_src_topic.parse().as_ref().expect("parse md");

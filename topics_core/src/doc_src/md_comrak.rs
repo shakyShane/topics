@@ -10,7 +10,8 @@ use crate::doc::DocResult;
 use crate::doc_src::ast_range::AstRange;
 use crate::doc_src::{parse_inline_kind, MdElements};
 use crate::items::{Command, Instruction, Item};
-use std::cell::Ref;
+use comrak::arena_tree::Node;
+use std::cell::{Ref, RefCell};
 
 pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     let mut kind: Option<Item> = None;
@@ -71,31 +72,43 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     if let Some(Item::Topic(topic)) = kind.as_mut() {
         let found_heading = false;
         let list: Option<Ref<Ast>> = None;
-        let mut list: Vec<(Ref<Ast>, Option<Ref<Ast>>)> = vec![];
+        let mut list: Vec<(Ref<Ast>, Option<&'_ Node<RefCell<Ast>>>)> = vec![];
         node.children().enumerate().for_each(|(index, node)| {
             let d = node.data.borrow();
             match &d.value {
                 NodeValue::Heading(NodeHeading { level: 2, .. }) => {
-                    let non: Option<Ref<Ast>> = None;
+                    let non: Option<&'_ Node<RefCell<Ast>>> = None;
                     list.push((d, non));
                 }
                 NodeValue::List(node_list) => {
                     let mut last = list.last_mut();
                     if let Some(last) = last {
                         if last.1.is_none() {
-                            last.1 = Some(d)
+                            last.1 = Some(node)
                         }
                     }
                 }
                 _ => {}
             }
         });
-        // for h in headings {
-        //     if let Some((index, node)) = h {
-        //         println!("index")
-        //     }
-        // }
-        dbg!(list);
+        for (heading, maybe_list) in list {
+            if let Some(list) = maybe_list {
+                let list_data = list.data.borrow();
+                println!("list start_line = {} ", list_data.start_line);
+                for node in list.children() {
+                    let d = node.data.borrow();
+                    match &d.value {
+                        NodeValue::Item(list) => {
+                            for node in node.children() {
+                                let t = collect_single_line_text(node);
+                                println!("first line-> {}", t);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
     }
 
     if let Some(kind) = kind {
