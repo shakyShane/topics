@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::doc::DocResult;
 use crate::doc_err::DocError;
-use crate::doc_src::DocSrcImpl;
+use crate::doc_src::{DocSrcImpl, MdSrc};
 use crate::items::{Item, ItemWrap};
 use comrak::arena_tree::Node;
 use comrak::nodes::{Ast, ListType};
@@ -50,8 +50,9 @@ impl FromStr for MdDocSource {
 }
 
 pub fn parse_md_str(input: &str) -> DocResult<Vec<Item>> {
-    let src = MdDocSource::from_str(input)?;
-    let mut items: Vec<Item> = vec![];
+    let mut md_src = MdSrc::from_str(input)?;
+    let elems = md_src.parse().as_ref().expect("parse md");
+    let items = elems.as_items()?;
     Ok(items)
 }
 

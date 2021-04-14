@@ -1,9 +1,11 @@
+use crate::db::Db;
 use crate::doc_err::DocError;
-use crate::doc_src::{from_serde_yaml_error, parse_md_str, DocSource, TomlError};
+use crate::doc_src::{from_serde_yaml_error, parse_md_str, DocSource, MdSrc, TomlError};
 use crate::items::item::Item;
 use crate::items::ItemWrap;
 use crate::{context::Context, items::Topic};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -79,66 +81,87 @@ impl Doc {
             source: doc_src,
             ..Default::default()
         };
-        match &doc.source {
-            DocSource::Yaml(yaml_doc) => {
-                // for src in &yaml_doc.doc_src_items.items {
-                //     let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
-                //         .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
-                //     match item {
-                //         Err(doc_err) => {
-                //             doc.errors.push(doc_err);
-                //         }
-                //         Ok(item) => {
-                //             doc.items.push(ItemTracked {
-                //                 item,
-                //                 src_doc: DocSource::Yaml((*yaml_doc).clone()),
-                //                 input_file: yaml_doc.input_file.clone(),
-                //             });
-                //         }
-                //     };
-                // }
-                todo!("yaml input?")
-            }
-            DocSource::Toml(toml_doc) => {
-                // let items = one_or_many_toml(&toml_doc.file_content).map_err(|err| TomlError {
-                //     doc: &doc,
-                //     toml_err: err,
-                // })?;
-                // for item in items {
-                //     doc.items.push(ItemTracked {
-                //         item,
-                //         src_doc: DocSource::Toml((*toml_doc).clone()),
-                //         input_file: toml_doc.input_file.clone(),
-                //     });
-                // }
-                todo!("toml input...?");
-            }
-            DocSource::Md(md_doc) => {
-                for src in &md_doc.doc_src_items.items {
-                    let items = parse_md_str(&src.content)?;
-                    for item in items {
-                        if let Item::Topic(topic) = &item {
-                            for item_wrap in topic.deps.iter().chain(topic.steps.iter()) {
-                                if let ItemWrap::Item(item) = item_wrap {
-                                    doc.items.push(ItemTracked {
-                                        item: item.clone(),
-                                        src_doc: DocSource::Md((*md_doc).clone()),
-                                        input_file: md_doc.input_file.clone(),
-                                    });
-                                }
-                            }
-                        }
-                        doc.items.push(ItemTracked {
-                            item,
-                            src_doc: DocSource::Md((*md_doc).clone()),
-                            input_file: md_doc.input_file.clone(),
-                        });
-                    }
-                }
-            }
-        }
         Ok(doc)
+        //     match &doc.source {
+        //         DocSource::Yaml(yaml_doc) => {
+        //             // for src in &yaml_doc.doc_src_items.items {
+        //             //     let item: Result<Item, DocError> = serde_yaml::from_str(&src.content)
+        //             //         .map_err(|err| from_serde_yaml_error(&doc, &src, &err));
+        //             //     match item {
+        //             //         Err(doc_err) => {
+        //             //             doc.errors.push(doc_err);
+        //             //         }
+        //             //         Ok(item) => {
+        //             //             doc.items.push(ItemTracked {
+        //             //                 item,
+        //             //                 src_doc: DocSource::Yaml((*yaml_doc).clone()),
+        //             //                 input_file: yaml_doc.input_file.clone(),
+        //             //             });
+        //             //         }
+        //             //     };
+        //             // }
+        //             todo!("yaml input?")
+        //         }
+        //         DocSource::Toml(toml_doc) => {
+        //             // let items = one_or_many_toml(&toml_doc.file_content).map_err(|err| TomlError {
+        //             //     doc: &doc,
+        //             //     toml_err: err,
+        //             // })?;
+        //             // for item in items {
+        //             //     doc.items.push(ItemTracked {
+        //             //         item,
+        //             //         src_doc: DocSource::Toml((*toml_doc).clone()),
+        //             //         input_file: toml_doc.input_file.clone(),
+        //             //     });
+        //             // }
+        //             todo!("toml input...?");
+        //         }
+        //         DocSource::Md(md_doc) => {
+        //             // let mds: Vec<Result<MdSrc, _>> = md_doc
+        //             //     .doc_src_items
+        //             //     .items
+        //             //     .iter()
+        //             //     .map(|src| MdSrc::from_str(&src.content))
+        //             //     .collect();
+        //             // dbg!(mds);
+        //             // for src in &md_doc.doc_src_items.items {
+        //             //     let mut md_src = MdSrc::from_str(&src.content)?;
+        //             //     let elems = md_src.parse().as_ref().expect("parse md");
+        //             //     let items = elems.as_items()?;
+        //             //     for item in items {
+        //             //         if let Item::Topic(topic) = &item {
+        //             //             for item_wrap in topic.deps.iter().chain(topic.steps.iter()) {
+        //             //                 if let ItemWrap::Item(item) = item_wrap {
+        //             //                     doc.items.push(ItemTracked {
+        //             //                         item: item.clone(),
+        //             //                         src_doc: DocSource::Md((*md_doc).clone()),
+        //             //                         input_file: md_doc.input_file.clone(),
+        //             //                     });
+        //             //                 }
+        //             //             }
+        //             //         }
+        //             //         doc.items.push(ItemTracked {
+        //             //             item,
+        //             //             src_doc: DocSource::Md((*md_doc).clone()),
+        //             //             input_file: md_doc.input_file.clone(),
+        //             //         });
+        //             //     }
+        //             }
+        //         }
+        //     }
+        //     Ok(doc)
     }
+}
+
+#[test]
+fn test_doc_from_src() {
+    let ctx = Context::default();
+    let f = ctx.read_docs_unwrapped(&vec![
+        PathBuf::from("../fixtures/md/topics.md"),
+        PathBuf::from("../fixtures/md/commands.md"),
+    ]);
+    let db = Db::try_from_docs(&f);
+    dbg!(db);
 }
 
 // fn one_or_many_toml(input: &str) -> Result<Vec<Item>, toml::de::Error> {

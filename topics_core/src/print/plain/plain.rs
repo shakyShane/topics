@@ -147,27 +147,26 @@ fn print_item_line(item: &Item, db: &Db, width: usize) {
 }
 
 fn print_item_wrap(item_wrap: &ItemWrap, db: &Db, width: usize) {
-    // dbg!(&db);
-    // let maybe_item = match item_wrap {
-    //     ItemWrap::NamedRef(name) => (name.clone(), db.item_map.get(name)),
-    //     ItemWrap::Item(item) => {
-    //         let name = item.name();
-    //         (name.clone(), db.item_map.get(&name))
-    //     }
-    // };
-    // match maybe_item {
-    //     (_name, Some(matched_item)) => {
-    //         print_item_line(&matched_item.item, &db, width);
-    //     }
-    //     (name, None) => {
-    //         println!(
-    //             "{:width$}- NOT_FOUND: {name}",
-    //             " ",
-    //             width = width,
-    //             name = name
-    //         );
-    //     }
-    // }
+    let maybe_item = match item_wrap {
+        ItemWrap::NamedRef(name) => (name.item.clone(), db.item_map.get(&name.item)),
+        ItemWrap::Item(item) => {
+            let name = item.name();
+            (name.clone(), db.item_map.get(&name))
+        }
+    };
+    match maybe_item {
+        (_name, Some(matched_item)) => {
+            print_item_line(&matched_item.item, &db, width);
+        }
+        (name, None) => {
+            println!(
+                "{:width$}- NOT_FOUND: {name}",
+                " ",
+                width = width,
+                name = name
+            );
+        }
+    }
 }
 
 fn print_error_heading(kind: &str, message: &str) {

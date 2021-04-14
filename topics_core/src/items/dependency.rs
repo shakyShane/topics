@@ -1,9 +1,10 @@
 use crate::cwd::Cwd;
 use crate::doc_src::code_fence;
+use crate::items::LineMarker;
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone)]
 pub struct DependencyCheck {
-    pub name: String,
+    pub name: LineMarker<String>,
     pub verify: String,
     pub autofix: Option<String>,
     pub url: Option<String>,
@@ -13,7 +14,7 @@ impl DependencyCheck {
     pub fn minimal(name: &str, verify: &str) -> Self {
         Self {
             verify: name.to_string(),
-            name: verify.to_string(),
+            name: LineMarker::new(verify.to_string(), None),
             autofix: None,
             url: None,
         }
@@ -24,7 +25,7 @@ impl Default for DependencyCheck {
     fn default() -> Self {
         Self {
             verify: "node -v".to_string(),
-            name: "install node".to_string(),
+            name: LineMarker::new("install node".to_string(), None),
             autofix: None,
             url: Some("https://nodejs.org".to_string()),
         }

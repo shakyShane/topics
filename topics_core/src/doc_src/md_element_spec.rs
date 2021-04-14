@@ -96,8 +96,23 @@ echo hello world!
     let mut md_src_topic = MdSrc::from_str(topic_input)?;
     let elems = md_src_topic.parse().as_ref().expect("parse md");
     let items = elems.as_items()?;
+    Ok(())
+}
+
+#[test]
+fn test_dep_check() -> anyhow::Result<()> {
+    let input = r#"
+# Dependency Check: Node JS installed globally
+
+Node JS is required and should be on version 12.0
+
+```shell verify
+node -v
+```
+"#;
+    let mut md_src = MdSrc::from_str(input)?;
+    let elems = md_src.parse().as_ref().expect("parse md");
+    let items = elems.as_items()?;
     dbg!(items);
     Ok(())
-    // let elems = md_src.parse().as_ref().expect("parse md");
-    // let items = elems.as_items()?;
 }

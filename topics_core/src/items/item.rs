@@ -33,7 +33,7 @@ impl Item {
         match self {
             Item::Command(cmd) => cmd.name = name.into(),
             Item::FileExistsCheck(fec) => fec.name = name.to_string(),
-            Item::DependencyCheck(dc) => dc.name = name.to_string(),
+            Item::DependencyCheck(dc) => dc.name = name.into(),
             Item::Instruction(inst) => inst.name = name.into(),
             Item::HostEntriesCheck(hec) => hec.name = name.to_string(),
             Item::Topic(top) => top.name = name.into(),
@@ -44,7 +44,7 @@ impl Item {
         match self {
             Item::Command(cmd) => cmd.name.to_string(),
             Item::FileExistsCheck(fec) => fec.name.clone(),
-            Item::DependencyCheck(dc) => dc.name.clone(),
+            Item::DependencyCheck(dc) => dc.name.to_string(),
             Item::Instruction(inst) => inst.name.to_string(),
             Item::HostEntriesCheck(hec) => hec.name.clone(),
             Item::Topic(top) => top.name.to_string(),
@@ -68,6 +68,7 @@ impl Item {
             Item::Instruction(inst) => inst.name.set_line_start(line_start),
             Item::Command(cmd) => cmd.name.set_line_start(line_start),
             Item::Topic(topic) => topic.name.set_line_start(line_start),
+            Item::DependencyCheck(dep_check) => dep_check.name.set_line_start(line_start),
             _i => todo!("set line start {}", _i.name()),
         }
     }
