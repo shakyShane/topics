@@ -86,6 +86,8 @@ echo hello world!
 
 ## Dependencies
 
+- Access to Azure
+
 ## Steps
 
 - Run unit tests

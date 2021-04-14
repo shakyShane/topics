@@ -7,7 +7,7 @@ pub struct LineMarker<T>
 where
     T: Debug + Clone + Default,
 {
-    pub line_start: Option<usize>,
+    pub line_start: Option<u32>,
     pub item: T,
 }
 
@@ -26,13 +26,13 @@ impl<T> LineMarker<T>
 where
     T: Debug + Clone + Default,
 {
-    pub fn new(item: impl Into<T>, line_start: Option<usize>) -> Self {
+    pub fn new(item: impl Into<T>, line_start: Option<u32>) -> Self {
         Self {
             line_start,
             item: item.into(),
         }
     }
-    pub fn set_line_start(&mut self, line_start: usize) {
+    pub fn set_line_start(&mut self, line_start: u32) {
         self.line_start = Some(line_start)
     }
 }

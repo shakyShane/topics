@@ -18,8 +18,14 @@ pub enum Item {
 
 #[derive(Debug, Clone)]
 pub enum ItemWrap {
-    Named(String),
+    NamedRef(LineMarker<String>),
     Item(Item),
+}
+
+impl ItemWrap {
+    pub fn named_ref(string: impl Into<String>, line_start: u32) -> ItemWrap {
+        Self::NamedRef(LineMarker::new(string.into(), Some(line_start)))
+    }
 }
 
 impl Item {
@@ -57,7 +63,7 @@ impl Item {
         }
         .to_string()
     }
-    pub fn set_line_start(&mut self, line_start: usize) {
+    pub fn set_line_start(&mut self, line_start: u32) {
         match self {
             Item::Instruction(inst) => inst.name.set_line_start(line_start),
             Item::Command(cmd) => cmd.name.set_line_start(line_start),

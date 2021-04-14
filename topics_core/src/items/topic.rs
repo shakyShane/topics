@@ -7,6 +7,17 @@ pub struct Topic {
     pub deps: Vec<ItemWrap>,
 }
 
+impl Topic {
+    pub fn add_step_named_ref(&mut self, string: impl Into<String>, line_start: u32) {
+        self.steps
+            .push(ItemWrap::named_ref(string.into(), line_start));
+    }
+    pub fn add_dep_named_ref(&mut self, string: impl Into<String>, line_start: u32) {
+        self.deps
+            .push(ItemWrap::named_ref(string.into(), line_start));
+    }
+}
+
 impl Default for Topic {
     fn default() -> Self {
         Self {

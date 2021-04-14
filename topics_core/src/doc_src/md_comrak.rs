@@ -9,7 +9,7 @@ use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use crate::doc::DocResult;
 use crate::doc_src::ast_range::AstRange;
 use crate::doc_src::{parse_inline_kind, MdElements};
-use crate::items::{Command, Instruction, Item};
+use crate::items::{Command, Instruction, Item, ItemWrap, LineMarker};
 use comrak::arena_tree::Node;
 use std::cell::{Ref, RefCell};
 
@@ -29,7 +29,7 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
                 let item = parse_inline_kind(&t);
                 kind = item;
                 if let Some(item) = kind.as_mut() {
-                    item.set_line_start(start_line as usize)
+                    item.set_line_start(start_line)
                 }
             }
             _ => {
@@ -70,15 +70,13 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     }
 
     if let Some(Item::Topic(topic)) = kind.as_mut() {
-        let found_heading = false;
-        let list: Option<Ref<Ast>> = None;
-        let mut list: Vec<(Ref<Ast>, Option<&'_ Node<RefCell<Ast>>>)> = vec![];
+        let mut list: Vec<(&'_ Node<RefCell<Ast>>, Option<&'_ Node<RefCell<Ast>>>)> = vec![];
         node.children().enumerate().for_each(|(index, node)| {
             let d = node.data.borrow();
             match &d.value {
                 NodeValue::Heading(NodeHeading { level: 2, .. }) => {
-                    let non: Option<&'_ Node<RefCell<Ast>>> = None;
-                    list.push((d, non));
+                    let empty_node: Option<&'_ Node<RefCell<Ast>>> = None;
+                    list.push((node, empty_node));
                 }
                 NodeValue::List(node_list) => {
                     let mut last = list.last_mut();
@@ -93,15 +91,24 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
         });
         for (heading, maybe_list) in list {
             if let Some(list) = maybe_list {
+                let heading_kind = collect_single_line_text(heading);
+                let heading_line_start = heading.data.borrow().start_line;
                 let list_data = list.data.borrow();
-                println!("list start_line = {} ", list_data.start_line);
                 for node in list.children() {
                     let d = node.data.borrow();
                     match &d.value {
                         NodeValue::Item(list) => {
                             for node in node.children() {
-                                let t = collect_single_line_text(node);
-                                println!("first line-> {}", t);
+                                let named_ref = collect_single_line_text(node);
+                                match heading_kind.as_str() {
+                                    "Steps" => {
+                                        topic.add_step_named_ref(named_ref, heading_line_start)
+                                    }
+                                    "Dependencies" => {
+                                        topic.add_dep_named_ref(named_ref, heading_line_start)
+                                    }
+                                    _ => {}
+                                }
                             }
                         }
                         _ => {}

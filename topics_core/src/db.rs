@@ -1,5 +1,5 @@
 use crate::doc::{Doc, ItemTracked};
-use crate::items::{Item, ItemWrap};
+use crate::items::{Item, ItemWrap, LineMarker};
 use std::collections::{HashMap, HashSet};
 
 type ItemGraph = HashMap<String, HashSet<String>>;
@@ -22,8 +22,8 @@ impl Db {
                 if let Item::Topic(topic) = this_item {
                     for dep in &topic.deps {
                         match dep {
-                            ItemWrap::Named(item_name) => {
-                                entry.insert(item_name.clone());
+                            ItemWrap::NamedRef(item_name) => {
+                                entry.insert(item_name.item.clone());
                             }
                             ItemWrap::Item(item) => {
                                 entry.insert(item.name());
@@ -32,8 +32,8 @@ impl Db {
                     }
                     for dep in &topic.steps {
                         match dep {
-                            ItemWrap::Named(item_name) => {
-                                entry.insert(item_name.clone());
+                            ItemWrap::NamedRef(item_name) => {
+                                entry.insert(item_name.item.clone());
                             }
                             ItemWrap::Item(item) => {
                                 entry.insert(item.name());
