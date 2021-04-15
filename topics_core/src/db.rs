@@ -9,13 +9,13 @@ type ItemGraph = HashMap<String, HashSet<String>>;
 #[derive(Debug)]
 pub struct Db {
     graph: ItemGraph,
-    pub item_map: HashMap<String, ItemTracked>,
+    // pub item_map: HashMap<String, ItemTracked>,
 }
 
 impl Db {
     pub fn try_from_docs(docs: &[Doc]) -> anyhow::Result<Self> {
         let mut graph: ItemGraph = HashMap::new();
-        let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
+        // let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
         for doc in docs {
             if let DocSource::Md(md) = &doc.source {
                 for item in &md.doc_src_items.items {
@@ -24,55 +24,34 @@ impl Db {
                         let items = elems.as_items();
                         if let Ok(items) = items {
                             for item in items {
+                                let entry = graph.entry(item.name()).or_insert_with(HashSet::new);
+                                match &item {
+                                    Item::Topic(topic) => {
+                                        for dep in topic.deps.iter().chain(topic.steps.iter()) {
+                                            match dep {
+                                                ItemWrap::NamedRef(line_marker) => {
+                                                    entry.insert(line_marker.to_string());
+                                                }
+                                                ItemWrap::Item(_) => todo!("inline item"),
+                                            }
+                                        }
+                                    }
+                                    Item::Command(_) => {}
+                                    Item::FileExistsCheck(_) => {}
+                                    Item::DependencyCheck(_) => {}
+                                    Item::Instruction(_) => {}
+                                    Item::HostEntriesCheck(_) => {}
+                                    Item::TaskGroup(_) => {}
+                                }
                                 println!("name->{}", item.name());
                             }
                         }
                     }
                 }
             }
-            // let mds: Vec<Result<MdSrc, _>> = doc
-            //     .iter()
-            //     .map(|src: &Doc| {
-            //         match src.source {
-            //             DocSource::Yaml(_) => todo!("not implemented"),
-            //             DocSource::Toml(_) => todo!("not implemented"),
-            //             DocSource::Md(ds) => MdSrc::from_str(ds.)
-            //         }
-            //     })
-            //     .flatten()
-            //     .collect();
-            // dbg!(mds);
-            // dbg!(&doc);
-            // for item_tracked in &doc.items {
-            //     let this_item = &item_tracked.item;
-            //     let entry = graph.entry(this_item.name()).or_insert_with(HashSet::new);
-            //     item_map.insert(this_item.name(), (*item_tracked).clone());
-            //     if let Item::Topic(topic) = this_item {
-            //         for dep in &topic.deps {
-            //             match dep {
-            //                 ItemWrap::NamedRef(item_name) => {
-            //                     entry.insert(item_name.item.clone());
-            //                 }
-            //                 ItemWrap::Item(item) => {
-            //                     entry.insert(item.name());
-            //                 }
-            //             }
-            //         }
-            //         for dep in &topic.steps {
-            //             match dep {
-            //                 ItemWrap::NamedRef(item_name) => {
-            //                     entry.insert(item_name.item.clone());
-            //                 }
-            //                 ItemWrap::Item(item) => {
-            //                     entry.insert(item.name());
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
         }
         let _ = detect_cycle(&graph)?;
-        Ok(Self { graph, item_map })
+        Ok(Self { graph })
     }
     #[cfg(test)]
     pub fn unknown(&self) -> HashMap<String, HashSet<String>> {
@@ -80,11 +59,11 @@ impl Db {
         for (parent_name, hash_set) in &self.graph {
             for child_name in hash_set {
                 if self.graph.get(child_name).is_none() {
-                    let _matched_item = self.item_map.get(parent_name);
-                    let entry = output
-                        .entry(parent_name.clone())
-                        .or_insert_with(HashSet::new);
-                    entry.insert(child_name.clone());
+                    // let _matched_item = self.item_map.get(parent_name);
+                    // let entry = output
+                    //     .entry(parent_name.clone())
+                    //     .or_insert_with(HashSet::new);
+                    // entry.insert(child_name.clone());
                 }
             }
         }
@@ -95,22 +74,22 @@ impl Db {
         let mut output = vec![];
         for parent_name in self.graph.keys() {
             let mut used = false;
-            let item = self.item_map.get(parent_name);
-            if let Some(ItemTracked {
-                item: Item::Topic(..),
-                ..
-            }) = item
-            {
-                used = true
-            }
-            for child_hash_set in self.graph.values() {
-                if child_hash_set.contains(&parent_name.clone()) {
-                    used = true
-                }
-            }
-            if !used {
-                output.push(parent_name.clone())
-            }
+            // let item = self.item_map.get(parent_name);
+            // if let Some(ItemTracked {
+            //     item: Item::Topic(..),
+            //     ..
+            // }) = item
+            // {
+            //     used = true
+            // }
+            // for child_hash_set in self.graph.values() {
+            //     if child_hash_set.contains(&parent_name.clone()) {
+            //         used = true
+            //     }
+            // }
+            // if !used {
+            //     output.push(parent_name.clone())
+            // }
         }
         output
     }
@@ -179,12 +158,12 @@ mod test {
     fn test_detect_unknown() -> anyhow::Result<()> {
         let g = graph_db();
         let unknown = g.unknown();
-        for (key, _value) in unknown {
-            let parent = g.item_map.get(&key);
-            if let Some(ItemTracked { item, .. }) = parent {
-                println!("missing item in {}", item.name())
-            }
-        }
+        // for (key, _value) in unknown {
+        //     let parent = g.item_map.get(&key);
+        //     if let Some(ItemTracked { item, .. }) = parent {
+        //         println!("missing item in {}", item.name())
+        //     }
+        // }
         Ok(())
     }
 
