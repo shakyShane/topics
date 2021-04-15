@@ -153,17 +153,6 @@ impl Doc {
     }
 }
 
-#[test]
-fn test_doc_from_src() {
-    let ctx = Context::default();
-    let f = ctx.read_docs_unwrapped(&vec![
-        PathBuf::from("../fixtures/md/topics.md"),
-        PathBuf::from("../fixtures/md/commands.md"),
-    ]);
-    let db = Db::try_from_docs(&f);
-    dbg!(db);
-}
-
 // fn one_or_many_toml(input: &str) -> Result<Vec<Item>, toml::de::Error> {
 //     #[derive(Debug, serde::Deserialize)]
 //     struct TempItems {

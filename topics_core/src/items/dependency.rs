@@ -24,7 +24,7 @@ impl DependencyCheck {
 impl Default for DependencyCheck {
     fn default() -> Self {
         Self {
-            verify: "node -v".to_string(),
+            verify: "echo 'verify script missing'; exit 1;".to_string(),
             name: LineMarker::new("install node".to_string(), None),
             autofix: None,
             url: Some("https://nodejs.org".to_string()),

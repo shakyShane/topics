@@ -8,6 +8,7 @@ use comrak::nodes::{Ast, ListType};
 use multi_doc::MultiDoc;
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 
+use std::convert::TryFrom;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -49,9 +50,19 @@ impl FromStr for MdDocSource {
     }
 }
 
+impl<'a> From<&'a MdDocSource> for &'a str {
+    fn from(mds: &'a MdDocSource) -> Self {
+        &mds.file_content
+    }
+}
+
 pub fn parse_md_str(input: &str) -> DocResult<Vec<Item>> {
-    let mut md_src = MdSrc::from_str(input)?;
-    let elems = md_src.parse().as_ref().expect("parse md");
+    let mut md_src = MdSrc::new();
+    let md_src_doc = MdDocSource::from_str(input)?;
+    let elems = md_src
+        .parse(&md_src_doc.file_content)
+        .as_ref()
+        .expect("parse md");
     let items = elems.as_items()?;
     Ok(items)
 }

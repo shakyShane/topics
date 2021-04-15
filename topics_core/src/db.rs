@@ -1,6 +1,8 @@
 use crate::doc::{Doc, ItemTracked};
+use crate::doc_src::{DocSource, MdSrc};
 use crate::items::{Item, ItemWrap, LineMarker};
 use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
 type ItemGraph = HashMap<String, HashSet<String>>;
 
@@ -15,33 +17,59 @@ impl Db {
         let mut graph: ItemGraph = HashMap::new();
         let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
         for doc in docs {
-            for item_tracked in &doc.items {
-                let this_item = &item_tracked.item;
-                let entry = graph.entry(this_item.name()).or_insert_with(HashSet::new);
-                item_map.insert(this_item.name(), (*item_tracked).clone());
-                if let Item::Topic(topic) = this_item {
-                    for dep in &topic.deps {
-                        match dep {
-                            ItemWrap::NamedRef(item_name) => {
-                                entry.insert(item_name.item.clone());
-                            }
-                            ItemWrap::Item(item) => {
-                                entry.insert(item.name());
-                            }
-                        }
-                    }
-                    for dep in &topic.steps {
-                        match dep {
-                            ItemWrap::NamedRef(item_name) => {
-                                entry.insert(item_name.item.clone());
-                            }
-                            ItemWrap::Item(item) => {
-                                entry.insert(item.name());
+            if let DocSource::Md(md) = &doc.source {
+                for item in &md.doc_src_items.items {
+                    let mut md_src = MdSrc::new();
+                    if let Some(elems) = md_src.parse(item.content.as_str()) {
+                        let items = elems.as_items();
+                        if let Ok(items) = items {
+                            for item in items {
+                                println!("name->{}", item.name());
                             }
                         }
                     }
                 }
             }
+            // let mds: Vec<Result<MdSrc, _>> = doc
+            //     .iter()
+            //     .map(|src: &Doc| {
+            //         match src.source {
+            //             DocSource::Yaml(_) => todo!("not implemented"),
+            //             DocSource::Toml(_) => todo!("not implemented"),
+            //             DocSource::Md(ds) => MdSrc::from_str(ds.)
+            //         }
+            //     })
+            //     .flatten()
+            //     .collect();
+            // dbg!(mds);
+            // dbg!(&doc);
+            // for item_tracked in &doc.items {
+            //     let this_item = &item_tracked.item;
+            //     let entry = graph.entry(this_item.name()).or_insert_with(HashSet::new);
+            //     item_map.insert(this_item.name(), (*item_tracked).clone());
+            //     if let Item::Topic(topic) = this_item {
+            //         for dep in &topic.deps {
+            //             match dep {
+            //                 ItemWrap::NamedRef(item_name) => {
+            //                     entry.insert(item_name.item.clone());
+            //                 }
+            //                 ItemWrap::Item(item) => {
+            //                     entry.insert(item.name());
+            //                 }
+            //             }
+            //         }
+            //         for dep in &topic.steps {
+            //             match dep {
+            //                 ItemWrap::NamedRef(item_name) => {
+            //                     entry.insert(item_name.item.clone());
+            //                 }
+            //                 ItemWrap::Item(item) => {
+            //                     entry.insert(item.name());
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
         }
         let _ = detect_cycle(&graph)?;
         Ok(Self { graph, item_map })
@@ -121,6 +149,17 @@ mod test {
         let good = ctx.read_docs_unwrapped(&docs);
         assert_eq!(good.len(), 3);
         Db::try_from_docs(&good).expect("test data")
+    }
+
+    #[test]
+    fn test_doc_from_src() {
+        let ctx = Context::default();
+        let f = ctx.read_docs_unwrapped(&vec![
+            PathBuf::from("../fixtures/md/topics.md"),
+            PathBuf::from("../fixtures/md/commands.md"),
+        ]);
+        let db = Db::try_from_docs(&f);
+        dbg!(db);
     }
 
     #[test]

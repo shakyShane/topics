@@ -16,8 +16,8 @@ A block of text following the title!
 echo hello world!
 ```
         "#;
-    let mut md_src = MdSrc::new(MdDocSource::from_str(input)?);
-    let elems = md_src.parse().as_ref().expect("parse md");
+    let mut md_src = MdSrc::new();
+    let elems = md_src.parse(input).as_ref().expect("parse md");
     let items = elems.as_items()?;
     let first = items.get(0).expect("at least 1 item");
     if let Item::Command(Command {
@@ -71,16 +71,16 @@ oh feck
 
 #[test]
 fn test_steps() -> anyhow::Result<()> {
-    let command_input = r#"# Command: Run unit tests
-
-A block of text following the title!
-
-```shell command --cwd="./"
-echo hello world!
-```
-        "#;
-    let mut md_src = MdSrc::from_str(command_input)?;
-    md_src.doc_src.input_file = Some(PathBuf::from("./command.md"));
+    //     let command_input = r#"# Command: Run unit tests
+    //
+    // A block of text following the title!
+    //
+    // ```shell command --cwd="./"
+    // echo hello world!
+    // ```
+    //         "#;
+    // let mut md_src = MdSrc::new();
+    // md_src.doc_src.input_file = Some(PathBuf::from("./command.md"));
 
     let topic_input = r#"# Topic: Run all tests
 
@@ -93,8 +93,8 @@ echo hello world!
 - Run unit tests
 - So something else
         "#;
-    let mut md_src_topic = MdSrc::from_str(topic_input)?;
-    let elems = md_src_topic.parse().as_ref().expect("parse md");
+    let mut md_src_topic = MdSrc::new();
+    let elems = md_src_topic.parse(topic_input).as_ref().expect("parse md");
     let items = elems.as_items()?;
     Ok(())
 }
@@ -107,11 +107,12 @@ fn test_dep_check() -> anyhow::Result<()> {
 Node JS is required and should be on version 12.0
 
 ```shell verify
-node -v
+node -d
 ```
+
 "#;
-    let mut md_src = MdSrc::from_str(input)?;
-    let elems = md_src.parse().as_ref().expect("parse md");
+    let mut md_src = MdSrc::new();
+    let elems = md_src.parse(input).as_ref().expect("parse md");
     let items = elems.as_items()?;
     dbg!(items);
     Ok(())

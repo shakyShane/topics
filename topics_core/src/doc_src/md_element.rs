@@ -10,14 +10,14 @@ use comrak::{format_html, parse_document, Arena, ComrakOptions};
 
 use crate::doc::DocResult;
 use crate::doc_src::ast_range::{AstRange, AstRangeImpl};
-use crate::doc_src::{process_node, to_items, MdDocSource};
+use crate::doc_src::{process_node, to_items, DocSource, MdDocSource};
 use crate::items::Item;
 use std::fmt::{Debug, Formatter};
 
 pub struct MdSrc<'a> {
     arena: Arena<AstNode<'a>>,
 
-    pub doc_src: MdDocSource,
+    pub doc_src: Option<MdDocSource>,
     pub md_elements: Option<MdElements<'a>>,
 }
 
@@ -32,26 +32,17 @@ impl Debug for MdSrc<'_> {
 }
 
 impl<'a> MdSrc<'a> {
-    pub fn new(doc_src: MdDocSource) -> Self {
+    pub fn new() -> Self {
         let a = Arena::new();
         Self {
             arena: a,
+            doc_src: None,
             md_elements: None,
-            doc_src,
         }
     }
-    pub fn parse(&'a mut self) -> &'a Option<MdElements<'a>> {
-        self.md_elements = Some(MdElements::new(&self.doc_src.file_content, &self.arena));
+    pub fn parse(&'a mut self, input: &'a str) -> &'a Option<MdElements<'a>> {
+        self.md_elements = Some(MdElements::new(input, &self.arena));
         &self.md_elements
-    }
-}
-
-impl FromStr for MdSrc<'_> {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let src = MdDocSource::from_str(s)?;
-        Ok(MdSrc::new(src))
     }
 }
 
