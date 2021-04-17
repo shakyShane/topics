@@ -61,6 +61,10 @@ impl Db {
         }
         for item in items.iter() {
             let html = item.range_as_html((vec![0], 1));
+            let src_file = item.md_doc_src.input_file.as_ref();
+            if let Some(src) = src_file {
+                println!("+++[{}]", src.display());
+            }
             println!("-->html");
             println!("\t\t{}", html);
         }
