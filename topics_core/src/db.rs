@@ -20,7 +20,7 @@ impl Db {
         for doc in docs {
             if let DocSource::Md(md) = &doc.source {
                 for item in &md.doc_src_items.items {
-                    let next = MdSrc::new(&md);
+                    let next = MdSrc::new(md, item);
                     items.push(next);
                     // items.push(MdSrc::new().parse(item.content.as_str()));
                     // let md_src = MdSrc::new().parse(item.content.as_str());
@@ -57,7 +57,12 @@ impl Db {
             }
         }
         for item in items.iter() {
-            item.parse("# heading");
+            item.parse();
+        }
+        for item in items.iter() {
+            let html = item.range_as_html((vec![0], 1));
+            println!("-->html");
+            println!("\t\t{}", html);
         }
         // let _ = detect_cycle(&graph)?;
         Ok(Self { graph })

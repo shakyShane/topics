@@ -16,8 +16,10 @@ A block of text following the title!
 echo hello world!
 ```
         "#;
-    let md_src = MdSrc::new();
-    let parsed = md_src.parse(input);
+    let ds = MdDocSource::from_str(input)?;
+    let first = ds.doc_src_items.items.get(0).expect("first item");
+    let md_src = MdSrc::new(&ds, first);
+    md_src.parse();
     let items = md_src.items();
     let first = items.get(0).expect("at least 1 item");
     if let Item::Command(Command {

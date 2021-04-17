@@ -5,7 +5,7 @@ use crate::doc_src::{DocSrcImpl, MdSrc};
 use crate::items::{Item, ItemWrap};
 use comrak::arena_tree::Node;
 use comrak::nodes::{Ast, ListType};
-use multi_doc::MultiDoc;
+use multi_doc::{MultiDoc, SingleDoc};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 
 use std::convert::TryFrom;
@@ -54,14 +54,6 @@ impl<'a> From<&'a MdDocSource> for &'a str {
     fn from(mds: &'a MdDocSource) -> Self {
         &mds.file_content
     }
-}
-
-pub fn parse_md_str(input: &str) -> DocResult<Vec<Item>> {
-    let md_src_doc = MdDocSource::from_str(input)?;
-    let md_src = MdSrc::new(&md_src_doc);
-    md_src.parse();
-    let items = md_src.items();
-    Ok(items)
 }
 
 // pub fn parse_elements(elements: &[Element]) -> DocResult<Vec<Item>> {
@@ -301,141 +293,5 @@ pub mod code_fence {
 
     pub(crate) fn split_args(input: &str) -> anyhow::Result<Vec<String>> {
         shellwords::split(input).map_err(|e| e.into())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::items::{Command, DependencyCheck};
-
-    #[test]
-    fn test_from_str() -> anyhow::Result<()> {
-        let input = r#"
-# Command: Run unit tests <br>command</br>
-## This is a description
-
-```shell command
-echo "About to install ${MIN_VERSION}"
-yarn build:static && \
-yarn export
-```
----
-    "#;
-        let src = MdDocSource::from_str(input)?;
-        let items = parse_md_str(&src.file_content)?;
-        assert_eq!(items.len(), 1);
-        Ok(())
-    }
-
-    #[test]
-    fn test_cmd_item() -> anyhow::Result<()> {
-        let input = r#"
-# Command: Run unit tests <br>command</br>
-
-## This is a description
-
-```shell command --cwd=/containers/www/client
-echo "About to install ${MIN_VERSION}"
-yarn build:static && yarn export
-```
-
-```shell
-echo just another code block that should not be counted
-```
-    "#;
-        let src = MdDocSource::from_str(input)?;
-        let items = parse_md_str(&src.file_content)?;
-        assert_eq!(items.len(), 1);
-        Ok(())
-    }
-
-    #[test]
-    fn test_dep_check_item() -> anyhow::Result<()> {
-        let input = r#"
-# Dependency Check: Node JS installed globally
-
-Node JS is required and should be on version 12.0
-
-```command verify
-node -v
-```
-
-This can be auto fixed with the following command
-
-```command autofix
-nvm use 12
-```
-    "#;
-        let src = MdDocSource::from_str(input)?;
-        let items = parse_md_str(&src.file_content)?;
-        assert_eq!(items.len(), 1);
-        Ok(())
-    }
-
-    #[test]
-    fn test_topic_item_with_inline_command() -> anyhow::Result<()> {
-        let input = r#"
-# Topic: Run unit tests
-
-## Dependencies
-
-- Instruction: Get access to GH
-
-  with a newline
-- Dep 2
-
-## Steps
-
-- Command: Unit tests jest command
-
-  ```shell command --cwd="containers/www/client"
-  jest --runInBand
-  rm -rf test/out
-  ```
-- Check output
-- Dependency Check: Global Node
-
-    ```shell verify
-    node -v
-    ```
-    
-    ```shell autofix
-    nvm i 12
-    ```
-  
-    "#;
-        let src = MdDocSource::from_str(input)?;
-        let items = parse_md_str(&src.file_content)?;
-        match items.get(0).unwrap() {
-            Item::Topic(topic) => {
-                assert_eq!(topic.deps.len(), 2);
-            }
-            _ => unreachable!(),
-        };
-        match items.get(0).unwrap() {
-            Item::Topic(topic) => {
-                assert_eq!(topic.steps.len(), 3);
-                let first_item = topic.steps.get(0).unwrap();
-                match first_item {
-                    ItemWrap::Item(Item::Command(Command { cwd, name, .. })) => {
-                        assert_eq!(cwd.0, PathBuf::from("containers/www/client"));
-                        assert_eq!(name, &String::from("Unit tests jest command"));
-                    }
-                    _ => unreachable!(),
-                }
-                let last_item = topic.steps.get(2).unwrap();
-                match last_item {
-                    ItemWrap::Item(Item::DependencyCheck(DependencyCheck {
-                        verify, name, ..
-                    })) => {
-                        assert_eq!(name, &String::from("Global Node"));
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            _ => unreachable!(),
-        };
-        Ok(())
     }
 }

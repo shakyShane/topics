@@ -12,10 +12,10 @@ use crate::doc::DocResult;
 use crate::doc_src::ast_range::{AstRange, AstRangeImpl};
 use crate::doc_src::{process_node, to_items, DocSource, MdDocSource};
 use crate::items::Item;
-use std::fmt::{Debug, Formatter};
 use multi_doc::SingleDoc;
+use std::fmt::{Debug, Formatter};
 
-#[derive(Default)]
+// #[derive(Default)]
 pub struct MdSrc<'a> {
     arena: Arena<AstNode<'a>>,
 
@@ -45,7 +45,7 @@ impl<'a> MdSrc<'a> {
         }
     }
     pub fn parse(&'a self) {
-        *self.md_elements.borrow_mut() = Some(MdElements::new(self.md_doc_src., &self.arena));
+        *self.md_elements.borrow_mut() = Some(MdElements::new(&self.item_doc.content, &self.arena));
     }
     pub fn items(&'a self) -> Vec<Item> {
         self.md_elements
@@ -53,6 +53,13 @@ impl<'a> MdSrc<'a> {
             .as_ref()
             .expect("must parse before getting here")
             .as_items()
+    }
+    pub fn range_as_html(&self, range: impl AstRangeImpl) -> String {
+        self.md_elements
+            .borrow()
+            .as_ref()
+            .map(|elements| elements.as_html(range))
+            .unwrap_or_default()
     }
 }
 
