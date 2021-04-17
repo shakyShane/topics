@@ -20,7 +20,8 @@ echo hello world!
     let first = ds.doc_src_items.items.get(0).expect("first item");
     let md_src = MdSrc::new(&ds, first);
     md_src.parse();
-    let items = md_src.items();
+    let items = md_src.items.borrow();
+    let items = items.as_ref().expect("items");
     let first = items.get(0).expect("at least 1 item");
     if let Item::Command(Command {
         name,

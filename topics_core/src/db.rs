@@ -16,12 +16,12 @@ impl Db {
     pub fn try_from_docs(docs: &[Doc]) -> anyhow::Result<Self> {
         let mut graph: ItemGraph = HashMap::new();
         // let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
-        let mut items: Vec<MdSrc> = vec![];
+        let mut src_items: Vec<MdSrc> = vec![];
         for doc in docs {
             if let DocSource::Md(md) = &doc.source {
                 for item in &md.doc_src_items.items {
                     let next = MdSrc::new(md, item);
-                    items.push(next);
+                    src_items.push(next);
                     // items.push(MdSrc::new().parse(item.content.as_str()));
                     // let md_src = MdSrc::new().parse(item.content.as_str());
                     // if let Some(elems) = md_src.parse(item.content.as_str()) {
@@ -56,17 +56,36 @@ impl Db {
                 }
             }
         }
-        for item in items.iter() {
+        for item in src_items.iter() {
             item.parse();
         }
-        for item in items.iter() {
-            let html = item.range_as_html((vec![0], 1));
-            let src_file = item.md_doc_src.input_file.as_ref();
-            if let Some(src) = src_file {
-                println!("+++[{}]", src.display());
+        let mut hm: HashMap<&'_ LineMarker<String>, &'_ Item>;
+        for src in src_items.iter() {
+            if let Some(items) = src.items.borrow().as_ref() {
+                for item in items {
+                    let lm = match item {
+                        Item::Command(cmd) => &cmd.name,
+                        // Item::FileExistsCheck(_) => {}
+                        Item::DependencyCheck(dpc) => &dpc.name,
+                        Item::Instruction(inst) => &inst.name,
+                        // Item::HostEntriesCheck(_) => {}
+                        Item::Topic(_) => {}
+                        // Item::TaskGroup(_) => {}
+                        _ => todo!("linemarker"),
+                    };
+                    // hm.entry(lm).or_insert(3);
+                    // println!("Item={}", item.name());
+                }
             }
-            println!("-->html");
-            println!("\t\t{}", html);
+            // for item in src.items.borrow().as_ref() {}
+            // let items = src.items();
+            // let html = src.range_as_html((vec![0], 1));
+            // let src_file = src.md_doc_src.input_file.as_ref();
+            // if let Some(src) = src_file {
+            //     println!("+++[{}]", src.display());
+            // }
+            // println!("-->html");
+            // println!("\t\t{}", html);
         }
         // let _ = detect_cycle(&graph)?;
         Ok(Self { graph })
