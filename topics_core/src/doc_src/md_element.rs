@@ -22,7 +22,7 @@ pub struct MdSrc<'a> {
     pub md_doc_src: &'a MdDocSource,
     pub item_doc: &'a SingleDoc,
     pub md_elements: RefCell<Option<MdElements<'a>>>,
-    pub items: RefCell<Option<Vec<Item>>>,
+    // pub items: RefCell<Option<Vec<Item>>>,
 }
 
 impl Debug for MdSrc<'_> {
@@ -43,18 +43,18 @@ impl<'a> MdSrc<'a> {
             md_doc_src: doc_src,
             item_doc: single_doc,
             md_elements: RefCell::new(None),
-            items: RefCell::new(None),
+            // items: RefCell::new(None),
         }
     }
     pub fn parse(&'a self) {
         *self.md_elements.borrow_mut() = Some(MdElements::new(&self.item_doc.content, &self.arena));
-        *self.items.borrow_mut() = Some(
-            self.md_elements
-                .borrow()
-                .as_ref()
-                .expect("parsed above")
-                .as_items(),
-        );
+        // *self.items.borrow_mut() = Some(
+        //     self.md_elements
+        //         .borrow()
+        //         .as_ref()
+        //         .expect("parsed above")
+        //         .as_items(),
+        // );
     }
     pub fn range_as_html(&self, range: impl AstRangeImpl) -> String {
         self.md_elements

@@ -1,6 +1,6 @@
 use crate::doc::{Doc, ItemTracked};
 use crate::doc_src::{DocSource, MdSrc};
-use crate::items::{Item, ItemWrap, LineMarker};
+use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
@@ -15,81 +15,59 @@ pub struct Db {
 impl Db {
     pub fn try_from_docs(docs: &[Doc]) -> anyhow::Result<Self> {
         let mut graph: ItemGraph = HashMap::new();
-        // let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
         let mut src_items: Vec<MdSrc> = vec![];
+
         for doc in docs {
             if let DocSource::Md(md) = &doc.source {
                 for item in &md.doc_src_items.items {
                     let next = MdSrc::new(md, item);
                     src_items.push(next);
-                    // items.push(MdSrc::new().parse(item.content.as_str()));
-                    // let md_src = MdSrc::new().parse(item.content.as_str());
-                    // if let Some(elems) = md_src.parse(item.content.as_str()) {
-                    //     let items = elems.as_items();
-                    //     let html = elems.as_html((vec![0], 1));
-                    //     println!("html={}", html);
-                    //     if let Ok(items) = items {
-                    //         for item in items {
-                    //             let entry = graph.entry(item.name()).or_insert_with(HashSet::new);
-                    //             match &item {
-                    //                 Item::Topic(topic) => {
-                    //                     for dep in topic.deps.iter().chain(topic.steps.iter()) {
-                    //                         match dep {
-                    //                             ItemWrap::NamedRef(line_marker) => {
-                    //                                 entry.insert(line_marker.to_string());
-                    //                             }
-                    //                             ItemWrap::Item(_) => todo!("inline item"),
-                    //                         }
-                    //                     }
-                    //                 }
-                    //                 Item::Command(_) => {}
-                    //                 Item::FileExistsCheck(_) => {}
-                    //                 Item::DependencyCheck(_) => {}
-                    //                 Item::Instruction(_) => {}
-                    //                 Item::HostEntriesCheck(_) => {}
-                    //                 Item::TaskGroup(_) => {}
-                    //             }
-                    //             println!("name->{}", item.name());
-                    //         }
-                    //     }
-                    // }
                 }
             }
         }
+
         for item in src_items.iter() {
             item.parse();
         }
-        let mut hm: HashMap<&'_ LineMarker<String>, &'_ Item>;
-        for src in src_items.iter() {
-            if let Some(items) = src.items.borrow().as_ref() {
-                for item in items {
-                    let lm = match item {
-                        Item::Command(cmd) => &cmd.name,
-                        // Item::FileExistsCheck(_) => {}
-                        Item::DependencyCheck(dpc) => &dpc.name,
-                        Item::Instruction(inst) => &inst.name,
-                        // Item::HostEntriesCheck(_) => {}
-                        Item::Topic(_) => {}
-                        // Item::TaskGroup(_) => {}
-                        _ => todo!("linemarker"),
-                    };
-                    // hm.entry(lm).or_insert(3);
-                    // println!("Item={}", item.name());
+
+        let mut hm: HashMap<&'_ String, Vec<&'_ String>> = HashMap::new();
+
+        let items: Vec<Item> = src_items
+            .iter()
+            .map(|src| {
+                src.md_elements
+                    .borrow()
+                    .as_ref()
+                    .expect("unwrap")
+                    .as_items()
+            })
+            .flatten()
+            .collect();
+
+        let item_lookup: HashMap<&'_ String, &'_ Item> =
+            items.iter().map(|item| (name_ref(item), item)).collect();
+
+        for item in &items {
+            let lm = marker_ref(item);
+            let entry = hm.entry(&lm.item).or_insert(Vec::new());
+            if let Item::Topic(topic) = item {
+                for named_ref in topic.deps.iter().chain(topic.steps.iter()) {
+                    match named_ref {
+                        ItemWrap::NamedRef(line_marker) => {
+                            entry.push(&line_marker.item);
+                        }
+                        ItemWrap::Item(_) => todo!("inline item"),
+                    }
                 }
             }
-            // for item in src.items.borrow().as_ref() {}
-            // let items = src.items();
-            // let html = src.range_as_html((vec![0], 1));
-            // let src_file = src.md_doc_src.input_file.as_ref();
-            // if let Some(src) = src_file {
-            //     println!("+++[{}]", src.display());
-            // }
-            // println!("-->html");
-            // println!("\t\t{}", html);
         }
-        // let _ = detect_cycle(&graph)?;
+
+        let cycles = detect_cycle(&hm, &item_lookup);
+        dbg!(cycles);
+
         Ok(Self { graph })
     }
+
     #[cfg(test)]
     pub fn unknown(&self) -> HashMap<String, HashSet<String>> {
         let mut output: HashMap<String, HashSet<String>> = HashMap::new();
@@ -132,20 +110,27 @@ impl Db {
     }
 }
 
-fn detect_cycle(graph: &ItemGraph) -> anyhow::Result<()> {
-    for (name, hash_set) in graph {
-        for child_name in hash_set {
-            if let Some(child_set) = graph.get(child_name) {
-                if child_set.contains(name) {
-                    return Err(anyhow::anyhow!(
-                        "Infinite loop detected, please check usages of `{}`",
-                        name
-                    ));
+fn detect_cycle<'a>(
+    graph: &'a HashMap<&'a String, Vec<&'a String>>,
+    lookup: &'a HashMap<&'a String, &'a Item>,
+) -> Vec<(String, &'a Item)> {
+    let mut output: Vec<(String, &'_ Item)> = vec![];
+    for (parent_name, list_of_names) in graph {
+        for child_name in list_of_names {
+            if let Some(child_list) = graph.get(child_name) {
+                if child_list.contains(parent_name) {
+                    let msg = format!(
+                        "Infinite loop detected `{}` -> `{}` -> `{}` -> ∞",
+                        parent_name, child_name, parent_name
+                    );
+                    if let Some(item_ref) = lookup.get(parent_name) {
+                        output.push((msg, item_ref));
+                    }
                 }
             }
         }
     }
-    Ok(())
+    output
 }
 
 #[cfg(test)]
@@ -172,6 +157,7 @@ mod test {
         let ctx = Context::default();
         let f = ctx.read_docs_unwrapped(&vec![
             PathBuf::from("../fixtures/md/topics.md"),
+            PathBuf::from("../fixtures/md/topics_2.md"),
             PathBuf::from("../fixtures/md/commands.md"),
         ]);
         let db = Db::try_from_docs(&f);

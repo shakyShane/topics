@@ -74,6 +74,32 @@ impl Item {
     }
 }
 
+pub fn name_ref(item: &Item) -> &String {
+    match item {
+        Item::Command(cmd) => &cmd.name.item,
+        // Item::FileExistsCheck(_) => {}
+        Item::DependencyCheck(dpc) => &dpc.name.item,
+        Item::Instruction(inst) => &inst.name.item,
+        // Item::HostEntriesCheck(_) => {}
+        Item::Topic(t) => &t.name.item,
+        // Item::TaskGroup(_) => {}
+        _ => todo!("linemarker"),
+    }
+}
+
+pub fn marker_ref(item: &Item) -> &LineMarker<String> {
+    match item {
+        Item::Command(cmd) => &cmd.name,
+        // Item::FileExistsCheck(_) => {}
+        Item::DependencyCheck(dpc) => &dpc.name,
+        Item::Instruction(inst) => &inst.name,
+        // Item::HostEntriesCheck(_) => {}
+        Item::Topic(t) => &t.name,
+        // Item::TaskGroup(_) => {}
+        _ => todo!("linemarker"),
+    }
+}
+
 impl FromStr for Item {
     type Err = anyhow::Error;
 

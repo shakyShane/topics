@@ -32,7 +32,7 @@ use std::str::FromStr;
 /// assert_eq!(cwd, this_dir)
 /// ```
 ///
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
 pub struct Cwd(pub PathBuf);
 
 impl FromStr for Cwd {

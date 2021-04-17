@@ -4,25 +4,9 @@
 
 ## Dependencies
 
-- Instruction: Run unit tests
-
-  Here is the actual instruction
-- item 2
-- Instruction: Log into your account
-- Instruction: Find the PR with the corresponding issue number
+- Access to Azure
 - Cargo Test
-- echo "hello world"
 - Node JS installed globally
-- Command: Will Work
-  
-  ```shell command 
-  echo oops!
-  ```
-- Dependency Check: k8s
-
-  ```shell verify
-  kubctl version --short
-  ```
 
 ## Steps
 

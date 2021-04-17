@@ -1,19 +1,27 @@
-use std::fmt::Debug;
+use std::fmt;
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 use std::ops::Deref;
 use std::str::FromStr;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Default, Eq, Hash, PartialEq, Clone)]
 pub struct LineMarker<T>
 where
-    T: Debug + Clone + Default,
+    T: Debug + Default + Eq + Hash + PartialEq + Clone,
 {
     pub line_start: Option<u32>,
     pub item: T,
 }
 
+impl Debug for LineMarker<String> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "[{:?}]: {}", self.line_start, self.item)
+    }
+}
+
 impl<T> Deref for LineMarker<T>
 where
-    T: Debug + Clone + Default,
+    T: Debug + Default + Eq + Hash + PartialEq + Clone,
 {
     type Target = T;
 
@@ -24,7 +32,7 @@ where
 
 impl<T> LineMarker<T>
 where
-    T: Debug + Clone + Default,
+    T: Debug + Default + Eq + Hash + PartialEq + Clone,
 {
     pub fn new(item: impl Into<T>, line_start: Option<u32>) -> Self {
         Self {
@@ -40,6 +48,15 @@ where
 impl PartialEq<String> for LineMarker<String> {
     fn eq(&self, other: &String) -> bool {
         self.item == *other
+    }
+}
+
+impl<T> Display for LineMarker<T>
+where
+    T: Debug + Default + Eq + Hash + PartialEq + Clone,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", *self)
     }
 }
 
