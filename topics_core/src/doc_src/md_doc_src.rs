@@ -57,13 +57,10 @@ impl<'a> From<&'a MdDocSource> for &'a str {
 }
 
 pub fn parse_md_str(input: &str) -> DocResult<Vec<Item>> {
-    let mut md_src = MdSrc::new();
     let md_src_doc = MdDocSource::from_str(input)?;
-    let elems = md_src
-        .parse(&md_src_doc.file_content)
-        .as_ref()
-        .expect("parse md");
-    let items = elems.as_items()?;
+    let md_src = MdSrc::new(&md_src_doc);
+    md_src.parse();
+    let items = md_src.items();
     Ok(items)
 }
 

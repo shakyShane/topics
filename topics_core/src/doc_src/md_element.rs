@@ -13,36 +13,46 @@ use crate::doc_src::ast_range::{AstRange, AstRangeImpl};
 use crate::doc_src::{process_node, to_items, DocSource, MdDocSource};
 use crate::items::Item;
 use std::fmt::{Debug, Formatter};
+use multi_doc::SingleDoc;
 
+#[derive(Default)]
 pub struct MdSrc<'a> {
     arena: Arena<AstNode<'a>>,
 
-    pub doc_src: Option<MdDocSource>,
-    pub md_elements: Option<MdElements<'a>>,
+    pub md_doc_src: &'a MdDocSource,
+    pub item_doc: &'a SingleDoc,
+    pub md_elements: RefCell<Option<MdElements<'a>>>,
 }
 
 impl Debug for MdSrc<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MdSrc")
             .field("arena", &"Arena<AstNode>")
-            .field("doc_src", &self.doc_src)
+            .field("md_doc_src", &self.md_doc_src)
             .field("md_elements", &self.md_elements)
             .finish()
     }
 }
 
 impl<'a> MdSrc<'a> {
-    pub fn new() -> Self {
+    pub fn new(doc_src: &'a MdDocSource, single_doc: &'a SingleDoc) -> Self {
         let a = Arena::new();
         Self {
             arena: a,
-            doc_src: None,
-            md_elements: None,
+            md_doc_src: doc_src,
+            item_doc: single_doc,
+            md_elements: RefCell::new(None),
         }
     }
-    pub fn parse(&'a mut self, input: &'a str) -> &'a Option<MdElements<'a>> {
-        self.md_elements = Some(MdElements::new(input, &self.arena));
-        &self.md_elements
+    pub fn parse(&'a self) {
+        *self.md_elements.borrow_mut() = Some(MdElements::new(self.md_doc_src., &self.arena));
+    }
+    pub fn items(&'a self) -> Vec<Item> {
+        self.md_elements
+            .borrow()
+            .as_ref()
+            .expect("must parse before getting here")
+            .as_items()
     }
 }
 
@@ -101,10 +111,10 @@ impl<'a> MdElements<'a> {
 }
 
 impl<'a> MdElements<'a> {
-    pub fn as_items<'b>(&self) -> Result<Vec<Item>, anyhow::Error> {
+    pub fn as_items<'b>(&self) -> Vec<Item> {
         let mut path = vec![0];
         let items = process_node(&self.root, &mut path);
-        Ok(items)
+        items
     }
     pub fn select_ast(&self, range: impl AstRangeImpl) -> Vec<&'a Node<'a, RefCell<Ast>>> {
         let AstRange { ast_len, ast_path } = range.ast_range();
@@ -167,6 +177,6 @@ impl<'a> TryFrom<&'a MdElements<'a>> for Vec<Item> {
     type Error = anyhow::Error;
 
     fn try_from(md: &'a MdElements<'a>) -> Result<Self, Self::Error> {
-        md.as_items()
+        Ok(md.as_items())
     }
 }

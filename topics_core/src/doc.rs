@@ -1,6 +1,6 @@
 use crate::db::Db;
 use crate::doc_err::DocError;
-use crate::doc_src::{from_serde_yaml_error, parse_md_str, DocSource, MdSrc, TomlError};
+use crate::doc_src::{from_serde_yaml_error, DocSource, MdSrc, TomlError};
 use crate::items::item::Item;
 use crate::items::ItemWrap;
 use crate::{context::Context, items::Topic};
@@ -10,7 +10,6 @@ use std::str::FromStr;
 #[derive(Debug, Default)]
 pub struct Doc {
     pub source: DocSource,
-    pub items: Vec<ItemTracked>,
     pub errors: Vec<DocError>,
 }
 
@@ -24,46 +23,47 @@ pub struct ItemTracked {
 pub type DocResult<T, E = DocError> = core::result::Result<T, E>;
 
 impl Doc {
-    pub fn topics(&self) -> Vec<Topic> {
-        self.items
-            .iter()
-            .filter_map(|item| match item {
-                ItemTracked {
-                    item: Item::Topic(topic),
-                    ..
-                } => Some(topic.clone()),
-                _ => None,
-            })
-            .collect()
-    }
-    pub fn topic_names(&self) -> Vec<&str> {
-        self.items
-            .iter()
-            .filter_map(|item| match item {
-                ItemTracked {
-                    item: Item::Topic(topic),
-                    ..
-                } => Some(topic.name.as_str()),
-                _ => None,
-            })
-            .collect()
-    }
-    pub fn topic_by_name(&self, name: &str) -> Option<&Topic> {
-        self.items.iter().find_map(|item| match item {
-            ItemTracked {
-                item: Item::Topic(topic),
-                ..
-            } => {
-                if *topic.name == name {
-                    Some(topic)
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        })
-    }
-    pub fn from_path_buf(pb: &PathBuf, ctx: &Context) -> DocResult<Self> {
+    // pub fn topics(&self) -> Vec<Topic> {
+    //     self.items
+    //         .iter()
+    //         .filter_map(|item| match item {
+    //             ItemTracked {
+    //                 item: Item::Topic(topic),
+    //                 ..
+    //             } => Some(topic.clone()),
+    //             _ => None,
+    //         })
+    //         .collect()
+    // }
+    // pub fn topic_names(&self) -> Vec<&str> {
+    //     self.items
+    //         .iter()
+    //         .filter_map(|item| match item {
+    //             ItemTracked {
+    //                 item: Item::Topic(topic),
+    //                 ..
+    //             } => Some(topic.name.as_str()),
+    //             _ => None,
+    //         })
+    //         .collect()
+    // }
+    // pub fn topic_by_name(&self, name: &str) -> Option<&Topic> {
+    //     self.items.iter().find_map(|item| match item {
+    //         ItemTracked {
+    //             item: Item::Topic(topic),
+    //             ..
+    //         } => {
+    //             if *topic.name == name {
+    //                 Some(topic)
+    //             } else {
+    //                 None
+    //             }
+    //         }
+    //         _ => None,
+    //     })
+    // }
+    pub fn from_path_buf(pb: impl Into<PathBuf>, ctx: &Context) -> DocResult<Self> {
+        let pb = pb.into();
         let doc_src = match pb.extension() {
             None => todo!("what to handle here?"),
             Some(os_str) => match os_str.to_str() {
@@ -71,7 +71,7 @@ impl Doc {
                 Some("yaml") | Some("yml") => DocSource::yaml(&pb, ctx)?,
                 Some("toml") => DocSource::toml(&pb, ctx)?,
                 Some("md") | Some("markdown") => DocSource::md(&pb, ctx)?,
-                Some(_other) => return Err(DocError::NotSupported(pb.clone())),
+                Some(_other) => return Err(DocError::NotSupported(pb)),
             },
         };
         Self::from_doc_src(&pb, doc_src, &ctx)
@@ -170,4 +170,9 @@ impl Doc {
 //             }
 //         })
 //         .map(|temp| temp.item)
+// }
+
+// #[test]
+// fn test_from_path() {
+//     let d = Doc::from_path_buf("../fixtures/md/topics.md");
 // }

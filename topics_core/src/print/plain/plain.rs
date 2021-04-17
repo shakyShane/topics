@@ -47,9 +47,10 @@ impl Print for PlainPrinter {
 
     fn print_all(&self, docs: &[Doc], db: &Db, ctx: &Context) -> anyhow::Result<()> {
         for doc in docs {
-            for topic in &doc.topics() {
-                let _ = self.print_topic(&topic, &db, &doc, &ctx);
-            }
+            todo!("print_all:: print doc")
+            // for topic in &doc.topics() {
+            //     let _ = self.print_topic(&topic, &db, &doc, &ctx);
+            // }
         }
         Ok(())
     }

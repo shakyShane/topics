@@ -16,41 +16,50 @@ impl Db {
     pub fn try_from_docs(docs: &[Doc]) -> anyhow::Result<Self> {
         let mut graph: ItemGraph = HashMap::new();
         // let mut item_map: HashMap<String, ItemTracked> = HashMap::new();
+        let mut items: Vec<MdSrc> = vec![];
         for doc in docs {
             if let DocSource::Md(md) = &doc.source {
                 for item in &md.doc_src_items.items {
-                    let mut md_src = MdSrc::new();
-                    if let Some(elems) = md_src.parse(item.content.as_str()) {
-                        let items = elems.as_items();
-                        if let Ok(items) = items {
-                            for item in items {
-                                let entry = graph.entry(item.name()).or_insert_with(HashSet::new);
-                                match &item {
-                                    Item::Topic(topic) => {
-                                        for dep in topic.deps.iter().chain(topic.steps.iter()) {
-                                            match dep {
-                                                ItemWrap::NamedRef(line_marker) => {
-                                                    entry.insert(line_marker.to_string());
-                                                }
-                                                ItemWrap::Item(_) => todo!("inline item"),
-                                            }
-                                        }
-                                    }
-                                    Item::Command(_) => {}
-                                    Item::FileExistsCheck(_) => {}
-                                    Item::DependencyCheck(_) => {}
-                                    Item::Instruction(_) => {}
-                                    Item::HostEntriesCheck(_) => {}
-                                    Item::TaskGroup(_) => {}
-                                }
-                                println!("name->{}", item.name());
-                            }
-                        }
-                    }
+                    let next = MdSrc::new(&md);
+                    items.push(next);
+                    // items.push(MdSrc::new().parse(item.content.as_str()));
+                    // let md_src = MdSrc::new().parse(item.content.as_str());
+                    // if let Some(elems) = md_src.parse(item.content.as_str()) {
+                    //     let items = elems.as_items();
+                    //     let html = elems.as_html((vec![0], 1));
+                    //     println!("html={}", html);
+                    //     if let Ok(items) = items {
+                    //         for item in items {
+                    //             let entry = graph.entry(item.name()).or_insert_with(HashSet::new);
+                    //             match &item {
+                    //                 Item::Topic(topic) => {
+                    //                     for dep in topic.deps.iter().chain(topic.steps.iter()) {
+                    //                         match dep {
+                    //                             ItemWrap::NamedRef(line_marker) => {
+                    //                                 entry.insert(line_marker.to_string());
+                    //                             }
+                    //                             ItemWrap::Item(_) => todo!("inline item"),
+                    //                         }
+                    //                     }
+                    //                 }
+                    //                 Item::Command(_) => {}
+                    //                 Item::FileExistsCheck(_) => {}
+                    //                 Item::DependencyCheck(_) => {}
+                    //                 Item::Instruction(_) => {}
+                    //                 Item::HostEntriesCheck(_) => {}
+                    //                 Item::TaskGroup(_) => {}
+                    //             }
+                    //             println!("name->{}", item.name());
+                    //         }
+                    //     }
+                    // }
                 }
             }
         }
-        let _ = detect_cycle(&graph)?;
+        for item in items.iter() {
+            item.parse("# heading");
+        }
+        // let _ = detect_cycle(&graph)?;
         Ok(Self { graph })
     }
     #[cfg(test)]
