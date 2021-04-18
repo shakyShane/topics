@@ -32,38 +32,47 @@ impl Db {
 
         let mut hm: HashMap<&'_ String, Vec<&'_ String>> = HashMap::new();
 
-        let items: Vec<Item> = src_items
+        let items: Vec<(&'_ MdSrc, Vec<Item>)> = src_items
             .iter()
             .map(|src| {
-                src.md_elements
-                    .borrow()
-                    .as_ref()
-                    .expect("unwrap")
-                    .as_items()
+                (
+                    src,
+                    src.md_elements
+                        .borrow()
+                        .as_ref()
+                        .expect("unwrap")
+                        .as_items(),
+                )
             })
-            .flatten()
             .collect();
 
-        let item_lookup: HashMap<&'_ String, &'_ Item> =
-            items.iter().map(|item| (name_ref(item), item)).collect();
+        let mut item_lookup: HashMap<&'_ String, (&'_ MdSrc, &'_ Item)> = HashMap::new();
 
-        for item in &items {
-            let lm = marker_ref(item);
-            let entry = hm.entry(&lm.item).or_insert(Vec::new());
-            if let Item::Topic(topic) = item {
-                for named_ref in topic.deps.iter().chain(topic.steps.iter()) {
-                    match named_ref {
-                        ItemWrap::NamedRef(line_marker) => {
-                            entry.push(&line_marker.item);
+        for (mdsrc, items) in &items {
+            for item in items {
+                item_lookup.insert(name_ref(item), (mdsrc, item));
+            }
+        }
+
+        for (mdsrc, items) in &items {
+            for item in items {
+                let lm = marker_ref(item);
+                let entry = hm.entry(&lm.item).or_insert(Vec::new());
+                if let Item::Topic(topic) = item {
+                    for named_ref in topic.deps.iter().chain(topic.steps.iter()) {
+                        match named_ref {
+                            ItemWrap::NamedRef(line_marker) => {
+                                entry.push(&line_marker.item);
+                            }
+                            ItemWrap::Item(_) => todo!("inline item"),
                         }
-                        ItemWrap::Item(_) => todo!("inline item"),
                     }
                 }
             }
         }
-
-        let cycles = detect_cycle(&hm, &item_lookup);
-        dbg!(cycles);
+        dbg!(hm);
+        // let cycles = detect_cycle(&hm, &item_lookup);
+        // dbg!(cycles);
 
         Ok(Self { graph })
     }
