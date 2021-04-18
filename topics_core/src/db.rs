@@ -1,4 +1,4 @@
-use crate::db_error::{CycleError, DbError, ErrorRef};
+use crate::db_error::{CycleError, DbError, ErrorRef, IntoDbError};
 use crate::doc::Doc;
 use crate::doc_src::{DocSource, MdSrc};
 use crate::items::{marker_ref, name_ref, Item, ItemWrap};
@@ -132,16 +132,10 @@ fn detect_cycle<'a>(
         for child_name in list_of_names {
             if let Some(child_list) = graph.get(child_name) {
                 if child_list.contains(parent_name) {
-                    if let Some((mdsrc, item)) = lookup.get(parent_name) {
-                        let err = DbError::Cycle(ErrorRef {
-                            item,
-                            src: mdsrc,
-                            inner: CycleError {
-                                from: parent_name.to_string(),
-                                to: child_name.to_string(),
-                            },
-                        });
-                        output.push((err, (mdsrc, item)));
+                    if let Some((src, item)) = lookup.get(parent_name) {
+                        let cycle_err = CycleError::new(*parent_name, *child_name);
+                        let db_err = cycle_err.into_db_error(src, item);
+                        output.push((db_err, (src, item)));
                     }
                 }
             }

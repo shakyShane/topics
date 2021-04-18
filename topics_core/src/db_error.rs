@@ -13,6 +13,10 @@ pub enum DbError<'a> {
     Cycle(ErrorRef<'a, CycleError>),
 }
 
+pub trait IntoDbError<'a> {
+    fn into_db_error(self, src: &'a MdSrc<'a>, item: &'a Item) -> DbError<'a>;
+}
+
 #[derive(Debug)]
 pub struct ErrorRef<'a, T>
 where
@@ -62,6 +66,15 @@ pub struct CycleError {
     pub to: String,
 }
 
+impl CycleError {
+    pub fn new(from: impl Into<String>, to: impl Into<String>) -> Self {
+        Self {
+            from: from.into(),
+            to: to.into(),
+        }
+    }
+}
+
 impl ErrCode for CycleError {
     const CODE: &'static str = "001";
 }
@@ -73,5 +86,15 @@ impl Display for CycleError {
             "Infinite loop detected `{}` -> `{}` -> `{}` -> ∞",
             self.from, self.to, self.from
         )
+    }
+}
+
+impl<'a> IntoDbError<'a> for CycleError {
+    fn into_db_error(self, src: &'a MdSrc<'a>, item: &'a Item) -> DbError<'a> {
+        DbError::Cycle(ErrorRef {
+            inner: self,
+            item,
+            src,
+        })
     }
 }
