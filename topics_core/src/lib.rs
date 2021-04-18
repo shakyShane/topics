@@ -15,6 +15,7 @@ mod host;
 mod items;
 mod print;
 
+pub mod db_error;
 pub mod doc_err;
 pub mod opt;
 

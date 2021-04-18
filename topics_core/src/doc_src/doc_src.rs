@@ -2,7 +2,6 @@ use crate::context::Context;
 use crate::doc::DocResult;
 use crate::doc_src::{MdDocSource, TomlDocSource, YamlDocSource};
 
-use multi_doc::SingleDoc;
 use std::path::PathBuf;
 
 pub trait DocSrcImpl: Sized {

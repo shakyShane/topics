@@ -1,5 +1,3 @@
-use comrak::arena_tree::Node;
-use comrak::nodes::{Ast, ListType};
 use topics_core::from_cli;
 
 fn main() {
@@ -13,7 +11,6 @@ fn main() {
 
 #[test]
 fn test_parse() {
-    use pest::Parser;
     let input = r#"# Action: view pods `logs`
 
 ## Dependencies
@@ -26,7 +23,7 @@ fn test_parse() {
 - step 4
 "#;
     use comrak::nodes::{AstNode, NodeValue};
-    use comrak::{format_html, parse_document, Arena, ComrakOptions};
+    use comrak::{parse_document, Arena, ComrakOptions};
 
     fn collect_single_line_text<'a>(node: &'a AstNode<'a>) -> String {
         node.children()
@@ -65,12 +62,12 @@ fn test_parse() {
             if heading.level == 3 {
                 println!("heading 3");
             }
-        } else if let NodeValue::List(node_list) = n.value {
+        } else if let NodeValue::List(_node_list) = n.value {
             println!("list start -> {}", n.start_line);
             for item_child in node.children() {
                 let list_item = item_child.data.borrow();
                 println!("\tlist item start line -> {}", list_item.start_line);
-                if let NodeValue::Item(node_list) = &list_item.value {
+                if let NodeValue::Item(_node_list) = &list_item.value {
                     for c in item_child.children() {
                         if let Some(first) = c.first_child() {
                             let node = first.data.borrow();

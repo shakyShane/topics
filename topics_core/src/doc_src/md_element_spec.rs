@@ -1,11 +1,3 @@
-use crate::doc_src::{collect_single_line_text, to_items, MdDocSource, MdElements, MdSrc};
-use crate::items::{Command, Instruction, Item};
-use comrak::nodes::{Ast, NodeValue};
-use comrak::{format_html, Arena, ComrakOptions};
-use std::convert::TryInto;
-use std::path::PathBuf;
-use std::str::FromStr;
-
 // #[test]
 // fn test_command() -> anyhow::Result<()> {
 //     let input = r#"# Command: Run unit tests

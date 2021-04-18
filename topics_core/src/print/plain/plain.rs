@@ -45,8 +45,8 @@ impl Print for PlainPrinter {
         Ok(())
     }
 
-    fn print_all(&self, docs: &[Doc], db: &Db, ctx: &Context) -> anyhow::Result<()> {
-        for doc in docs {
+    fn print_all(&self, docs: &[Doc], _db: &Db, _ctx: &Context) -> anyhow::Result<()> {
+        for _doc in docs {
             todo!("print_all:: print doc")
             // for topic in &doc.topics() {
             //     let _ = self.print_topic(&topic, &db, &doc, &ctx);
@@ -147,7 +147,7 @@ fn print_item_line(item: &Item, db: &Db, width: usize) {
     }
 }
 
-fn print_item_wrap(item_wrap: &ItemWrap, db: &Db, width: usize) {
+fn print_item_wrap(_item_wrap: &ItemWrap, _db: &Db, _width: usize) {
     // let maybe_item = match item_wrap {
     //     ItemWrap::NamedRef(name) => (name.item.clone(), db.item_map.get(&name.item)),
     //     ItemWrap::Item(item) => {

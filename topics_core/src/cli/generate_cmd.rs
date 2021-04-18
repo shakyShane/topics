@@ -29,7 +29,7 @@ impl SubCommand for GenerateCmd {
     }
 }
 
-fn print_items(items: &[Item]) {
+fn print_items(_items: &[Item]) {
     // for item in items {
     //     let yaml = serde_yaml::to_string(&item);
     //     println!("{}", yaml.unwrap());

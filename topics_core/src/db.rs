@@ -1,8 +1,8 @@
-use crate::doc::{Doc, ItemTracked};
+use crate::db_error::{CycleError, DbError, ErrorRef};
+use crate::doc::Doc;
 use crate::doc_src::{DocSource, MdSrc};
-use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
+use crate::items::{marker_ref, name_ref, Item, ItemWrap};
 use std::collections::{HashMap, HashSet};
-use std::str::FromStr;
 
 type ItemGraph = HashMap<String, HashSet<String>>;
 
@@ -14,7 +14,7 @@ pub struct Db {
 
 impl Db {
     pub fn try_from_docs(docs: &[Doc]) -> anyhow::Result<Self> {
-        let mut graph: ItemGraph = HashMap::new();
+        let graph: ItemGraph = HashMap::new();
         let mut src_items: Vec<MdSrc> = vec![];
 
         for doc in docs {
@@ -54,7 +54,7 @@ impl Db {
             }
         }
 
-        for (mdsrc, items) in &items {
+        for (_mdsrc, items) in &items {
             for item in items {
                 let lm = marker_ref(item);
                 let entry = hm.entry(&lm.item).or_insert(Vec::new());
@@ -70,8 +70,12 @@ impl Db {
                 }
             }
         }
-        dbg!(hm);
-        // let cycles = detect_cycle(&hm, &item_lookup);
+        // dbg!(hm);
+        let cycles = detect_cycle(&hm, &item_lookup);
+
+        cycles.iter().for_each(|(cyc, (_mdsrc, _item))| {
+            println!("{}", cyc);
+        });
         // dbg!(cycles);
 
         Ok(Self { graph })
@@ -79,8 +83,8 @@ impl Db {
 
     #[cfg(test)]
     pub fn unknown(&self) -> HashMap<String, HashSet<String>> {
-        let mut output: HashMap<String, HashSet<String>> = HashMap::new();
-        for (parent_name, hash_set) in &self.graph {
+        let output: HashMap<String, HashSet<String>> = HashMap::new();
+        for (_parent_name, hash_set) in &self.graph {
             for child_name in hash_set {
                 if self.graph.get(child_name).is_none() {
                     // let _matched_item = self.item_map.get(parent_name);
@@ -95,9 +99,9 @@ impl Db {
     }
     #[cfg(test)]
     pub fn unused(&self) -> Vec<String> {
-        let mut output = vec![];
-        for parent_name in self.graph.keys() {
-            let mut used = false;
+        let output = vec![];
+        for _parent_name in self.graph.keys() {
+            let _used = false;
             // let item = self.item_map.get(parent_name);
             // if let Some(ItemTracked {
             //     item: Item::Topic(..),
@@ -121,19 +125,23 @@ impl Db {
 
 fn detect_cycle<'a>(
     graph: &'a HashMap<&'a String, Vec<&'a String>>,
-    lookup: &'a HashMap<&'a String, &'a Item>,
-) -> Vec<(String, &'a Item)> {
-    let mut output: Vec<(String, &'_ Item)> = vec![];
+    lookup: &'a HashMap<&'a String, (&'a MdSrc<'a>, &'a Item)>,
+) -> Vec<(DbError<'a>, (&'a MdSrc<'a>, &'a Item))> {
+    let mut output: Vec<(DbError, (&MdSrc, &Item))> = vec![];
     for (parent_name, list_of_names) in graph {
         for child_name in list_of_names {
             if let Some(child_list) = graph.get(child_name) {
                 if child_list.contains(parent_name) {
-                    let msg = format!(
-                        "Infinite loop detected `{}` -> `{}` -> `{}` -> ∞",
-                        parent_name, child_name, parent_name
-                    );
-                    if let Some(item_ref) = lookup.get(parent_name) {
-                        output.push((msg, item_ref));
+                    if let Some((mdsrc, item)) = lookup.get(parent_name) {
+                        let err = DbError::Cycle(ErrorRef {
+                            item,
+                            src: mdsrc,
+                            inner: CycleError {
+                                from: parent_name.to_string(),
+                                to: child_name.to_string(),
+                            },
+                        });
+                        output.push((err, (mdsrc, item)));
                     }
                 }
             }
@@ -189,7 +197,7 @@ mod test {
     #[test]
     fn test_detect_unknown() -> anyhow::Result<()> {
         let g = graph_db();
-        let unknown = g.unknown();
+        let _unknown = g.unknown();
         // for (key, _value) in unknown {
         //     let parent = g.item_map.get(&key);
         //     if let Some(ItemTracked { item, .. }) = parent {

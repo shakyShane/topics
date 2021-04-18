@@ -1,19 +1,17 @@
 use std::cell::RefCell;
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Deref;
-use std::str::FromStr;
 
 use comrak::arena_tree::Node;
 use comrak::nodes::{Ast, AstNode};
 use comrak::{format_html, parse_document, Arena, ComrakOptions};
 
-use crate::doc::DocResult;
 use crate::doc_src::ast_range::{AstRange, AstRangeImpl};
-use crate::doc_src::{process_node, to_items, DocSource, MdDocSource};
+use crate::doc_src::{process_node, MdDocSource};
 use crate::items::Item;
 use multi_doc::SingleDoc;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
 // #[derive(Default)]
 pub struct MdSrc<'a> {
@@ -145,7 +143,7 @@ impl<'a> MdElements<'a> {
             return self
                 .root
                 .children()
-                .skip((*second))
+                .skip(*second)
                 .take(ast_len)
                 .collect::<Vec<&'_ Node<'_, RefCell<Ast>>>>();
         }

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
+
 use std::str::FromStr;
 
 use crate::cwd::Cwd;
 use crate::doc_src::ast_range::AstRange;
-use crate::doc_src::{code_fence, MdElements};
-use crate::items::{Item, LineMarker};
+use crate::doc_src::code_fence;
+use crate::items::LineMarker;
 
 #[derive(Debug, Clone)]
 pub struct Command {

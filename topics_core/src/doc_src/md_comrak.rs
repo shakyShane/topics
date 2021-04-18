@@ -1,17 +1,13 @@
 use std::fmt;
 use std::fmt::{Debug, Formatter};
-use std::ops::Deref;
-use std::str::FromStr;
 
 use comrak::nodes::{Ast, AstNode, NodeCodeBlock, NodeHeading, NodeValue};
-use comrak::{format_html, parse_document, Arena, ComrakOptions};
 
-use crate::doc::DocResult;
 use crate::doc_src::ast_range::AstRange;
 use crate::doc_src::{parse_inline_kind, MdElements};
 use crate::items::{Command, Instruction, Item, ItemWrap, LineMarker};
 use comrak::arena_tree::Node;
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 
 pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> Vec<Item> {
     let mut kind: Option<Item> = None;
@@ -39,7 +35,7 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     }
 
     if let Some(Item::Instruction(inst)) = kind.as_mut() {
-        let Instruction { name, ast_range } = inst;
+        let Instruction { name: _, ast_range } = inst;
         *ast_range = AstRange::range(&path, node.children().count());
     }
 
@@ -71,15 +67,15 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
 
     if let Some(Item::Topic(topic)) = kind.as_mut() {
         let mut list: Vec<(&'_ Node<RefCell<Ast>>, Option<&'_ Node<RefCell<Ast>>>)> = vec![];
-        node.children().enumerate().for_each(|(index, node)| {
+        node.children().enumerate().for_each(|(_index, node)| {
             let d = node.data.borrow();
             match &d.value {
                 NodeValue::Heading(NodeHeading { level: 2, .. }) => {
                     let empty_node: Option<&'_ Node<RefCell<Ast>>> = None;
                     list.push((node, empty_node));
                 }
-                NodeValue::List(node_list) => {
-                    let mut last = list.last_mut();
+                NodeValue::List(_node_list) => {
+                    let last = list.last_mut();
                     if let Some(last) = last {
                         if last.1.is_none() {
                             last.1 = Some(node)
@@ -93,11 +89,11 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
             if let Some(list) = maybe_list {
                 let heading_kind = collect_single_line_text(heading);
                 let heading_line_start = heading.data.borrow().start_line;
-                let list_data = list.data.borrow();
+                let _list_data = list.data.borrow();
                 for node in list.children() {
                     let d = node.data.borrow();
                     match &d.value {
-                        NodeValue::Item(list) => {
+                        NodeValue::Item(_list) => {
                             for node in node.children() {
                                 let named_ref = collect_single_line_text(node);
                                 match heading_kind.as_str() {
@@ -185,8 +181,7 @@ pub(crate) fn to_items(md: &'_ MdElements<'_>) -> Vec<Item> {
 }
 
 pub fn debug_ast(asts: &[Ast]) -> impl Debug {
-    use std::fmt::Write;
-    let mut s = String::new();
+    let _s = String::new();
     struct AstDebug(Vec<Ast>);
     impl Debug for AstDebug {
         fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

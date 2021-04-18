@@ -1,14 +1,11 @@
 use crate::context::Context;
 use crate::doc::DocResult;
 use crate::doc_err::DocError;
-use crate::doc_src::{DocSrcImpl, MdSrc};
-use crate::items::{Item, ItemWrap};
-use comrak::arena_tree::Node;
-use comrak::nodes::{Ast, ListType};
-use multi_doc::{MultiDoc, SingleDoc};
-use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
+use crate::doc_src::DocSrcImpl;
+use crate::items::Item;
 
-use std::convert::TryFrom;
+use multi_doc::MultiDoc;
+
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -219,7 +216,7 @@ pub fn parse_inline_kind(input: &str) -> Option<Item> {
     let lines = input.splitn(2, '\n').collect::<Vec<&str>>();
 
     // kind + name + other
-    if let (Some(first), maybe_rest) = (lines.get(0), lines.get(1)) {
+    if let (Some(first), _maybe_rest) = (lines.get(0), lines.get(1)) {
         match split_first_line(first).as_mut() {
             Some(Item::Instruction(inst)) => {
                 return Some(Item::Instruction(inst.clone()));

@@ -1,11 +1,9 @@
-use crate::db::Db;
 use crate::doc_err::DocError;
 use crate::doc_src::{from_serde_yaml_error, DocSource, MdSrc, TomlError};
 use crate::items::item::Item;
-use crate::items::ItemWrap;
-use crate::{context::Context, items::Topic};
+
+use crate::context::Context;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 #[derive(Debug, Default)]
 pub struct Doc {
@@ -77,7 +75,7 @@ impl Doc {
         Self::from_doc_src(&pb, doc_src, &ctx)
     }
     pub fn from_doc_src(_pb: &PathBuf, doc_src: DocSource, _ctx: &Context) -> DocResult<Self> {
-        let mut doc = Doc {
+        let doc = Doc {
             source: doc_src,
             ..Default::default()
         };

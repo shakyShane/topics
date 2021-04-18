@@ -1,11 +1,7 @@
-use std::fmt;
-use std::fmt::{Debug, Formatter};
-use std::ops::Deref;
-
-use comrak::nodes::{Ast, AstNode, NodeValue};
+use std::fmt::Debug;
 
 use crate::doc_src::ast_range::AstRange;
-use crate::doc_src::debug_ast;
+
 use crate::items::LineMarker;
 
 #[derive(Debug, Clone)]
