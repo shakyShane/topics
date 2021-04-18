@@ -38,7 +38,6 @@ impl SubCommand for PrintCmd {
             .into_iter()
             .map(|doc| doc.expect("guarded previously"))
             .collect::<Vec<Doc>>();
-
         let _db = Db::try_from_docs(&docs);
 
         // if let Err(e) = db {

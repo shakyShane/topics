@@ -56,7 +56,7 @@ where
             }
         );
         let _ = writeln!(f);
-        write!(f, "\t{}", self.inner)
+        write!(f, "  {}", self.inner)
     }
 }
 
@@ -91,7 +91,7 @@ impl Display for CycleError {
 
         write!(
             f,
-            "\t check line {}",
+            "    check line {}",
             self.to.line_start.expect("cannot be absent")
         )
     }
