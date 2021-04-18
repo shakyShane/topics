@@ -1,5 +1,5 @@
 use crate::doc_src::MdSrc;
-use crate::items::Item;
+use crate::items::{Item, LineMarker};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::Deref;
 
@@ -63,14 +63,14 @@ where
 #[derive(Debug)]
 pub struct CycleError {
     pub from: String,
-    pub to: String,
+    pub to: LineMarker<String>,
 }
 
 impl CycleError {
-    pub fn new(from: impl Into<String>, to: impl Into<String>) -> Self {
+    pub fn new(from: impl Into<String>, to: LineMarker<String>) -> Self {
         Self {
             from: from.into(),
-            to: to.into(),
+            to,
         }
     }
 }
@@ -81,10 +81,18 @@ impl ErrCode for CycleError {
 
 impl Display for CycleError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(
+        let _ = write!(
             f,
             "Infinite loop detected `{}` -> `{}` -> `{}` -> ∞",
-            self.from, self.to, self.from
+            self.from, self.to.item, self.from
+        );
+
+        let _ = writeln!(f);
+
+        write!(
+            f,
+            "\t check line {}",
+            self.to.line_start.expect("cannot be absent")
         )
     }
 }

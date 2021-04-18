@@ -96,13 +96,12 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
                         NodeValue::Item(_list) => {
                             for node in node.children() {
                                 let named_ref = collect_single_line_text(node);
+                                let item_line_start = node.data.borrow();
                                 match heading_kind.as_str() {
-                                    "Steps" => {
-                                        topic.add_step_named_ref(named_ref, heading_line_start)
-                                    }
-                                    "Dependencies" => {
-                                        topic.add_dep_named_ref(named_ref, heading_line_start)
-                                    }
+                                    "Steps" => topic
+                                        .add_step_named_ref(named_ref, item_line_start.start_line),
+                                    "Dependencies" => topic
+                                        .add_dep_named_ref(named_ref, item_line_start.start_line),
                                     _ => {}
                                 }
                             }

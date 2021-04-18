@@ -1,7 +1,7 @@
 use crate::db_error::{CycleError, DbError, ErrorRef, IntoDbError};
 use crate::doc::Doc;
 use crate::doc_src::{DocSource, MdSrc};
-use crate::items::{marker_ref, name_ref, Item, ItemWrap};
+use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
 use std::collections::{HashMap, HashSet};
 
 type ItemGraph = HashMap<String, HashSet<String>>;
@@ -30,7 +30,7 @@ impl Db {
             item.parse();
         }
 
-        let mut hm: HashMap<&'_ String, Vec<&'_ String>> = HashMap::new();
+        let mut hm: HashMap<&'_ String, Vec<&'_ LineMarker<String>>> = HashMap::new();
 
         let items: Vec<(&'_ MdSrc, Vec<Item>)> = src_items
             .iter()
@@ -62,7 +62,7 @@ impl Db {
                     for named_ref in topic.deps.iter().chain(topic.steps.iter()) {
                         match named_ref {
                             ItemWrap::NamedRef(line_marker) => {
-                                entry.push(&line_marker.item);
+                                entry.push(line_marker);
                             }
                             ItemWrap::Item(_) => todo!("inline item"),
                         }
@@ -70,7 +70,6 @@ impl Db {
                 }
             }
         }
-        // dbg!(hm);
         let cycles = detect_cycle(&hm, &item_lookup);
 
         cycles.iter().for_each(|(cyc, (_mdsrc, _item))| {
@@ -124,16 +123,18 @@ impl Db {
 }
 
 fn detect_cycle<'a>(
-    graph: &'a HashMap<&'a String, Vec<&'a String>>,
+    graph: &'a HashMap<&'a String, Vec<&'a LineMarker<String>>>,
     lookup: &'a HashMap<&'a String, (&'a MdSrc<'a>, &'a Item)>,
 ) -> Vec<(DbError<'a>, (&'a MdSrc<'a>, &'a Item))> {
     let mut output: Vec<(DbError, (&MdSrc, &Item))> = vec![];
     for (parent_name, list_of_names) in graph {
-        for child_name in list_of_names {
+        for child_name_marker in list_of_names {
+            let child_name = &child_name_marker.item;
             if let Some(child_list) = graph.get(child_name) {
-                if child_list.contains(parent_name) {
+                let found = child_list.iter().find(|n| n.item == **parent_name);
+                if let Some(child_m) = found {
                     if let Some((src, item)) = lookup.get(parent_name) {
-                        let cycle_err = CycleError::new(*parent_name, *child_name);
+                        let cycle_err = CycleError::new(*parent_name, (*child_m).clone());
                         let db_err = cycle_err.into_db_error(src, item);
                         output.push((db_err, (src, item)));
                     }
