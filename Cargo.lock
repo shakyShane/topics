@@ -241,6 +241,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "conch-parser"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baf61cea7edff80a7d8a9a4c219d391664715559e9d4e7129494b45278705a41"
+dependencies = [
+ "void",
+]
+
+[[package]]
 name = "console"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1329,6 +1338,7 @@ name = "topics"
 version = "0.1.0"
 dependencies = [
  "comrak",
+ "conch-parser",
  "env_logger",
  "log",
  "parser-combinators",
@@ -1481,6 +1491,12 @@ name = "version_check"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5a972e5669d67ba988ce3dc826706fb0a8b01471c088cb0b6110b805cc36aed"
+
+[[package]]
+name = "void"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
 name = "walkdir"

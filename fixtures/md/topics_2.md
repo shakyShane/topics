@@ -5,5 +5,5 @@
 - Run all unit tests
 
 ```shell
-echo hello world! 
+echo hello ${MY_NAME} 
 ```

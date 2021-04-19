@@ -1,106 +1,89 @@
-use topics_core::from_cli;
+use conch_parser::ast::{
+    AndOrList, Arithmetic, Command, ComplexWord, CompoundCommand, CompoundCommandKind,
+    ListableCommand, Parameter, ParameterSubstitution, PipeableCommand, Redirect,
+    RedirectOrCmdWord, SimpleCommand, SimpleWord, TopLevelCommand, TopLevelWord, Word,
+};
+use conch_parser::lexer::Lexer;
+use conch_parser::parse::DefaultParser;
+use std::rc::Rc;
 
 fn main() {
-    // std::env::set_var("RUST_LOG", "topics=trace");
-    env_logger::init();
-    std::process::exit(match from_cli() {
-        Ok(_) => 0,
-        Err(_) => 1,
-    });
-}
+    // Initialize our token lexer and shell parser with the program's input
+    let cmd = r#"
+DEBUG=true echo foo ${BAR}
+if []
+    "#;
+    let lex = Lexer::new(cmd.chars());
+    let parser = DefaultParser::new(lex);
 
-#[test]
-fn test_parse() {
-    let input = r#"# Action: view pods `logs`
-
-## Dependencies
-
-- step 3
-    hello there
-    ```shell command
-    oops!
-    ```
-- step 4
-"#;
-    use comrak::nodes::{AstNode, NodeValue};
-    use comrak::{parse_document, Arena, ComrakOptions};
-
-    fn collect_single_line_text<'a>(node: &'a AstNode<'a>) -> String {
-        node.children()
-            .filter_map(|n| match &n.data.borrow().value {
-                NodeValue::Text(t) => Some(std::str::from_utf8(t).unwrap().to_string()),
-                // todo, preserve this information?
-                NodeValue::Code(t) => Some(std::str::from_utf8(t).unwrap().to_string()),
-                _ => None,
-            })
-            .collect::<Vec<String>>()
-            .join("")
-    }
-
-    // The returned nodes are created in the supplied Arena, and are bound by its lifetime.
-    let arena = Arena::new();
-
-    let root = parse_document(&arena, input, &ComrakOptions::default());
-    fn iter_nodes<'a>(node: &'a AstNode<'a>) {
-        // dbg!(node.first_child());
-        let n = node.data.borrow();
-        if let NodeValue::Heading(heading) = n.value {
-            if heading.level == 1 {
-                println!("heading 1, line=[--{}--]", n.start_line);
-                let t = collect_single_line_text(node);
-                println!("heading 1={}", t);
+    // Parse our input!
+    for t in parser {
+        match t {
+            Err(e) => {
+                eprintln!("ERROR");
+                eprintln!("{:?}", e);
+                eprintln!("{}", e.to_string());
             }
-            if heading.level == 2 {
-                let t = collect_single_line_text(node);
-                if t == "Dependencies" {
-                    println!("deps!");
-                }
-                if t == "Steps" {
-                    println!("steps!");
-                }
-            }
-            if heading.level == 3 {
-                println!("heading 3");
-            }
-        } else if let NodeValue::List(_node_list) = n.value {
-            println!("list start -> {}", n.start_line);
-            for item_child in node.children() {
-                let list_item = item_child.data.borrow();
-                println!("\tlist item start line -> {}", list_item.start_line);
-                if let NodeValue::Item(_node_list) = &list_item.value {
-                    for c in item_child.children() {
-                        if let Some(first) = c.first_child() {
-                            let node = first.data.borrow();
-                            if let NodeValue::Paragraph = &node.value {
-                                let text = collect_single_line_text(first);
-                                println!("text=||--{}--||", text);
-                            }
+            Ok(TopLevelCommand(tlc)) => match tlc {
+                Command::Job(_) => {}
+                Command::List(list) => match list {
+                    AndOrList { first, rest } => {
+                        println!("rest={:?}", rest);
+                        match first {
+                            ListableCommand::Pipe(_, _) => {}
+                            ListableCommand::Single(single) => match single {
+                                PipeableCommand::Simple(simple) => {
+                                    for w in simple.redirects_or_cmd_words {
+                                        match w {
+                                            RedirectOrCmdWord::Redirect(_) => {}
+                                            RedirectOrCmdWord::CmdWord(cmd_word) => {
+                                                match cmd_word {
+                                                    TopLevelWord(tlw) => {
+                                                        println!("tlw={:?}", tlw);
+                                                        match tlw {
+                                                        ComplexWord::Concat(_) => {}
+                                                        ComplexWord::Single(single) => match single {
+                                                            Word::Simple(w_s) => match w_s {
+                                                                SimpleWord::Literal(_) => {}
+                                                                SimpleWord::Escaped(_) => {}
+                                                                SimpleWord::Param(p) => match p {
+                                                                    Parameter::At => {}
+                                                                    Parameter::Star => {}
+                                                                    Parameter::Pound => {}
+                                                                    Parameter::Question => {}
+                                                                    Parameter::Dash => {}
+                                                                    Parameter::Dollar => {}
+                                                                    Parameter::Bang => {}
+                                                                    Parameter::Positional(_) => {}
+                                                                    Parameter::Var(var) => {
+                                                                        println!("var={}", var);
+                                                                    }
+                                                                },
+                                                                SimpleWord::Subst(_) => {}
+                                                                SimpleWord::Star => {}
+                                                                SimpleWord::Question => {}
+                                                                SimpleWord::SquareOpen => {}
+                                                                SimpleWord::SquareClose => {}
+                                                                SimpleWord::Tilde => {}
+                                                                SimpleWord::Colon => {}
+                                                            },
+                                                            Word::DoubleQuoted(_) => {}
+                                                            Word::SingleQuoted(_) => {}
+                                                        },
+                                                    }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                PipeableCommand::Compound(_) => {}
+                                PipeableCommand::FunctionDef(_, _) => {}
+                            },
                         }
                     }
-                }
-            }
-        } else {
-            for c in node.children() {
-                //     let b = c.data.borrow();
-                //     if let NodeValue::List(node_list) = &b.value {
-                //         println!("++node_list.start=[{}]", b.start_line);
-                //         iter_nodes(c);
-                //         println!("--node_list.end=[{}]", b.start_line);
-                //     }
-                //     if let NodeValue::Text(t) = &b.value {
-                //         println!();
-                //         println!("\tt-->|{}|", std::str::from_utf8(&t).unwrap());
-                //         println!();
-                //     }
-                //     if let NodeValue::Heading(heading) = &b.value {
-                //         println!("heading.h{}.line=[{}]", heading.level, b.start_line);
-                //         iter_nodes(c);
-                //         println!("heading.h{}.end=[{}]", heading.level, b.start_line);
-                //     }
-                iter_nodes(c)
-            }
+                },
+            },
         }
     }
-
-    iter_nodes(root);
 }
