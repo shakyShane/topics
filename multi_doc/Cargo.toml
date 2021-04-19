@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.38"
 yaml-rust = "0.4.5"
+serde = { version = "1.0.123", features = ["derive"] }
 
 [dev-dependencies]
 insta = "1.7.0"

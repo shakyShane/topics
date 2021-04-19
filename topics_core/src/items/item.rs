@@ -18,6 +18,7 @@ pub enum Item {
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
+#[serde(tag = "kind", content = "content")]
 pub enum ItemWrap {
     NamedRef(LineMarker<String>),
     Item(Item),

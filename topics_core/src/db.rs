@@ -1,18 +1,20 @@
 use crate::db_error::{CycleError, DbError, ErrorRef, IntoDbError, SerializedError};
 use crate::doc::Doc;
-use crate::doc_src::{DocSource, MdSrc};
+use crate::doc_src::{DocSource, MdDocSource, MdSrc};
 use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
 use crate::print::OutputKind;
 use std::collections::HashMap;
 use std::fmt::Display;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Db {}
 
 #[derive(Debug, Default, serde::Serialize)]
 pub struct Output {
-    pub errors: Vec<SerializedError>,
+    pub docs: HashMap<PathBuf, MdDocSource>,
     pub items: Vec<Item>,
+    pub errors: Vec<SerializedError>,
 }
 
 pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<Output> {
@@ -83,6 +85,10 @@ fn output_json<'a>(
         }
     }
     for (md_src, items) in items {
+        if let Some(pb) = &md_src.md_doc_src.input_file {
+            let pb = pb.clone();
+            output.docs.entry(pb).or_insert(md_src.md_doc_src.clone());
+        }
         for item in items {
             output.items.push(item.clone()); // todo: How to remove this clone...
         }

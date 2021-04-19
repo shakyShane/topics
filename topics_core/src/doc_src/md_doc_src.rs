@@ -9,7 +9,7 @@ use multi_doc::MultiDoc;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct MdDocSource {
     pub input_file: Option<PathBuf>,
     pub file_content: String,

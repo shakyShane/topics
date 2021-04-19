@@ -13,6 +13,7 @@ pub struct Command {
     pub cwd: Cwd,
     pub command: String,
     pub env: Option<Env>,
+    #[serde(skip)]
     pub ast_range: AstRange,
 }
 

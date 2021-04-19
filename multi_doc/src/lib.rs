@@ -1,12 +1,12 @@
 use std::cmp::Ordering;
 use yaml_rust::yaml;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct MultiDoc {
     pub items: Vec<SingleDoc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SingleDoc {
     pub line_start: usize,
     pub line_end: usize,

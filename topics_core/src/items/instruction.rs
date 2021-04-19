@@ -7,6 +7,7 @@ use crate::items::LineMarker;
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Instruction {
     pub name: LineMarker<String>,
+    #[serde(skip)]
     pub ast_range: AstRange,
 }
 

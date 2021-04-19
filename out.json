@@ -1,0 +1,207 @@
+{
+  "docs": {
+    "fixtures/md/commands.md": {
+      "input_file": "fixtures/md/commands.md",
+      "file_content": "# Command: Cargo Test\n\n```toml\nDOCKER_CLIENT_ = { valuesFrom = \"global-vars\", path = \"images.client\" }\n```\n\n```shell\ndocker build -t ${DOCKER_CLIENT_tag} ${DOCKER_CLIENT_context}\ncargo test\n```",
+      "doc_src_items": {
+        "items": [
+          {
+            "line_start": 0,
+            "line_end": 10,
+            "content": "# Command: Cargo Test\n\n```toml\nDOCKER_CLIENT_ = { valuesFrom = \"global-vars\", path = \"images.client\" }\n```\n\n```shell\ndocker build -t ${DOCKER_CLIENT_tag} ${DOCKER_CLIENT_context}\ncargo test\n```"
+          }
+        ]
+      }
+    },
+    "fixtures/md/topics_2.md": {
+      "input_file": "fixtures/md/topics_2.md",
+      "file_content": "# Topic: Access to Azure\n\n## Dependencies \n\n- Run all unit tests\n\n```shell\necho hello ${MY_NAME} \n```",
+      "doc_src_items": {
+        "items": [
+          {
+            "line_start": 0,
+            "line_end": 9,
+            "content": "# Topic: Access to Azure\n\n## Dependencies \n\n- Run all unit tests\n\n```shell\necho hello ${MY_NAME} \n```"
+          }
+        ]
+      }
+    },
+    "fixtures/md/config.md": {
+      "input_file": "fixtures/md/config.md",
+      "file_content": "# Config: global-vars\n\nThese are variables that are deemed 'global' in the sense that they may be useful\nto any individual part of the project\n\n```toml\nimages.client = { tag = \"nbs-frontend\", context = \"./containers/www/client\" } \nimages.graph = { tag = \"nbs-graph\", context = \"./containers/www/graph/api\" } \n```",
+      "doc_src_items": {
+        "items": [
+          {
+            "line_start": 0,
+            "line_end": 9,
+            "content": "# Config: global-vars\n\nThese are variables that are deemed 'global' in the sense that they may be useful\nto any individual part of the project\n\n```toml\nimages.client = { tag = \"nbs-frontend\", context = \"./containers/www/client\" } \nimages.graph = { tag = \"nbs-graph\", context = \"./containers/www/graph/api\" } \n```"
+          }
+        ]
+      }
+    },
+    "fixtures/md/topics.md": {
+      "input_file": "fixtures/md/topics.md",
+      "file_content": "# Topic: Run all unit tests\n\n## use this to verify your work\n\n## Dependencies\n\n- Access to Azure\n- Cargo Test\n- Node JS installed globally\n\n## Steps\n\n- something here\n- another thing\n\n---\n\n# Instruction: echo \"hello world\"\n\nThis is another instruction\n\n---\n\n# Command: item 2\n\n```shell command --cwd=\".\"\necho hello world\n```\n\n---\n\n# Dependency Check: Node JS installed globally\n\nNode JS is required and should be on version 12.0\n\n```shell verify\nnode -v\n```",
+      "doc_src_items": {
+        "items": [
+          {
+            "line_start": 0,
+            "line_end": 15,
+            "content": "# Topic: Run all unit tests\n\n## use this to verify your work\n\n## Dependencies\n\n- Access to Azure\n- Cargo Test\n- Node JS installed globally\n\n## Steps\n\n- something here\n- another thing\n"
+          },
+          {
+            "line_start": 16,
+            "line_end": 21,
+            "content": "\n# Instruction: echo \"hello world\"\n\nThis is another instruction\n"
+          },
+          {
+            "line_start": 22,
+            "line_end": 29,
+            "content": "\n# Command: item 2\n\n```shell command --cwd=\".\"\necho hello world\n```\n"
+          },
+          {
+            "line_start": 30,
+            "line_end": 38,
+            "content": "\n# Dependency Check: Node JS installed globally\n\nNode JS is required and should be on version 12.0\n\n```shell verify\nnode -v\n```"
+          }
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "kind": "Command",
+      "content": {
+        "name": {
+          "line_start": 1,
+          "item": "Cargo Test"
+        },
+        "cwd": "/Users/shaneosbourne/WebstormProjects/topics",
+        "command": "DOCKER_CLIENT_ = { valuesFrom = \"global-vars\", path = \"images.client\" }",
+        "env": null
+      }
+    },
+    {
+      "kind": "Topic",
+      "content": {
+        "name": {
+          "line_start": 1,
+          "item": "Run all unit tests"
+        },
+        "steps": [
+          {
+            "kind": "NamedRef",
+            "content": {
+              "line_start": 13,
+              "item": "something here"
+            }
+          },
+          {
+            "kind": "NamedRef",
+            "content": {
+              "line_start": 14,
+              "item": "another thing"
+            }
+          }
+        ],
+        "deps": [
+          {
+            "kind": "NamedRef",
+            "content": {
+              "line_start": 7,
+              "item": "Access to Azure"
+            }
+          },
+          {
+            "kind": "NamedRef",
+            "content": {
+              "line_start": 8,
+              "item": "Cargo Test"
+            }
+          },
+          {
+            "kind": "NamedRef",
+            "content": {
+              "line_start": 9,
+              "item": "Node JS installed globally"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "Instruction",
+      "content": {
+        "name": {
+          "line_start": 2,
+          "item": "echo \"hello world\""
+        }
+      }
+    },
+    {
+      "kind": "Command",
+      "content": {
+        "name": {
+          "line_start": 2,
+          "item": "item 2"
+        },
+        "cwd": ".",
+        "command": "echo hello world",
+        "env": null
+      }
+    },
+    {
+      "kind": "DependencyCheck",
+      "content": {
+        "name": {
+          "line_start": 2,
+          "item": "Node JS installed globally"
+        },
+        "verify": "echo 'verify script missing'; exit 1;",
+        "autofix": null,
+        "url": "https://nodejs.org"
+      }
+    },
+    {
+      "kind": "Topic",
+      "content": {
+        "name": {
+          "line_start": 1,
+          "item": "Access to Azure"
+        },
+        "steps": [],
+        "deps": [
+          {
+            "kind": "NamedRef",
+            "content": {
+              "line_start": 5,
+              "item": "Run all unit tests"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "kind": "Cycle",
+      "content": {
+        "from": "Access to Azure",
+        "to": {
+          "line_start": 5,
+          "item": "Run all unit tests"
+        }
+      }
+    },
+    {
+      "kind": "Cycle",
+      "content": {
+        "from": "Run all unit tests",
+        "to": {
+          "line_start": 7,
+          "item": "Access to Azure"
+        }
+      }
+    }
+  ]
+}
