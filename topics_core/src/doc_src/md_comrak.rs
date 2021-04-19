@@ -88,7 +88,7 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
         for (heading, maybe_list) in list {
             if let Some(list) = maybe_list {
                 let heading_kind = collect_single_line_text(heading);
-                let heading_line_start = heading.data.borrow().start_line;
+                let _heading_line_start = heading.data.borrow().start_line;
                 let _list_data = list.data.borrow();
                 for node in list.children() {
                     let d = node.data.borrow();
