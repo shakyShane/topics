@@ -2,6 +2,7 @@ use std::env::current_dir;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
+use typescript_definitions::TypeScriptify;
 
 ///
 /// A wrapper type to allow a default implementation
@@ -32,7 +33,9 @@ use std::str::FromStr;
 /// assert_eq!(cwd, this_dir)
 /// ```
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize, TypeScriptify,
+)]
 pub struct Cwd(pub PathBuf);
 
 impl FromStr for Cwd {

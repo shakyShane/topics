@@ -1,6 +1,7 @@
 use crate::items::{ItemWrap, LineMarker};
+use typescript_definitions::TypeScriptify;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 pub struct Topic {
     pub name: LineMarker<String>,
     pub steps: Vec<ItemWrap>,

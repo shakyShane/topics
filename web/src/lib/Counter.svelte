@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as json from "../../../out.json";
-  console.log(json.default);
+  import {Output} from "../../../typescript";
+  const d = json.default as Output;
+  d.docs
   let count: number = 0
   const increment = () => {
     count += 1

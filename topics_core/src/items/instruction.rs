@@ -3,8 +3,9 @@ use std::fmt::Debug;
 use crate::doc_src::ast_range::AstRange;
 
 use crate::items::LineMarker;
+use typescript_definitions::TypeScriptify;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 pub struct Instruction {
     pub name: LineMarker<String>,
     #[serde(skip)]

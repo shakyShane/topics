@@ -10,6 +10,7 @@ edition = "2018"
 anyhow = "1.0.38"
 yaml-rust = "0.4.5"
 serde = { version = "1.0.123", features = ["derive"] }
+typescript-definitions = { git = "https://github.com/onelson/typescript-definitions", branch = "no-debug-attrs"}
 
 [dev-dependencies]
 insta = "1.7.0"

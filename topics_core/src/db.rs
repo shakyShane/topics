@@ -1,21 +1,16 @@
-use crate::db_error::{CycleError, DbError, ErrorRef, IntoDbError, SerializedError};
-use crate::doc::Doc;
-use crate::doc_src::{DocSource, MdDocSource, MdSrc};
-use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
-use crate::print::OutputKind;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::path::PathBuf;
 
+use crate::db_error::{CycleError, DbError, ErrorRef, IntoDbError, SerializedError};
+use crate::doc::Doc;
+use crate::doc_src::{DocSource, MdDocSource, MdSrc};
+use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
+use crate::output::Output;
+use crate::print::OutputKind;
+
 #[derive(Debug)]
 pub struct Db {}
-
-#[derive(Debug, Default, serde::Serialize)]
-pub struct Output {
-    pub docs: HashMap<PathBuf, MdDocSource>,
-    pub items: Vec<Item>,
-    pub errors: Vec<SerializedError>,
-}
 
 pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<Output> {
     let mut src_items: Vec<MdSrc> = vec![];
@@ -121,11 +116,11 @@ fn detect_cycle<'a>(
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use std::path::PathBuf;
 
     use crate::context::Context;
 
-    use std::path::PathBuf;
+    use super::*;
 
     #[test]
     fn test_doc_from_src() {

@@ -1,0 +1,1 @@
+cargo run --bin topics_core_bin > web/__generated__/topics.d.ts

@@ -3,6 +3,7 @@ use crate::items::{Item, LineMarker};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::Deref;
 use std::str::FromStr;
+use typescript_definitions::TypeScriptify;
 
 ///
 /// A container for all error types related to the static analysis
@@ -14,7 +15,7 @@ pub enum DbError<'a> {
     Cycle(ErrorRef<'a, CycleError>),
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, TypeScriptify)]
 #[serde(tag = "kind", content = "content")]
 pub enum SerializedError {
     Cycle(CycleError),
@@ -67,7 +68,7 @@ where
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, TypeScriptify)]
 pub struct CycleError {
     pub from: String,
     pub to: LineMarker<String>,

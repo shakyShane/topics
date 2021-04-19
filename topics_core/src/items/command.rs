@@ -6,8 +6,9 @@ use crate::cwd::Cwd;
 use crate::doc_src::ast_range::AstRange;
 use crate::doc_src::code_fence;
 use crate::items::LineMarker;
+use typescript_definitions::TypeScriptify;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 pub struct Command {
     pub name: LineMarker<String>,
     pub cwd: Cwd,
@@ -23,7 +24,7 @@ pub struct CommandInlineArgs {
     pub cwd: Cwd,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, TypeScriptify)]
 pub struct Env {
     pub values: Option<HashMap<String, String>>,
 }

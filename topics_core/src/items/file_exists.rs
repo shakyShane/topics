@@ -1,6 +1,7 @@
 use std::path::PathBuf;
+use typescript_definitions::TypeScriptify;
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize, TypeScriptify)]
 pub struct FileExistsCheck {
     pub cwd: PathBuf,
     pub path: PathBuf,

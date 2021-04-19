@@ -11,13 +11,17 @@ pub mod cwd;
 mod db;
 mod doc;
 pub mod doc_src;
-mod host;
-mod items;
+pub mod items;
 mod print;
 
 pub mod db_error;
 pub mod doc_err;
 pub mod opt;
+pub mod output;
+
+pub use db_error::*;
+pub use doc_err::*;
+pub use output::*;
 
 /// Run a supported sub-command by using the
 /// arguments given to the program at runtime

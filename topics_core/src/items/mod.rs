@@ -1,6 +1,7 @@
 pub use command::*;
 pub use dependency::*;
 pub use file_exists::*;
+pub use host::*;
 pub use instruction::*;
 pub use item::*;
 pub use line_marker::*;
@@ -10,6 +11,7 @@ pub use topic::*;
 pub mod command;
 pub mod dependency;
 pub mod file_exists;
+pub mod host;
 pub mod instruction;
 pub mod item;
 pub mod line_marker;

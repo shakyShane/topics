@@ -1,12 +1,13 @@
 use std::cmp::Ordering;
+use typescript_definitions::TypeScriptify;
 use yaml_rust::yaml;
 
-#[derive(Debug, Clone, Default, serde::Serialize)]
+#[derive(Debug, Clone, Default, serde::Serialize, TypeScriptify)]
 pub struct MultiDoc {
     pub items: Vec<SingleDoc>,
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 pub struct SingleDoc {
     pub line_start: usize,
     pub line_end: usize,

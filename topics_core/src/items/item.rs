@@ -1,11 +1,11 @@
-use crate::host::HostEntriesCheck;
-use crate::items::Topic;
 use crate::items::{Command, Instruction};
 use crate::items::{DependencyCheck, TaskGroup};
 use crate::items::{FileExistsCheck, LineMarker};
+use crate::items::{HostEntriesCheck, Topic};
 use std::str::FromStr;
+use typescript_definitions::TypeScriptify;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 #[serde(tag = "kind", content = "content")]
 pub enum Item {
     Command(Command),
@@ -17,7 +17,7 @@ pub enum Item {
     TaskGroup(TaskGroup),
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 #[serde(tag = "kind", content = "content")]
 pub enum ItemWrap {
     NamedRef(LineMarker<String>),

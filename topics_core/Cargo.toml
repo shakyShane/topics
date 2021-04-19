@@ -6,6 +6,14 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "topics_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "topics_core_bin"
+path = "src/bin.rs"
+
 [dependencies]
 serde = { version = "1.0.123", features = ["derive"] }
 serde_yaml = "0.8.17"
@@ -25,6 +33,7 @@ toml = "0.5.8"
 shellwords = "1.1.0"
 comrak = "0.10.0"
 conch-parser = "0.1.1"
+typescript-definitions = { git = "https://github.com/onelson/typescript-definitions", branch = "no-debug-attrs"}
 
 [dev-dependencies]
 insta = "1.7.0"

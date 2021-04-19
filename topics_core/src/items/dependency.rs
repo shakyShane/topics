@@ -1,8 +1,9 @@
 use crate::cwd::Cwd;
 use crate::doc_src::code_fence;
 use crate::items::LineMarker;
+use typescript_definitions::TypeScriptify;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, TypeScriptify)]
 pub struct DependencyCheck {
     pub name: LineMarker<String>,
     pub verify: String,

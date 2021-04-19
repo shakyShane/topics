@@ -3,8 +3,9 @@ use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::ops::Deref;
 use std::str::FromStr;
+use typescript_definitions::TypeScriptify;
 
-#[derive(Default, Eq, Hash, PartialEq, Clone, serde::Serialize)]
+#[derive(Default, Eq, Hash, PartialEq, Clone, serde::Serialize, TypeScriptify)]
 pub struct LineMarker<T>
 where
     T: Debug + Default + Eq + Hash + PartialEq + Clone,
