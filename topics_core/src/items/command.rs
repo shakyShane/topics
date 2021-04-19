@@ -7,7 +7,7 @@ use crate::doc_src::ast_range::AstRange;
 use crate::doc_src::code_fence;
 use crate::items::LineMarker;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Command {
     pub name: LineMarker<String>,
     pub cwd: Cwd,
@@ -22,7 +22,7 @@ pub struct CommandInlineArgs {
     pub cwd: Cwd,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize)]
 pub struct Env {
     pub values: Option<HashMap<String, String>>,
 }

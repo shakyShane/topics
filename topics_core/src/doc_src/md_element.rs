@@ -20,7 +20,6 @@ pub struct MdSrc<'a> {
     pub md_doc_src: &'a MdDocSource,
     pub item_doc: &'a SingleDoc,
     pub md_elements: RefCell<Option<MdElements<'a>>>,
-    // pub items: RefCell<Option<Vec<Item>>>,
 }
 
 impl Debug for MdSrc<'_> {
@@ -41,7 +40,28 @@ impl<'a> MdSrc<'a> {
             md_doc_src: doc_src,
             item_doc: single_doc,
             md_elements: RefCell::new(None),
-            // items: RefCell::new(None),
+        }
+    }
+    pub fn as_items(&'a self) -> Vec<Item> {
+        self.md_elements
+            .borrow()
+            .as_ref()
+            .expect("unwrap")
+            .as_items()
+    }
+    #[cfg(test)]
+    pub fn new_from_single(doc_src: &'a MdDocSource) -> Self {
+        let a = Arena::new();
+        Self {
+            arena: a,
+            md_doc_src: doc_src,
+            item_doc: doc_src
+                .doc_src_items
+                .items
+                .iter()
+                .nth(0)
+                .expect("new_from_single, nth:0"),
+            md_elements: RefCell::new(None),
         }
     }
     pub fn parse(&'a self) {
@@ -87,7 +107,6 @@ impl<'a> MdSrc<'a> {
 /// followed by n lines of markdown.
 ///
 pub struct MdElements<'a> {
-    arena: &'a Arena<AstNode<'a>>,
     items: Vec<Item>,
     pub root: &'a AstNode<'a>,
 }
@@ -114,7 +133,6 @@ impl<'a> MdElements<'a> {
     pub fn new(string: &str, arena: &'a Arena<AstNode<'a>>) -> Self {
         let root = parse_document(arena, string, &ComrakOptions::default());
         Self {
-            arena: &arena,
             root,
             items: vec![],
         }

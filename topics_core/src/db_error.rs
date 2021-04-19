@@ -1,7 +1,8 @@
-use crate::doc_src::MdSrc;
+use crate::doc_src::{MdDocSource, MdSrc};
 use crate::items::{Item, LineMarker};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::Deref;
+use std::str::FromStr;
 
 ///
 /// A container for all error types related to the static analysis
@@ -11,6 +12,12 @@ use std::ops::Deref;
 pub enum DbError<'a> {
     #[error("{}", .0)]
     Cycle(ErrorRef<'a, CycleError>),
+}
+
+#[derive(Debug, serde::Serialize)]
+#[serde(tag = "kind", content = "content")]
+pub enum SerializedError {
+    Cycle(CycleError),
 }
 
 pub trait IntoDbError<'a> {
@@ -60,7 +67,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct CycleError {
     pub from: String,
     pub to: LineMarker<String>,

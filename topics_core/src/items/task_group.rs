@@ -1,6 +1,6 @@
 use crate::items::item::ItemWrap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct TaskGroup {
     pub name: String,
     pub steps: Vec<ItemWrap>,

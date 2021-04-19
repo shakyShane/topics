@@ -19,7 +19,7 @@ pub trait AstRangeImpl {
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct AstRange {
     pub ast_path: Vec<usize>,
     pub ast_len: usize,

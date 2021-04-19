@@ -1,14 +1,14 @@
 use crate::cli::{SubCommand, SubCommandError, SubCommandResult};
 use crate::context::Context;
-use crate::db::Db;
+use crate::db::try_from_docs;
 use crate::doc::Doc;
-use crate::print::{Print, PrintKind};
+use crate::print::{OutputKind, Print};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, structopt::StructOpt)]
 pub struct PrintCmd {
     #[structopt(short, long, default_value)]
-    pub print_kind: PrintKind,
+    pub print_kind: OutputKind,
 
     #[structopt(short, long)]
     pub index: Option<usize>,
@@ -38,7 +38,16 @@ impl SubCommand for PrintCmd {
             .into_iter()
             .map(|doc| doc.expect("guarded previously"))
             .collect::<Vec<Doc>>();
-        let _db = Db::try_from_docs(&docs);
+
+        let output = try_from_docs(&docs, &self.print_kind).expect("try_from_docs");
+        match self.print_kind {
+            OutputKind::Plain => {}
+            OutputKind::Markdown => {}
+            OutputKind::Json => {
+                let json = serde_json::to_string_pretty(&output).expect("serde_json::to_string");
+                println!("{}", json);
+            }
+        }
 
         // if let Err(e) = db {
         //     let _ = self.print_kind.print_error(&e.to_string(), &ctx);

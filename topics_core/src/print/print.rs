@@ -47,30 +47,30 @@ pub trait Print: Debug {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum PrintKind {
+pub enum OutputKind {
     Plain,
     Markdown,
     Json,
 }
 
-impl Display for PrintKind {
+impl Display for OutputKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl Default for PrintKind {
+impl Default for OutputKind {
     fn default() -> Self {
         Self::Plain
     }
 }
 
-impl Print for PrintKind {
+impl Print for OutputKind {
     fn print_welcome(&self, docs: &[Doc], ctx: &Context) -> anyhow::Result<()> {
         match self {
-            PrintKind::Markdown => (md::MdPrinter).print_welcome(docs, ctx),
-            PrintKind::Plain => (plain::PlainPrinter).print_welcome(docs, ctx),
-            PrintKind::Json => {
+            OutputKind::Markdown => (md::MdPrinter).print_welcome(docs, ctx),
+            OutputKind::Plain => (plain::PlainPrinter).print_welcome(docs, ctx),
+            OutputKind::Json => {
                 todo!("implement json")
             }
         }
@@ -78,53 +78,53 @@ impl Print for PrintKind {
 
     fn print_error(&self, msg: &str, ctx: &Context) -> anyhow::Result<()> {
         match self {
-            PrintKind::Plain => (plain::PlainPrinter).print_error(msg, ctx),
+            OutputKind::Plain => (plain::PlainPrinter).print_error(msg, ctx),
             _ => todo!("implement others for print_topic"),
         }
     }
 
     fn print_heading(&self, kind: &str, message: &str) {
         match self {
-            PrintKind::Plain => (plain::PlainPrinter).print_heading(kind, message),
+            OutputKind::Plain => (plain::PlainPrinter).print_heading(kind, message),
             _ => todo!("implement others for print_topic"),
         }
     }
 
     fn print_topic(&self, topic: &Topic, db: &Db, doc: &Doc, ctx: &Context) -> anyhow::Result<()> {
         match self {
-            PrintKind::Plain => (plain::PlainPrinter).print_topic(topic, db, doc, ctx),
+            OutputKind::Plain => (plain::PlainPrinter).print_topic(topic, db, doc, ctx),
             _ => todo!("implement others for print_topic"),
         }
     }
 
     fn print_all(&self, docs: &[Doc], db: &Db, ctx: &Context) -> anyhow::Result<()> {
         match self {
-            PrintKind::Markdown => (md::MdPrinter).print_all(docs, &db, ctx),
-            PrintKind::Plain => (plain::PlainPrinter).print_all(docs, &db, ctx),
-            PrintKind::Json => {
+            OutputKind::Markdown => (md::MdPrinter).print_all(docs, &db, ctx),
+            OutputKind::Plain => (plain::PlainPrinter).print_all(docs, &db, ctx),
+            OutputKind::Json => {
                 todo!("implement json")
             }
         }
     }
     fn print_errors(&self, docs: &[DocResult<Doc>], ctx: &Context) -> anyhow::Result<()> {
         match self {
-            PrintKind::Markdown => (md::MdPrinter).print_errors(docs, ctx),
-            PrintKind::Plain => (plain::PlainPrinter).print_errors(docs, ctx),
-            PrintKind::Json => {
+            OutputKind::Markdown => (md::MdPrinter).print_errors(docs, ctx),
+            OutputKind::Plain => (plain::PlainPrinter).print_errors(docs, ctx),
+            OutputKind::Json => {
                 todo!("implement json")
             }
         }
     }
 }
 
-impl FromStr for PrintKind {
+impl FromStr for OutputKind {
     type Err = PrintKindError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "md" | "Markdown" => Ok(PrintKind::Markdown),
-            "json" | "Json" => Ok(PrintKind::Json),
-            "plain" | "Plain" => Ok(PrintKind::Plain),
+            "md" | "Markdown" => Ok(OutputKind::Markdown),
+            "json" | "Json" => Ok(OutputKind::Json),
+            "plain" | "Plain" => Ok(OutputKind::Plain),
             _a => Err(PrintKindError::Unknown),
         }
     }

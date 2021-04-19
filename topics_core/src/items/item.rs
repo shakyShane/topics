@@ -5,7 +5,8 @@ use crate::items::{DependencyCheck, TaskGroup};
 use crate::items::{FileExistsCheck, LineMarker};
 use std::str::FromStr;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(tag = "kind", content = "content")]
 pub enum Item {
     Command(Command),
     FileExistsCheck(FileExistsCheck),
@@ -16,7 +17,7 @@ pub enum Item {
     TaskGroup(TaskGroup),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum ItemWrap {
     NamedRef(LineMarker<String>),
     Item(Item),

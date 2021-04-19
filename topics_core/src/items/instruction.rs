@@ -4,7 +4,7 @@ use crate::doc_src::ast_range::AstRange;
 
 use crate::items::LineMarker;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Instruction {
     pub name: LineMarker<String>,
     pub ast_range: AstRange,

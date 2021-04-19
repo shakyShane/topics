@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 use comrak::nodes::{Ast, AstNode, NodeCodeBlock, NodeHeading, NodeValue};
 
 use crate::doc_src::ast_range::AstRange;
-use crate::doc_src::{parse_inline_kind, MdElements};
+use crate::doc_src::parse_inline_kind;
 use crate::items::{Command, Instruction, Item, ItemWrap, LineMarker};
 use comrak::arena_tree::Node;
 use std::cell::RefCell;
@@ -116,65 +116,6 @@ pub(crate) fn process_node<'a>(node: &'a AstNode<'a>, path: &mut Vec<usize>) -> 
     if let Some(kind) = kind {
         items.push(kind)
     }
-
-    items
-}
-
-pub(crate) fn to_items(md: &'_ MdElements<'_>) -> Vec<Item> {
-    let mut path = vec![0];
-    let items = process_node(&md.root, &mut path);
-
-    // for node in root.children() {
-    //     let ast = node.data.borrow();
-    //
-    //     if let Some(Item::Instruction(Instruction { ast, .. })) = kind.as_mut() {
-    //         println!("skipping before it's an instruction");
-    //         continue;
-    //     }
-    //
-    //     match &ast.value {
-    //         NodeValue::Heading(NodeHeading { level: 1, .. }) => {
-    //             let t = collect_single_line_text(node);
-    //             let item = parse_inline_kind(&t);
-    //             kind = item;
-    //             // println!("got header.. = {} ", t);
-    //             // println!("got item.. = {:?} ", item);
-    //         }
-    //         NodeValue::Heading(NodeHeading { level: 2, .. }) => {}
-    //         NodeValue::Heading(NodeHeading { level: 3, .. }) => {}
-    //         NodeValue::Paragraph => {
-    //             // println!("++p");
-    //             // let ast = node.data.clone().into_inner();
-    //             // println!("--p");
-    //         }
-    //         NodeValue::HtmlBlock(html_block) => {
-    //             let html = std::str::from_utf8(&html_block.literal).unwrap();
-    //             // println!("++html",);
-    //             // println!("\t\t|{}|", html);
-    //             // println!("--html",);
-    //         }
-    //         NodeValue::CodeBlock(cb @ NodeCodeBlock { fenced: true, .. }) => {
-    //             let NodeCodeBlock { literal, info, .. } = cb;
-    //
-    //             // `trim_end` is here because the comrak parser adds a new-line to the
-    //             // end of code blocks, which may be spec-compliant, but it's possibly
-    //             // something we'd rather not forget about later
-    //             let literal = std::str::from_utf8(&literal).unwrap().trim_end();
-    //             let info = std::str::from_utf8(&info).unwrap();
-    //
-    //             // if info.is_empty() {
-    //             //     items.push(Element::code_block_without_params(literal));
-    //             // } else {
-    //             //     items.push(Element::code_block(literal, Some(info)));
-    //             // }
-    //         }
-    //         _ => {}
-    //     }
-    // }
-    //
-    // if let Some(item) = kind {
-    //     items.push(item);
-    // }
 
     items
 }

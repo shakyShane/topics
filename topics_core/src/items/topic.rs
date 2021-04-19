@@ -1,6 +1,6 @@
 use crate::items::{ItemWrap, LineMarker};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Topic {
     pub name: LineMarker<String>,
     pub steps: Vec<ItemWrap>,

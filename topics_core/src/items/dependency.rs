@@ -2,7 +2,7 @@ use crate::cwd::Cwd;
 use crate::doc_src::code_fence;
 use crate::items::LineMarker;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct DependencyCheck {
     pub name: LineMarker<String>,
     pub verify: String,

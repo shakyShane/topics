@@ -1,14 +1,14 @@
 use crate::cli::{SubCommand, SubCommandError, SubCommandResult};
 use crate::context::Context;
 
-use crate::print::{Print, PrintKind};
+use crate::print::{OutputKind, Print};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, structopt::StructOpt)]
 #[structopt(alias = "g")]
 pub struct VerifyCmd {
     #[structopt(short, long, default_value)]
-    pub print_kind: PrintKind,
+    pub print_kind: OutputKind,
 
     #[structopt(name = "files")]
     files: Vec<PathBuf>,
