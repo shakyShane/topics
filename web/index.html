@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Introduction | The AssemblyScript Book</title>
+    <title>{{title}}</title>
     <meta name="generator" content="VuePress 1.8.2">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
@@ -47,61 +47,25 @@
                             <button type="button" aria-label="Standard library" class="mobile-dropdown-title"><span
                                     class="title">Standard library</span> <span class="arrow right"></span></button>
                             <ul class="nav-dropdown" style="display:none;">
-                                <li class="dropdown-item"><!----> <a href="/stdlib/globals.html" class="nav-link">
-                                    Globals
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/array.html" class="nav-link">
-                                    Array
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/arraybuffer.html" class="nav-link">
-                                    ArrayBuffer
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/dataview.html" class="nav-link">
-                                    DataView
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/date.html" class="nav-link">
-                                    Date
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/error.html" class="nav-link">
-                                    Error
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/map.html" class="nav-link">
-                                    Map
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/math.html" class="nav-link">
-                                    Math
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/number.html" class="nav-link">
-                                    Number
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/set.html" class="nav-link">
-                                    Set
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/string.html" class="nav-link">
-                                    String
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/symbol.html" class="nav-link">
-                                    Symbol
-                                </a></li>
-                                <li class="dropdown-item"><!----> <a href="/stdlib/typedarray.html" class="nav-link">
-                                    TypedArray
-                                </a></li>
+                                <li class="dropdown-item">
+                                    <a href="/stdlib/globals.html" class="nav-link">
+                                        Globals
+                                    </a>
+                                </li>
+                                <li class="dropdown-item">
+                                    <a href="/stdlib/array.html" class="nav-link">Array</a>
+                                </li>
                                 <li class="dropdown-item"><h4>
                                     Extended
                                 </h4>
                                     <ul class="dropdown-subitem-wrapper">
                                         <li class="dropdown-subitem"><a href="/stdlib/staticarray.html"
-                                                                        class="nav-link">
-                                            StaticArray
-                                        </a></li>
+                                                                        class="nav-link">StaticArray</a></li>
                                         <li class="dropdown-subitem"><a href="/stdlib/process.html" class="nav-link">
                                             process
                                         </a></li>
                                         <li class="dropdown-subitem"><a href="/stdlib/console.html" class="nav-link">
                                             console
-                                        </a></li>
-                                        <li class="dropdown-subitem"><a href="/stdlib/crypto.html" class="nav-link">
-                                            crypto
                                         </a></li>
                                     </ul>
                                 </li>
@@ -123,21 +87,18 @@
             <ul class="sidebar-links">
                 <li>
                     <section class="sidebar-group depth-0"><p class="sidebar-heading open"><span>Getting started</span>
-                        <!----></p>
+                    </p>
                         <ul class="sidebar-links sidebar-group-items">
-                            <li><a href="/introduction.html" aria-current="page" class="active sidebar-link">Introduction</a>
-                            </li>
+                            <li><a href="/introduction.html" aria-current="page" class="active sidebar-link">Introduction</a></li>
                             <li><a href="/quick-start.html" class="sidebar-link">Quick Start</a></li>
                             <li><a href="/basics.html" class="sidebar-link">Basics</a></li>
                             <li><a href="/status.html" class="sidebar-link">Status</a></li>
-                            <li><a href="/frequently-asked-questions.html" class="sidebar-link">Frequently asked
-                                questions</a></li>
+                            <li><a href="/frequently-asked-questions.html" class="sidebar-link">Frequently asked questions</a></li>
                         </ul>
                     </section>
                 </li>
                 <li>
-                    <section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Documentation</span> <!---->
-                    </p>
+                    <section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Documentation</span></p>
                         <ul class="sidebar-links sidebar-group-items">
                             <li><a href="/compiler.html" class="sidebar-link">Compiler</a></li>
                             <li><a href="/types.html" class="sidebar-link">Types</a></li>
@@ -148,7 +109,7 @@
                     </section>
                 </li>
                 <li>
-                    <section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Advanced</span> <!----></p>
+                    <section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Advanced</span></p>
                         <ul class="sidebar-links sidebar-group-items">
                             <li><a href="/memory.html" class="sidebar-link">Memory</a></li>
                             <li><a href="/garbage-collection.html" class="sidebar-link">Garbage Collection</a></li>
@@ -164,114 +125,9 @@
             </ul>
         </aside>
         <main class="page">
-            <div class="theme-default-content content__default"><h1 id="introduction"><a
-                    href="#introduction" class="header-anchor">#</a> Introduction</h1>
-                <p>AssemblyScript compiles a <strong>strict variant</strong> of <a href="https://www.typescriptlang.org"
-                                                                                   target="_blank"
-                                                                                   rel="noopener noreferrer">TypeScript<span><svg
-                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px"
-                        viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor"
-                                                                                                 d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon
-                        fill="currentColor"
-                        points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span
-                        class="sr-only">(opens new window)</span></span></a> (a typed superset of JavaScript) to <a
-                        href="https://webassembly.org" target="_blank" rel="noopener noreferrer">WebAssembly<span><svg
-                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px"
-                        viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor"
-                                                                                                 d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon
-                        fill="currentColor"
-                        points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span
-                        class="sr-only">(opens new window)</span></span></a> using <a
-                        href="https://github.com/WebAssembly/binaryen" target="_blank" rel="noopener noreferrer">Binaryen<span><svg
-                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px"
-                        viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor"
-                                                                                                 d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon
-                        fill="currentColor"
-                        points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span
-                        class="sr-only">(opens new window)</span></span></a>, looking like:
-                </p>
-                <div class="language-ts extra-class"><pre class="language-ts"><code><span
-                        class="token keyword">export</span> <span class="token keyword">function</span> <span
-                        class="token function">fib</span><span class="token punctuation">(</span>n<span
-                        class="token operator">:</span> <span class="token builtin">i32</span><span
-                        class="token punctuation">)</span><span class="token operator">:</span> <span
-                        class="token builtin">i32</span> <span class="token punctuation">{</span>
-  <span class="token keyword">var</span> a <span class="token operator">=</span> <span
-                            class="token number">0</span><span class="token punctuation">,</span> b <span
-                            class="token operator">=</span> <span class="token number">1</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>n <span
-                            class="token operator">&gt;</span> <span class="token number">0</span><span
-                            class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">while</span> <span class="token punctuation">(</span><span
-                            class="token operator">--</span>n<span class="token punctuation">)</span> <span
-                            class="token punctuation">{</span>
-      <span class="token keyword">let</span> t <span class="token operator">=</span> a <span
-                            class="token operator">+</span> b
-      a <span class="token operator">=</span> b
-      b <span class="token operator">=</span> t
-    <span class="token punctuation">}</span>
-    <span class="token keyword">return</span> b
-  <span class="token punctuation">}</span>
-  <span class="token keyword">return</span> a
-<span class="token punctuation">}</span>
-</code></pre>
-                </div>
-                <div class="language-sh extra-class"><pre class="language-sh"><code>asc fib.ts -b fib.wasm -O3
-</code></pre>
-                </div>
-                <p>Its architecture differs from a JavaScript VM in that it compiles a program <strong>ahead of
-                    time</strong>, quite similar to your typical C compiler. One can think of it as TypeScript syntax on
-                    top of WebAssembly instructions, statically compiled, to produce lean and mean WebAssembly binaries.
-                </p>
-                <h2 id="in-a-nutshell"><a href="#in-a-nutshell" class="header-anchor">#</a> In a nutshell</h2>
-                <p>On top of <a href="/types.html">WebAssembly types</a>, AssemblyScript not only provides <a
-                        href="/environment.html#low-level-webassembly-operations">low-level built-ins</a> to access
-                    WebAssembly features directly, making it suitable as a thin layer on top of Wasm, but also comes
-                    with its own JavaScript-like <a href="/environment.html#standard-library">standard library</a> and a
-                    relatively small <a href="/garbage-collection.html">memory management and garbage collection
-                        runtime</a>, making it suitable as a general purpose higher-level language for WebAssembly
-                    today.</p>
-                <p>For example, on the lowest level, memory can be accessed using the <code>load&lt;T&gt;(offset)</code>
-                    and <code>store&lt;T&gt;(offset, value)</code> built-ins that compile to WebAssembly instructions
-                    directly</p>
-                <div class="language-ts extra-class"><pre class="language-ts"><code><span
-                        class="token generic-function"><span class="token function">store</span><span
-                        class="token generic class-name"><span class="token operator">&lt;</span>i32<span
-                        class="token operator">&gt;</span></span></span><span class="token punctuation">(</span><span
-                        class="token number">8</span><span class="token punctuation">,</span> <span
-                        class="token generic-function"><span class="token function">load</span><span
-                        class="token generic class-name"><span class="token operator">&lt;</span>i32<span
-                        class="token operator">&gt;</span></span></span><span class="token punctuation">(</span><span
-                        class="token number">0</span><span class="token punctuation">)</span> <span
-                        class="token operator">+</span> <span class="token generic-function"><span
-                        class="token function">load</span><span class="token generic class-name"><span
-                        class="token operator">&lt;</span>i32<span class="token operator">&gt;</span></span></span><span
-                        class="token punctuation">(</span><span class="token number">4</span><span
-                        class="token punctuation">)</span><span class="token punctuation">)</span>
-</code></pre>
-                </div>
-                <p>while the standard library provides higher-level implementations of <a href="/stdlib/array.html">Array</a>,
-                    <a href="/stdlib/arraybuffer.html">ArrayBuffer</a>, <a href="/stdlib/dataview.html">DataView</a>, <a
-                            href="/stdlib/math.html">Math</a> (double and single precision), <a
-                            href="/stdlib/typedarray.html">Uint8Array</a>, <a href="/stdlib/string.html">String</a>, <a
-                            href="/stdlib/map.html">Map</a>, <a href="/stdlib/set.html">Set</a> etc.:</p>
-                <div class="language-ts extra-class"><pre class="language-ts"><code><span
-                        class="token keyword">var</span> view <span class="token operator">=</span> <span
-                        class="token keyword">new</span> <span class="token class-name">Int32Array</span><span
-                        class="token punctuation">(</span><span class="token number">12</span><span
-                        class="token punctuation">)</span>
-view<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span> <span
-                            class="token operator">=</span> view<span class="token punctuation">[</span><span
-                            class="token number">0</span><span class="token punctuation">]</span> <span
-                            class="token operator">+</span> view<span class="token punctuation">[</span><span
-                            class="token number">1</span><span class="token punctuation">]</span>
-</code></pre>
-                </div>
-                <p>It is worth to note, however, that AssemblyScript still has its <a
-                        href="/basics.html#quirks">quirks</a>, and we are patiently waiting for <a href="/status.html">future
-                    WebAssembly features</a> (marked as 🦄 throughout the documentation) to become available for us to
-                    use.</p>
-                <p>Sounds appealing to you? Read on!</p></div>
+            <div class="theme-default-content content__default">
+                <h1>Content here</h1>
+            </div>
             <footer class="page-edit">
                 <div class="edit-link"><a
                         href="https://github.com/AssemblyScript/website/edit/master/src/introduction.md" target="_blank"
@@ -281,20 +137,15 @@ view<span class="token punctuation">[</span><span class="token number">2</span><
                                                                                                  d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon
                         fill="currentColor"
                         points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span
-                        class="sr-only">(opens new window)</span></span></div> <!----></footer>
-            <div class="page-nav"><p class="inner"><!----> <span class="next"><a
+                        class="sr-only">(opens new window)</span></span></div>
+            </footer>
+            <div class="page-nav"><p class="inner"> <span class="next"><a
                     href="/quick-start.html">
         Quick Start
       </a>
       →
     </span></p></div>
-            <div class="footer"><p><span class="item"
 
-            >Apache-2.0 licensed</span>,
-                <span class="item">Copyright © 2021</span> <span class="item"
-
-                >The AssemblyScript Project</span>
-            </p></div>
         </main>
     </div>
     <div class="global-ui"></div>
