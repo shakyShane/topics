@@ -51,6 +51,7 @@ pub enum OutputKind {
     Plain,
     Markdown,
     Json,
+    Html,
 }
 
 impl Display for OutputKind {
@@ -70,6 +71,7 @@ impl Print for OutputKind {
         match self {
             OutputKind::Markdown => (md::MdPrinter).print_welcome(docs, ctx),
             OutputKind::Plain => (plain::PlainPrinter).print_welcome(docs, ctx),
+            OutputKind::Html => (plain::PlainPrinter).print_welcome(docs, ctx),
             OutputKind::Json => {
                 todo!("implement json")
             }
@@ -104,6 +106,9 @@ impl Print for OutputKind {
             OutputKind::Json => {
                 todo!("implement json")
             }
+            OutputKind::Html => {
+                todo!("implement json")
+            }
         }
     }
     fn print_errors(&self, docs: &[DocResult<Doc>], ctx: &Context) -> anyhow::Result<()> {
@@ -111,6 +116,9 @@ impl Print for OutputKind {
             OutputKind::Markdown => (md::MdPrinter).print_errors(docs, ctx),
             OutputKind::Plain => (plain::PlainPrinter).print_errors(docs, ctx),
             OutputKind::Json => {
+                todo!("implement json")
+            }
+            OutputKind::Html => {
                 todo!("implement json")
             }
         }
@@ -125,6 +133,7 @@ impl FromStr for OutputKind {
             "md" | "Markdown" => Ok(OutputKind::Markdown),
             "json" | "Json" => Ok(OutputKind::Json),
             "plain" | "Plain" => Ok(OutputKind::Plain),
+            "html" | "Html" => Ok(OutputKind::Html),
             _a => Err(PrintKindError::Unknown),
         }
     }

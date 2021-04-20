@@ -16,6 +16,8 @@ mod print;
 
 pub mod db_error;
 pub mod doc_err;
+pub mod html;
+mod html_template;
 pub mod opt;
 pub mod output;
 

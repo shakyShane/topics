@@ -5,14 +5,16 @@ use std::path::PathBuf;
 use crate::db_error::{CycleError, DbError, ErrorRef, IntoDbError, SerializedError};
 use crate::doc::Doc;
 use crate::doc_src::{DocSource, MdDocSource, MdSrc};
+use crate::html::output_html;
 use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
 use crate::output::Output;
 use crate::print::OutputKind;
+use crate::Outputs;
 
 #[derive(Debug)]
 pub struct Db {}
 
-pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<Output> {
+pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<Outputs> {
     let mut src_items: Vec<MdSrc> = vec![];
 
     for doc in docs {
@@ -61,7 +63,8 @@ pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<O
     match output_kind {
         OutputKind::Plain => todo!("plain"),
         OutputKind::Markdown => todo!("markdown"),
-        OutputKind::Json => Ok(output_json(&graph, &item_lookup, &items)),
+        OutputKind::Json => Ok(Outputs::Json(output_json(&graph, &item_lookup, &items))),
+        OutputKind::Html => Ok(Outputs::Html(output_html(&graph, &item_lookup, &items))),
     }
 }
 

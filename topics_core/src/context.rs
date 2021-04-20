@@ -18,7 +18,7 @@ impl Context {
         Self::from_opts(&Opt::from_vec(input))
     }
     pub fn join_path(&self, pb: impl Into<PathBuf>) -> PathBuf {
-        self.opts.cwd.join_path(pb)
+        self.opts.cwd.join(pb.into())
     }
     pub fn read_docs_split(&self, files: &[PathBuf]) -> (Vec<DocResult<Doc>>, Vec<DocResult<Doc>>) {
         self.read_docs(&files).into_iter().partition(|a| match a {

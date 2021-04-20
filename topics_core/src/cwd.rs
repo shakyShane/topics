@@ -1,5 +1,6 @@
 use std::env::current_dir;
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::str::FromStr;
 use typescript_definitions::TypeScriptify;
@@ -17,7 +18,7 @@ use typescript_definitions::TypeScriptify;
 /// # use std::str::FromStr;
 /// # use std::path::PathBuf;
 /// let cwd = Cwd::from_str("/root").unwrap();
-/// let joined = cwd.join_path("dir");
+/// let joined = cwd.join("dir");
 /// assert_eq!(joined, PathBuf::from("/root/dir") );
 /// ```
 /// # Example
@@ -28,7 +29,7 @@ use typescript_definitions::TypeScriptify;
 /// ```rust
 /// # use topics_core::cwd::Cwd;
 /// # use std::env::current_dir;
-/// let cwd = Cwd::default().join_path("there");
+/// let cwd = Cwd::default().join("there");
 /// let this_dir = current_dir().unwrap().join("there");
 /// assert_eq!(cwd, this_dir)
 /// ```
@@ -37,6 +38,14 @@ use typescript_definitions::TypeScriptify;
     Debug, Clone, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize, TypeScriptify,
 )]
 pub struct Cwd(pub PathBuf);
+
+impl Deref for Cwd {
+    type Target = PathBuf;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl FromStr for Cwd {
     type Err = anyhow::Error;
@@ -54,11 +63,5 @@ impl Display for Cwd {
 impl Default for Cwd {
     fn default() -> Self {
         Self(current_dir().expect("can access cwd"))
-    }
-}
-
-impl Cwd {
-    pub fn join_path(&self, pb: impl Into<PathBuf>) -> PathBuf {
-        self.0.join(pb.into())
     }
 }

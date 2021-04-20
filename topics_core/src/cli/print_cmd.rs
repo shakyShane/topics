@@ -2,7 +2,10 @@ use crate::cli::{SubCommand, SubCommandError, SubCommandResult};
 use crate::context::Context;
 use crate::db::try_from_docs;
 use crate::doc::Doc;
+use crate::html_template::HtmlTemplate;
 use crate::print::{OutputKind, Print};
+use crate::Outputs;
+use std::fs;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, structopt::StructOpt)]
@@ -39,13 +42,49 @@ impl SubCommand for PrintCmd {
             .map(|doc| doc.expect("guarded previously"))
             .collect::<Vec<Doc>>();
 
-        let output = try_from_docs(&docs, &self.print_kind).expect("try_from_docs");
-        match self.print_kind {
-            OutputKind::Plain => {}
-            OutputKind::Markdown => {}
-            OutputKind::Json => {
-                let json = serde_json::to_string_pretty(&output).expect("serde_json::to_string");
+        let outputs = try_from_docs(&docs, &self.print_kind).expect("try_from_docs");
+        match outputs {
+            Outputs::Json(json_output) => {
+                let json =
+                    serde_json::to_string_pretty(&json_output).expect("serde_json::to_string");
                 println!("{}", json);
+            }
+            Outputs::Html(html_output) => {
+                let html_output_dir = ctx.opts.cwd.join("__generated__");
+                for p in &html_output.pages {
+                    let page_path = html_output_dir.join(&p.pb);
+                    let page_str = p.template(&ctx);
+                    match page_str {
+                        Ok(string) => match fs::write(&page_path, string) {
+                            Ok(f) => println!("file written... {}", page_path.display()),
+                            Err(e) => {
+                                eprintln!("Couldn't write file");
+                                eprintln!("{}", e.to_string());
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("{}", e.to_string())
+                        }
+                    }
+                }
+                for p in &html_output.assets {
+                    let asset_path = html_output_dir.join(&p.pb);
+                    let parent = asset_path.parent().expect("must have file parent");
+                    let fs_job = fs::create_dir_all(parent).and_then(|()| {
+                        fs::write(
+                            &asset_path,
+                            p.content.as_ref().expect("asset must exist here"),
+                        )
+                    });
+
+                    match fs_job {
+                        Ok(f) => println!("file written... {}", asset_path.display()),
+                        Err(e) => {
+                            eprintln!("Couldn't write file");
+                            eprintln!("{}", e.to_string());
+                        }
+                    }
+                }
             }
         }
 
