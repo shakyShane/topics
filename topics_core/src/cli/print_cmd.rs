@@ -45,7 +45,15 @@ impl SubCommand for PrintCmd {
         let outputs = try_from_docs(&docs, &self.print_kind).expect("try_from_docs");
         match outputs {
             Outputs::Plain(plain_output) => {
-                println!("--> here");
+                // for doc in plain_output.docs {
+                //     eprintln!("item={:#?}", doc);
+                // }
+                // for item in plain_output.items {
+                //     eprintln!("item={:#?}", item);
+                // }
+                // for e in plain_output.errors {
+                //     eprintln!("e={:?}", e);
+                // }
             }
             Outputs::Json(json_output) => {
                 let json =

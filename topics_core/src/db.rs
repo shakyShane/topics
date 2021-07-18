@@ -7,9 +7,8 @@ use crate::doc::Doc;
 use crate::doc_src::{DocSource, MdDocSource, MdSrc};
 use crate::html::output_html;
 use crate::items::{marker_ref, name_ref, Item, ItemWrap, LineMarker};
-use crate::output::Output;
+use crate::output::{output, Output, Outputs};
 use crate::print::OutputKind;
-use crate::Outputs;
 
 #[derive(Debug)]
 pub struct Db {}
@@ -66,32 +65,6 @@ pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<O
         OutputKind::Json => Ok(Outputs::Json(output(&graph, &item_lookup, &items))),
         OutputKind::Html => Ok(Outputs::Html(output_html(&graph, &item_lookup, &items))),
     }
-}
-
-fn output<'a>(
-    graph: &'a HashMap<&'a String, Vec<&'a LineMarker<String>>>,
-    lookup: &'a HashMap<&'a String, (&'a MdSrc<'a>, &'a Item)>,
-    items: &'a Vec<(&'_ MdSrc, Vec<Item>)>,
-) -> Output {
-    let mut output = Output::default();
-    let cycles = detect_cycle(graph, lookup);
-    for c in cycles {
-        match c {
-            DbError::Cycle(ErrorRef { inner, .. }) => {
-                output.errors.push(SerializedError::Cycle(inner));
-            }
-        }
-    }
-    for (md_src, items) in items {
-        if let Some(pb) = &md_src.md_doc_src.input_file {
-            let pb = pb.clone();
-            output.docs.entry(pb).or_insert(md_src.md_doc_src.clone());
-        }
-        for item in items {
-            output.items.push(item.clone()); // todo: How to remove this clone...
-        }
-    }
-    output
 }
 
 fn detect_cycle<'a>(
