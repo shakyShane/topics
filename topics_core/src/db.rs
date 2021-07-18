@@ -61,14 +61,14 @@ pub fn try_from_docs(docs: &[Doc], output_kind: &OutputKind) -> anyhow::Result<O
     }
 
     match output_kind {
-        OutputKind::Plain => todo!("plain"),
         OutputKind::Markdown => todo!("markdown"),
-        OutputKind::Json => Ok(Outputs::Json(output_json(&graph, &item_lookup, &items))),
+        OutputKind::Plain => Ok(Outputs::Plain(output(&graph, &item_lookup, &items))),
+        OutputKind::Json => Ok(Outputs::Json(output(&graph, &item_lookup, &items))),
         OutputKind::Html => Ok(Outputs::Html(output_html(&graph, &item_lookup, &items))),
     }
 }
 
-fn output_json<'a>(
+fn output<'a>(
     graph: &'a HashMap<&'a String, Vec<&'a LineMarker<String>>>,
     lookup: &'a HashMap<&'a String, (&'a MdSrc<'a>, &'a Item)>,
     items: &'a Vec<(&'_ MdSrc, Vec<Item>)>,

@@ -8,6 +8,7 @@ use crate::items::Item;
 use typescript_definitions::TypeScriptify;
 
 pub enum Outputs {
+    Plain(Output),
     Json(Output),
     Html(HtmlOutput),
 }

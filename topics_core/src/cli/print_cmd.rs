@@ -44,6 +44,9 @@ impl SubCommand for PrintCmd {
 
         let outputs = try_from_docs(&docs, &self.print_kind).expect("try_from_docs");
         match outputs {
+            Outputs::Plain(plain_output) => {
+                println!("--> here");
+            }
             Outputs::Json(json_output) => {
                 let json =
                     serde_json::to_string_pretty(&json_output).expect("serde_json::to_string");
@@ -51,9 +54,9 @@ impl SubCommand for PrintCmd {
             }
             Outputs::Html(html_output) => {
                 let html_output_dir = ctx.opts.cwd.join("__generated__");
-                for p in &html_output.pages {
-                    let page_path = html_output_dir.join(&p.pb);
-                    let page_str = p.template(&ctx);
+                for html_page in &html_output.pages {
+                    let page_path = html_output_dir.join(&html_page.pb);
+                    let page_str = html_page.template(&ctx);
                     match page_str {
                         Ok(string) => match fs::write(&page_path, string) {
                             Ok(f) => println!("file written... {}", page_path.display()),
@@ -67,18 +70,18 @@ impl SubCommand for PrintCmd {
                         }
                     }
                 }
-                for p in &html_output.assets {
-                    let asset_path = html_output_dir.join(&p.pb);
+                for asset in &html_output.assets {
+                    let asset_path = html_output_dir.join(&asset.pb);
                     let parent = asset_path.parent().expect("must have file parent");
                     let fs_job = fs::create_dir_all(parent).and_then(|()| {
                         fs::write(
                             &asset_path,
-                            p.content.as_ref().expect("asset must exist here"),
+                            asset.content.as_ref().expect("asset must exist here"),
                         )
                     });
 
                     match fs_job {
-                        Ok(f) => println!("file written... {}", asset_path.display()),
+                        Ok(_f) => println!("file written... {}", asset_path.display()),
                         Err(e) => {
                             eprintln!("Couldn't write file");
                             eprintln!("{}", e.to_string());
